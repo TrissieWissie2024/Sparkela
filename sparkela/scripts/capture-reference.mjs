@@ -9,17 +9,26 @@
 // PW_CHROMIUM_PATH points at a Chromium binary; without it Playwright uses its own browser.
 //
 // Output: reference/<site>/<mobile|desktop>/NN-<state>.png, one <page>.structure.json per page
-// or overlay, and reference/<site>/manifest.json (URLs, files, warnings).
+// or overlay, and reference/<site>/manifest.json (URLs, files, warnings, blockedHosts).
 //
 // Rules this script follows (brief §2.1 and §8):
-// - Structure only. The JSON holds boxes, spacing, counts and short orientation labels, never page
-//   copy. Nothing from a reference (text, images, logos, icons, CSS, code) goes into Sparkela.
+// - Structure only. The JSON holds boxes, spacing and counts. Labels may contain up to 32 chars of
+//   aria-label, id or heading text: on a reference site that is their copy, so labels are for
+//   orientation only, never copy them into docs/ or content/. Nothing from a reference (text,
+//   images, logos, icons, CSS, code) goes into Sparkela.
 // - reference/ is gitignored: screenshots are never committed and never go into public/.
-// - Cookie banners: always the most privacy-preserving choice (reject / only necessary).
-// - Never fills in or submits a form, never types an email, never opens the checkout. As a safety
-//   net, checkout URLs and non-GET sign-up/contact/login requests are blocked at the network level.
+// - Cookie banners: always the most privacy-preserving choice (reject / only necessary). A
+//   preferences panel is saved only when every optional toggle is already off. A consent banner
+//   that is still visible afterwards is a warning in the manifest.
+// - Never fills in a form, never types an email, never opens the checkout. Apart from the consent
+//   buttons above, the only submit is the single add-to-cart click in the throwaway cart context.
+//   As a safety net, checkout URLs and non-GET sign-up/contact/login requests are blocked at the
+//   network level.
 // - The cart drawer is captured in a throwaway browser context with exactly one item added.
 // - Popups are waited for and closed with their close button; quizzes are opened, never answered.
+// - Failed requests (for example a third-party host that the network policy blocks) are recorded
+//   per page under blockedHosts in the manifest: a block whose script never loaded is unknown, not
+//   absent.
 
 import { chromium } from '@playwright/test';
 import fs from 'node:fs/promises';
@@ -59,10 +68,20 @@ const SELECTORS = {
   quizStart: ['[data-action="start"]', 'role=button[name=/^(start|begin)/i]'],
   footer: ['body > footer', 'footer', '.shopify-section-group-footer-group'],
 };
-const COOKIE_REJECT = /^(reject all|reject|alles weigeren|weigeren|alleen noodzakelijk(e cookies)?|only necessary|necessary only|decline( all)?|deny)$/i;
-const COOKIE_PREFS = /^(voorkeuren|instellingen|cookie-?instellingen|preferences|settings|customi[sz]e|manage)$/i;
+// Cookie consent. Unanchored, tried in order: an explicit reject first ("Weiger alles", "Alles afwijzen",
+// "Reject all cookies"), then "only necessary" ("Alleen noodzakelijke", "Use necessary cookies only").
+const COOKIE_REJECT = [
+  /\b(weiger(en)?|afwijzen)\b|\b(reject|decline|deny|refuse)\b/i,
+  /\balleen\s+(strikt\s+)?(noodzakelijke?|essenti|functione)|^\s*(strikt\s+)?noodzakelijke\s+cookies\s*$|\bonly\s+(strictly\s+)?(necessary|essential|required)\b|\b(necessary|essential|required)(\s+cookies)?\s+only\b/i,
+];
+const COOKIE_PREFS = /voorkeur|instelling|aanpassen|beheren|preferences|settings|customi[sz]e|manage|options/i;
+const COOKIE_SAVE = /opslaan|bewaren|bevestig|save|confirm|selectie|selection|mijn keuze|my choices/i;
+const COOKIE_ALL = /\b(alle|alles|all)\b/i; // a save button that says "all" accepts everything: never clicked
+/** Ids, classes and iframe URLs of consent banners (generic words plus common consent platforms). */
+const CONSENT_HINT = /cookie|consent|gdpr|onetrust|cookiebot|didomi|usercentrics|iubenda|klaro|termly|osano|quantcast|trustarc|sourcepoint/i;
 const BLOCK_ALWAYS = /\/checkouts?(\/|\?|$)/i;
 const BLOCK_WRITES = /subscribe|newsletter|klaviyo|contact|login|register|\/account/i;
+const blockedByUs = (request) => BLOCK_ALWAYS.test(request.url()) || (request.method() !== 'GET' && BLOCK_WRITES.test(request.url()));
 
 const VIEWPORTS = {
   mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
@@ -160,6 +179,41 @@ function outlineInPage(rootSelector) {
   };
 }
 
+/**
+ * Marks the visible consent banners and dialogs of a document with data-capture-consent="<n>" and returns
+ * how many there are. A consent root floats (fixed, sticky or a dialog, or inside a fixed or sticky
+ * parent), is larger than a corner widget, has a button or link, has no email field (an email popup is not
+ * a consent banner), and is named like one (id, class or aria-label) or talks about cookies or consent.
+ */
+function markConsentRoots(hintSource) {
+  const hint = new RegExp(hintSource, 'i');
+  for (const el of document.querySelectorAll('[data-capture-consent]')) el.removeAttribute('data-capture-consent');
+  const floats = (el) => {
+    for (let node = el; node && node !== document.body; node = node.parentElement) if (/fixed|sticky/.test(getComputedStyle(node).position)) return true;
+    return false;
+  };
+  const roots = [];
+  for (const el of document.body?.querySelectorAll('*') ?? []) {
+    if (roots.some((root) => root.contains(el))) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width * r.height < 20_000) continue;
+    const s = getComputedStyle(el);
+    if (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) === 0) continue;
+    const dialog = el.tagName === 'DIALOG' || /^(dialog|alertdialog)$/.test(el.getAttribute('role') ?? '');
+    if (!dialog && !floats(el)) continue;
+    const text = el.textContent ?? '';
+    const named = hint.test(`${el.id} ${el.getAttribute('class') ?? ''} ${el.getAttribute('aria-label') ?? ''}`);
+    // Unnamed: the text itself must mention cookies, not just a link to the cookie policy (a sticky header).
+    const mentions = (t) => (t.match(/cookie|consent|toestemming/gi) ?? []).length;
+    const inLinks = () => [...el.querySelectorAll('a')].reduce((sum, a) => sum + mentions(a.textContent ?? ''), 0);
+    if (!named && !(text.length < 4000 && !el.closest('header, nav') && mentions(text) > inLinks())) continue;
+    if (!el.querySelector('button, [role="button"], a[href], input[type="submit"]') || el.querySelector('input[type="email"]')) continue;
+    roots.push(el);
+  }
+  roots.forEach((el, i) => el.setAttribute('data-capture-consent', String(i)));
+  return roots.length;
+}
+
 // --- Node-side helpers ---
 
 /** First visible element for a list of selectors, polling until `timeout` ms. */
@@ -176,28 +230,97 @@ async function firstVisible(scope, selectors, timeout = 0) {
   }
 }
 
-async function open(page, url) {
+async function open(page, url, rec) {
   log('  goto', url);
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
   await page.waitForTimeout(1200);
-  await rejectCookies(page);
+  await rejectCookies(page, rec);
 }
 
-/** Cookie banner: always the most privacy-preserving option. */
-async function rejectCookies(page) {
-  const visible = (loc) => loc.first().isVisible().catch(() => false);
-  const reject = page.getByRole('button', { name: COOKIE_REJECT });
-  if (!(await visible(reject))) {
-    const prefs = page.getByRole('button', { name: COOKIE_PREFS });
-    if (!(await visible(prefs))) return;
-    await prefs.first().click();
+/** Consent banners in every frame, as locators; a consent-platform iframe counts as a whole. */
+async function consentScopes(page) {
+  const scopes = [];
+  for (const frame of page.frames()) {
+    const n = await frame.evaluate(markConsentRoots, CONSENT_HINT.source).catch(() => 0);
+    for (let i = 0; i < n; i++) scopes.push(frame.locator(`[data-capture-consent="${i}"]`));
+    if (n > 0 || frame === page.mainFrame() || !CONSENT_HINT.test(frame.url())) continue;
+    const element = await frame.frameElement().catch(() => null);
+    if (element && (await element.isVisible().catch(() => false))) scopes.push(frame.locator(':root'));
+  }
+  return scopes;
+}
+
+/**
+ * Clicks the first visible button or link in `scopes` whose accessible name matches a pattern (patterns in
+ * order) and that `ok` accepts. Never a link that navigates or a control inside a form with an email field.
+ * Returns whether it clicked.
+ */
+async function clickMatching(scopes, patterns, ok = async () => true) {
+  const safe = (loc) =>
+    loc
+      .evaluate((el) => {
+        const href = el.tagName === 'A' ? (el.getAttribute('href') ?? '') : '#';
+        const inEmailForm = el.closest('form, dialog, [role="dialog"]')?.querySelector('input[type="email"]');
+        return /^(#|javascript:|$)/i.test(href) && !inEmailForm;
+      })
+      .catch(() => false);
+  for (const pattern of patterns) {
+    for (const scope of scopes) {
+      for (const role of ['button', 'link']) {
+        const candidates = scope.getByRole(role, { name: pattern });
+        const n = Math.min(await candidates.count().catch(() => 0), 8);
+        for (let i = 0; i < n; i++) {
+          const el = candidates.nth(i);
+          if (!(await el.isVisible().catch(() => false)) || !(await safe(el)) || !(await ok(el))) continue;
+          if (await el.click({ timeout: 5000 }).then(() => true, () => false)) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/** Optional consent toggles that are on, over all scopes (disabled ones, such as "necessary", do not count). */
+async function optionalTogglesOn(scopes) {
+  let on = 0;
+  for (const scope of scopes) {
+    on += await scope
+      .evaluate((root) =>
+        [...root.querySelectorAll('input[type="checkbox"], [role="switch"], [role="checkbox"]')]
+          .filter((t) => !t.disabled && t.getAttribute('aria-disabled') !== 'true')
+          .filter((t) => t.checked === true || t.getAttribute('aria-checked') === 'true').length,
+      )
+      .catch(() => 0);
+  }
+  return on;
+}
+
+/**
+ * Cookie banner: always the most privacy-preserving option. Reject or "only necessary" in the banner, else
+ * anywhere in the page or its frames; else open the preferences and reject there, or save them only when
+ * every optional toggle is already off. Warns when a consent banner is still visible afterwards.
+ */
+async function rejectCookies(page, rec) {
+  const everywhere = () => page.frames().map((frame) => frame.locator(':root'));
+  // A reject is never an expandable header (a "Noodzakelijke cookies" category in the preferences).
+  const notToggle = (el) => el.evaluate((node) => !node.hasAttribute('aria-expanded')).catch(() => false);
+  const notAll = (el) => el.evaluate((node, all) => !new RegExp(all, 'i').test(`${node.textContent} ${node.getAttribute('aria-label') ?? ''}`), COOKIE_ALL.source).catch(() => false);
+  let scopes = await consentScopes(page);
+  let clicked = (await clickMatching(scopes, COOKIE_REJECT, notToggle)) || (await clickMatching(everywhere(), COOKIE_REJECT, notToggle));
+  let note = '';
+  if (!clicked && scopes.length > 0 && (await clickMatching(scopes, [COOKIE_PREFS]))) {
     await page.waitForTimeout(800);
+    scopes = await consentScopes(page);
+    clicked = await clickMatching(scopes, COOKIE_REJECT, notToggle);
+    if (!clicked) {
+      const on = await optionalTogglesOn(scopes);
+      if (on === 0) clicked = await clickMatching(scopes, [COOKIE_SAVE], notAll);
+      else note = ` (${on} optional toggle(s) on in the preferences, so nothing was saved)`;
+    }
   }
-  if (await visible(reject)) {
-    await reject.first().click();
-    await page.waitForTimeout(600);
-  }
+  if (clicked) await page.waitForTimeout(800);
+  if ((await consentScopes(page)).length > 0) rec.warn(`cookie banner still visible on ${new URL(page.url()).pathname}, not rejected${note}`);
 }
 
 /** Close a popup or overlay with its own close button (never a submit), else Escape. */
@@ -255,7 +378,7 @@ async function withoutFloating(page, positions, fn) {
 
 function recorder(viewport, dir) {
   let n = 0;
-  const rec = { files: [], warnings: [], urls: {} };
+  const rec = { files: [], warnings: [], urls: {}, blockedHosts: {} };
   rec.shot = async (target, name, options = {}) => {
     const file = `${String(n + 1).padStart(2, '0')}-${name}.png`;
     await target.screenshot({ path: path.join(dir, file), timeout: 30_000, ...options });
@@ -268,18 +391,37 @@ function recorder(viewport, dir) {
     rec.files.push(`${name}.structure.json`);
   };
   rec.warn = (message) => {
+    if (rec.warnings.includes(message)) return; // e.g. the same banner on every visit of the homepage
     rec.warnings.push(message);
     log(`  WARN ${message}`);
+  };
+  /** A request that failed or got a 403: its host, per page path (the path of a failed navigation itself). */
+  rec.blocked = (request, reason) => {
+    if (!/^https?:/i.test(request.url())) return;
+    let at;
+    try {
+      const frame = request.frame();
+      at = new URL(request.isNavigationRequest() && !frame.parentFrame() ? request.url() : frame.page().url()).pathname;
+    } catch {
+      at = '(no page)'; // a service worker request has no frame
+    }
+    (rec.blockedHosts[at] ??= {})[new URL(request.url()).host] ??= reason;
   };
   return rec;
 }
 
-async function newContext(browser, name) {
+async function newContext(browser, name, rec) {
   const context = await browser.newContext({ ...VIEWPORTS[name], locale: 'nl-NL', timezoneId: 'Europe/Amsterdam', colorScheme: 'light' });
-  await context.route('**/*', (route) => {
-    const req = route.request();
-    if (BLOCK_ALWAYS.test(req.url()) || (req.method() !== 'GET' && BLOCK_WRITES.test(req.url()))) return route.abort();
-    return route.continue();
+  await context.route('**/*', (route) => (blockedByUs(route.request()) ? route.abort() : route.continue()));
+  // Record what did not load. A proxy that refuses a host shows up as a failed request (in Chromium
+  // net::ERR_TUNNEL_CONNECTION_FAILED) or as a 403. Our own blocks and requests cut off by a navigation
+  // (net::ERR_ABORTED) are left out.
+  context.on('requestfailed', (request) => {
+    const reason = request.failure()?.errorText ?? 'failed';
+    if (!blockedByUs(request) && reason !== 'net::ERR_ABORTED') rec.blocked(request, reason);
+  });
+  context.on('response', (response) => {
+    if (response.status() === 403) rec.blocked(response.request(), 'HTTP 403');
   });
   return context;
 }
@@ -289,7 +431,7 @@ async function newContext(browser, name) {
 async function captureHome(page, rec) {
   const started = Date.now();
   rec.urls.home = `${BASE}/`;
-  await open(page, `${BASE}/`);
+  await open(page, `${BASE}/`, rec);
   await rec.shot(page, 'home-top');
 
   // Email popup: wait for it (never fill it), capture, close it; then its trigger pill.
@@ -328,7 +470,7 @@ async function captureFooter(page, rec) {
 }
 
 async function captureMenu(page, rec, mobile) {
-  await open(page, `${BASE}/`);
+  await open(page, `${BASE}/`, rec);
   if (mobile) {
     const button = await firstVisible(page, sel('menuButton'), 5000);
     if (!button) return rec.warn('mobile menu button not found');
@@ -364,11 +506,11 @@ async function captureMenu(page, rec, mobile) {
 async function captureQuiz(page, rec) {
   let link = null;
   if (!SITE.quiz) {
-    await open(page, `${BASE}/`);
+    await open(page, `${BASE}/`, rec);
     link = await page.locator('a[href*="quiz" i], a[href*="finder" i]').first().getAttribute('href', { timeout: 2000 }).catch(() => null);
   }
   rec.urls.quiz = abs(SITE.quiz ?? link ?? '/');
-  await open(page, rec.urls.quiz);
+  await open(page, rec.urls.quiz, rec);
   await lazyScroll(page);
   const section = await firstVisible(page, sel('quizSection'), 3000);
   if (!section) {
@@ -392,7 +534,7 @@ async function captureQuiz(page, rec) {
 /** A page: first view (before any scrolling), full page, outline. */
 async function capturePage(page, rec, name, url) {
   rec.urls[name] = url;
-  await open(page, url);
+  await open(page, url, rec);
   await rec.shot(page, `${name}-top`);
   await lazyScroll(page);
   await withoutFloating(page, ['fixed'], () => rec.shot(page, `${name}-full`, { fullPage: true, scale: 'css' }));
@@ -416,10 +558,10 @@ async function captureProductScrolled(page, rec, outline) {
 
 /** Cart drawer in a throwaway context: the empty state first, then exactly one item added. */
 async function captureCart(browser, name, rec, productUrl) {
-  const context = await newContext(browser, name);
+  const context = await newContext(browser, name, rec);
   try {
     const page = await context.newPage();
-    await open(page, productUrl);
+    await open(page, productUrl, rec);
     const data = {};
     const cartButton = await firstVisible(page, sel('cartButton'));
     if (cartButton) {
@@ -465,7 +607,7 @@ async function captureViewport(browser, name) {
   await fs.rm(dir, { recursive: true, force: true });
   await fs.mkdir(dir, { recursive: true });
   const rec = recorder(name, dir);
-  const context = await newContext(browser, name);
+  const context = await newContext(browser, name, rec);
   const page = await context.newPage();
   page.setDefaultTimeout(20_000);
   const step = async (label, fn) => {
@@ -485,7 +627,7 @@ async function captureViewport(browser, name) {
   await step('quiz', () => captureQuiz(page, rec));
   await step('collection', async () => {
     if (!collectionUrl) {
-      await open(page, `${BASE}/`);
+      await open(page, `${BASE}/`, rec);
       collectionUrl = await discover(page, '/collections/', 'header');
     }
     if (!collectionUrl) throw new Error('no /collections/ link in the header');
@@ -502,7 +644,16 @@ async function captureViewport(browser, name) {
     await step('cart drawer', () => captureCart(browser, name, rec, productUrl));
   }
   await context.close();
-  return { urls: rec.urls, files: rec.files, warnings: rec.warnings };
+  const hosts = [...new Set(Object.values(rec.blockedHosts).flatMap(Object.keys))];
+  if (hosts.length > 0) {
+    const own = new URL(BASE).host;
+    const third = hosts.filter((host) => host !== own);
+    rec.warn(
+      `requests failed for ${hosts.length} host(s)${hosts.includes(own) ? `, including ${own} itself` : ''}: ${third.slice(0, 10).join(', ')}${third.length > 10 ? ', ...' : ''}. ` +
+        'See blockedHosts: a popup, quiz, review or widget block that was not found may be blocked, not absent.',
+    );
+  }
+  return { urls: rec.urls, files: rec.files, warnings: rec.warnings, blockedHosts: rec.blockedHosts };
 }
 
 async function main() {

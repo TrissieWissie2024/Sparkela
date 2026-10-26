@@ -1,0 +1,15 @@
+# Beslissingen en aannames
+
+Dit document houdt bij welke keuzes zijn gemaakt waar de brief ruimte liet. Per beslissing: wat, waarom en wat het betekent.
+
+## Omgeving en tooling
+
+1. **Node.js en Git portable.** Op de bouwmachine stonden Node.js en Git niet geïnstalleerd. Met akkoord van de eigenaar zijn Node.js 24.22.1 LTS (nodejs.org, SHA-256 gecontroleerd) en MinGit 2.56.0 (git-for-windows, SHA-256 gecontroleerd) als portable versie in `%LOCALAPPDATA%\Programs` gezet, zonder systeeminstallatie. Op een andere machine of op Vercel speelt dit niet: daar volstaat elke Node.js 24.
+2. **De repository-root is de hoofdmap; de app staat in `sparkela/`.** De brief en de twee merk-PDF's staan in de hoofdmap en zitten mee in de repository (GitHub: `TrissieWissie2026/Sparkela`, privé). Zo heeft ook een cloudsessie de volledige brief. Zet op Vercel de **Root Directory** op `sparkela`. De eerste commit is een setup-commit (scaffold, brief en merkbestanden), zodat de sessie naar de cloud kon verhuizen. Daarna volgt per fase een commit.
+3. **Next.js 16.4.3 met Cache Components.** Het project is opgezet met `create-next-app@16.4.3` (de laatste stabiele versie op 26-10-2026). `cacheComponents` en `partialPrefetching` staan aan, zoals de scaffold ze neerzet. Volgens de Next.js-documentatie worden beide in de volgende major verplicht, dus we bouwen meteen op dat model in plaats van later te migreren.
+4. **Tailwind CSS 4, ESLint 9, Vitest 5, Playwright 1.64.** Dit zijn de versies die bij de scaffold horen, of de laatste stabiele versie. TypeScript blijft op 5.x zoals de scaffold vastlegt. TypeScript 7 (de nieuwe native compiler) is nog te nieuw voor de toolchain van Next.
+5. **`@shopify/hydrogen-react` is (nog) niet toegevoegd.** De brief noemt Shopify-analytics als optioneel. Het pakket vraagt Vite als peer dependency en voegt nu weinig toe. De analytics-hooks (`lib/analytics.ts`) staan klaar; Shopify-analytics kan na de lancering worden aangesloten (zie `docs/TODO-LAUNCH.md`).
+6. **CORVANE niet beschikbaar.** Er was geen map `corvane/` op de machine en geen Vercel-URL in de brief. Zoals §8 voorschrijft, is de beschrijving in §6 leidend voor het kader (grid, witruimte, header, productkaart, productpagina, cart drawer en footer).
+7. **Merkbestanden.** `Sparkela_Logo_Eindconcept.pdf` en `Sparkela_Web_Kleurenpalet.pdf` zijn naast de brief in de hoofdmap gezet. Ze komen overeen met §3 en §5 van de brief. Aanvulling uit de logo-PDF: op een steen-vlak is het woord inkt met een bot-witte vonk.
+
+<!-- Aannames uit het plan (docs/PLAN.md) worden hieronder aangevuld. -->

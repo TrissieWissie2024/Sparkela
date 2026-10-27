@@ -57,9 +57,15 @@ export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
     "bg-transparent text-link underline underline-offset-4 decoration-1 hover:text-link-hover hover:decoration-2 rounded-sm",
 };
 
-/** Text buttons. sm is 36 px high, with a 44 px touch target through an invisible ::before. */
+/**
+ * Text buttons. sm is 36 px high, with a 44 px touch target through an invisible ::before. The ::before is centred
+ * with a fixed 44 px height rather than inset from the edges: an absolute box is placed against the padding box, so
+ * insets would lose the 1 px border on each side (42 px; decision 201).
+ */
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-9 px-4 text-sm before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']",
+  sm:
+    "h-9 px-4 text-sm before:absolute before:inset-x-0 before:top-1/2 before:h-[44px] before:-translate-y-1/2 " +
+    "before:content-['']",
   md: "h-12 px-6 text-[0.9375rem]",
   lg: "h-14 px-8 text-base",
 };

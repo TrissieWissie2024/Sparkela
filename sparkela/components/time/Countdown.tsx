@@ -22,7 +22,8 @@ import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
  *   (countdownScript) writes the running digits into the same box before the first paint, and hydration keeps them
  *   (suppressHydrationWarning), so the hand-over is invisible.
  * - After mount it ticks every second through useNow(1000): "2d 5u" above a day, "05:12:09" in the last 24 hours, in
- *   tabular figures in a box of at least 8 characters, so the layout does not move as digits change. The digits are
+ *   tabular figures in a box of at least 8 characters, so the layout does not move as digits change. `prefix`
+ *   ("Nog ") stands before the running digits only, so sighted users see what counts down; the fixed label has none. The digits are
  *   aria-hidden; screen readers get `srLabel` ("Eindigt op …") and no live region.
  * - A pause button with a fixed label ("Aftellen pauzeren") and aria-pressed (WCAG 2.2.2). Paused, the fixed label
  *   shows. With reduced motion there is no ticking and no button (motion-reduce:hidden): the fixed label shows.
@@ -44,6 +45,8 @@ export interface CountdownProps {
   tone?: "op-donker" | "op-roest" | "licht";
   /** Default true; hidden with reduced motion (then the fixed label shows). */
   showPause?: boolean;
+  /** Visible word before the running digits only ("Nog ", "Over "), never before the fixed label (decision 201). */
+  prefix?: string;
   className?: string;
 }
 
@@ -82,6 +85,7 @@ export function Countdown({
   fallbackLabel,
   tone = "licht",
   showPause = true,
+  prefix = "",
   className,
 }: CountdownProps) {
   const id = useId();
@@ -97,11 +101,13 @@ export function Countdown({
     return liveLabel ? <span className={cn("font-semibold", tones[tone], className)}>{liveLabel}</span> : null;
   }
 
-  const text = ticking && now !== null ? formatCountdown(getCountdown(now, targetMs), sharedCopy.countdown) : fallbackLabel;
+  const text =
+    ticking && now !== null ? `${prefix}${formatCountdown(getCountdown(now, targetMs), sharedCopy.countdown)}` : fallbackLabel;
 
   return (
     <span id={id} suppressHydrationWarning className={cn("inline-flex items-center gap-1", tones[tone], className)}>
-      <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block min-w-[8ch] font-semibold">
+      <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block font-semibold"
+        style={{ minWidth: `${8 + prefix.length}ch` }}>
         {text}
       </span>
       <VisuallyHidden {...hideAttribute} suppressHydrationWarning>
@@ -127,7 +133,7 @@ export function Countdown({
           )}
         </button>
       ) : null}
-      <InlineScript html={countdownScript(id, targetMs, sharedCopy.countdown, liveLabel ?? null)} />
+      <InlineScript html={countdownScript(id, targetMs, sharedCopy.countdown, liveLabel ?? null, prefix)} />
     </span>
   );
 }

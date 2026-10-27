@@ -134,7 +134,7 @@ describe("Countdown", () => {
 
   it("shows the fixed label in a tabular box, the screen reader text and the inline script before mount", () => {
     const html = renderToStaticMarkup(<Countdown {...props} tone="op-roest" />);
-    expect(html).toMatch(/<span data-countdown-text="" aria-hidden="true" class="tabular inline-block min-w-\[8ch\] font-semibold">t\/m 31 december<\/span>/);
+    expect(html).toMatch(/<span data-countdown-text="" aria-hidden="true" class="tabular inline-block font-semibold" style="min-width:8ch">t\/m 31 december<\/span>/);
     expect(html).toContain(`<span class="sr-only" data-countdown-hide="">${props.srLabel}</span>`);
     expect(html).toContain("text-bot-wit");
     expect(html).toContain('<script type="text/javascript">');

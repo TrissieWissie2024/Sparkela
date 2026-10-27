@@ -12,7 +12,8 @@ import { scriptJson } from "./timeSwitchScript";
  * a `liveLabel` it writes that label into the text box (readable, no longer aria-hidden) and hides the elements marked
  * COUNTDOWN_HIDE_ATTRIBUTE (the screen-reader label and the pause button); without one it hides the whole countdown
  * (decision 187). The elements it touches carry suppressHydrationWarning. With reduced motion it writes no digits
- * (the fixed label stays, plan §4.7). Pure string building; values are JSON-encoded with "<" escaped.
+ * (the fixed label stays, plan §4.7). `prefix` goes before the digits, as in Countdown. Pure string building; values
+ * are JSON-encoded with "<" escaped.
  */
 
 /** Attribute on the text box of a Countdown, inside the element with the countdown's id. */
@@ -25,6 +26,7 @@ export function countdownScript(
   targetMs: number,
   units: { days: string; hours: string },
   liveLabel: string | null = null,
+  prefix = "",
 ): string {
   if (!Number.isFinite(targetMs)) return "";
   return (
@@ -38,7 +40,7 @@ export function countdownScript(
     'if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
     "var s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),c=s%60;" +
     'function p(x){return(x<10?"0":"")+x}' +
-    `t.textContent=ms>86400000?d+${scriptJson(units.days)}+" "+h+${scriptJson(units.hours)}:p(d*24+h)+":"+p(m)+":"+p(c)` +
+    `t.textContent=${scriptJson(prefix)}+(ms>86400000?d+${scriptJson(units.days)}+" "+h+${scriptJson(units.hours)}:p(d*24+h)+":"+p(m)+":"+p(c))` +
     "}catch(e){}})();"
   );
 }

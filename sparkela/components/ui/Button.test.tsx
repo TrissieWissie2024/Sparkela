@@ -61,7 +61,12 @@ describe("buttonClasses", () => {
 
   it("has the heights of the plan and touch targets of at least 44 px", () => {
     expect(buttonClasses({ size: "sm" })).toContain("h-9");
-    expect(buttonClasses({ size: "sm" })).toContain("before:-inset-y-1");
+    // A centred 44 px ::before, not insets: insets sit inside the 1 px border and would give 42 px (decision 201).
+    const sm = buttonClasses({ size: "sm" });
+    expect(sm).toContain("before:h-[44px]");
+    expect(sm).toContain("before:top-1/2");
+    expect(sm).toContain("before:-translate-y-1/2");
+    expect(sm).not.toMatch(/before:-inset-y-/);
     expect(buttonClasses({ size: "md" })).toContain("h-12");
     expect(buttonClasses({ size: "lg" })).toContain("h-14");
     expect(buttonClasses({ size: "sm", iconOnly: true })).toContain("size-[44px]");

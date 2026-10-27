@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -118,5 +118,35 @@ describe("image keys used by content", () => {
     for (const collection of collections) {
       if (collection.bannerImage) expect(assets.images[collection.bannerImage], collection.bannerImage).toBeDefined();
     }
+  });
+});
+
+describe("docs/ASSETS.md (the shot list, plan §17.2)", () => {
+  const markdown = readFileSync(fileURLToPath(new URL("../docs/ASSETS.md", import.meta.url)), "utf8");
+  const rows = markdown.split("\n").filter((line) => line.startsWith("| `"));
+  const rowOf = (key: string) => rows.find((row) => row.startsWith(`| \`${key}\``));
+
+  it("names every image key with its file, ratio and size", () => {
+    for (const image of Object.values(assets.images)) {
+      const row = rowOf(image.key);
+      expect(row, image.key).toBeDefined();
+      expect(row, image.key).toContain(`\`${image.src}\``);
+      expect(row, image.key).toContain(image.aspect);
+      expect(row, image.key).toContain(`${image.width} × ${image.height}`);
+    }
+  });
+
+  it("names every video key with its file, poster and size", () => {
+    for (const video of Object.values(assets.videos)) {
+      const row = rowOf(video.key);
+      expect(row, video.key).toBeDefined();
+      expect(row, video.key).toContain(`\`${video.src}\``);
+      expect(row, video.key).toContain(`\`${video.poster}\``);
+      expect(row, video.key).toContain(`${video.width} × ${video.height}`);
+    }
+  });
+
+  it("says product photos in Shopify are JPEG or PNG, never WebP or AVIF", () => {
+    expect(markdown).toMatch(/JPEG of PNG, nooit WebP of AVIF/);
   });
 });

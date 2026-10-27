@@ -224,12 +224,12 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `app/opengraph-image.tsx` | Merk-OG 1200×630 | 10-11/E1 |
 | `app/sitemap.ts` | Statische routes, collecties, zichtbare producten, gestarte drops | 10-11/E1 |
 | `app/robots.ts` (+ `tests/unit/robots.test.ts`) | Alles toegestaan behalve `/api/`; sitemap-URL | 10-11/E1 |
-| `app/not-found.tsx` | Globale 404 met `ShopChrome` eromheen en `NotFoundView` | 7-9/D4 |
+| `app/not-found.tsx` | Globale 404 met `ShopChrome` eromheen en `NotFoundView` | fixer 4-6 (naar voren gehaald uit 7-9/D4, beslissing 201) |
 | `app/(kaal)/layout.tsx` | Minimale chrome: `ClockProvider`, `<main id="main">` en `MiniFooter` | 4-6/C1 |
 | `app/(kaal)/wachtlijst/page.tsx` | Wachtlijstpagina (§14.20) | 4-6/C1 |
 | `app/(kaal)/nieuwsbrief/bevestigen/page.tsx` | Bevestigingspagina van de dubbele opt-in (§14.21) | 4-6/C1 |
 | `app/(shop)/layout.tsx` | `ShopChrome` om `children` | 4-6/C3 |
-| `app/(shop)/not-found.tsx` | `NotFoundView` zonder extra chrome | 7-9/D4 |
+| `app/(shop)/not-found.tsx` | `NotFoundView` zonder extra chrome | fixer 4-6 (naar voren gehaald uit 7-9/D4, beslissing 201) |
 | `app/(shop)/page.tsx` | Homepage, secties 1 tot 16 (§14.1) | 7-9/D1 |
 | `app/(shop)/collections/[handle]/page.tsx` | Collectie (§14.3) | 7-9/D3 |
 | `app/(shop)/products/[handle]/page.tsx` | Productpagina (§14.2) | 7-9/D2 |
@@ -338,7 +338,9 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `lib/claims.ts` (+ test) | Alleen geverifieerde claims (§6.6) | 3b/B3 |
 | `lib/reviews.ts` | `getRatingSummary()` is `null` zonder reviews | 3b/B3 |
 | `lib/seo.ts` (+ test) | `pageMetadata`, JSON-LD-builders, routeconstanten (§18.1) | 3b/B3 |
-| `lib/catalog.ts` (+ test) | Puur: tags, badges, zichtbaarheid, collectieregels, filter, sorteer, zoeken, `needsHygieneSeal`, `materialForVariant` (§7.2) | 4-6/C2a |
+| `lib/paths.ts` | `productPath`, `collectionPath`, `dropPath`: client-safe padhelpers (geen env, geen `next/*`); `lib/seo.ts` exporteert ze opnieuw (beslissing 190) | integrator 4-6 |
+| `lib/catalog.ts` (+ test) | Puur: tags, badges, zichtbaarheid, collectieregels, filter, sorteer, zoeken, `needsHygieneSeal`, `materialForVariant` (§7.2); `withDropMembership` (droptags plus `productHandles`, toegepast in `lib/commerce/index.ts`, beslissing 200) en `keepUnitsTogether` (harde spatie tussen waarde en eenheid in de specregel, beslissing 201) | 4-6/C2a |
+| `lib/deadline.ts` | Tijdsbudgetten per verzoek: `CART_DEADLINE_MS` (8,5 s), `FORM_DEADLINE_MS` (12 s), `attemptSignal`, `canRetry` (beslissing 198) | fixer 4-6 |
 | `lib/shop-data.ts` | Cached samenstelling: catalogus + klok (§7.2) | 4-6/C2a |
 | `lib/commerce/index.ts` | Provider kiezen; cached `getProducts`, `getProduct`; gewone `getCollection`, `search` | 4-6/C2a |
 | `lib/commerce/local-data.ts` | Puur, synchroon, geen `server-only`: `buildLocalProducts(): Product[]` (de 26 producten uit `content/products.ts` als domeinproducten); gedeeld door de provider en `tests/fixtures/local-catalog.ts` (beslissing 140) | 4-6/C2a |
@@ -755,7 +757,7 @@ Alle tekst die bezoekers zien staat in `content/`. Componenten importeren copy, 
 | `content/quiz.ts` | `quiz` | `QuizConfig` | §5.7 |
 | `content/home.ts` | `home` | `HomeContent` | Copy van de homesecties (§5.8) |
 | `content/assets.ts` | `assets`, `SUPPLIED` | `AssetManifest`, `ReadonlySet<AssetKey>` | Beeldplekken (§17.2) |
-| `content/legal.ts` | `legalPages`, `legalReviewNotice`, `LegalSlug`, `cookieTable` | `LegalPageMeta[]`, `string`, `CookieTable` | Index van `content/legal/*.md` (slug, titel, bestand, `updatedAt` als literal); `cookieTable` (`{ caption; columns: { name; purpose; duration; when }; rows: CookieRow[]; settingsLabel: "Cookie-instellingen" }`) voor `/cookies` en het label van `CookieSettingsButton` (C1 in 4-6, beslissing 138) |
+| `content/legal.ts` | `legalPages`, `legalReviewNotice`, `LegalSlug`, `cookieTable`, `legalUi`, `legalVariables` | `LegalPageMeta[]`, `string`, `CookieTable`, … | Index van `content/legal/*.md` (slug, titel, `description`, bestand, `updatedAt` als literal); `legalVariables` vult de `{{naam}}`-tokens in de Markdown (bedrijfsgegevens, bedragen, afkappunt, dagen uit de config; een onbekend token laat de build falen), `<!-- slot -->` markeert waar paginaspecifieke inhoud komt (feestdagen, cookietabel); `legalUi` de vaste teksten van `LegalPage` (beslissing 191); `cookieTable` (`{ caption; columns: { name; purpose; duration; when }; rows: CookieRow[]; settingsLabel: "Cookie-instellingen" }`) voor `/cookies` en het label van `CookieSettingsButton` (C1 in 4-6, beslissing 138) |
 | `content/copy/shared.ts` | `sharedCopy` | `SharedCopy` | §5.9 (volledig vastgelegd) |
 | `content/copy/forms.ts` | `formsCopy` | `FormsCopy` | Aanmelden, bevestigen, herroepen, contact, wachtlijst, validatie, status |
 | `content/copy/chrome.ts` | `chromeCopy` | `ChromeCopy` | Promobalk, header, zoeken, menu, footer, consentbanner |
@@ -983,8 +985,9 @@ export interface SharedCopy {
   // metaTitle: "Pagina niet gevonden" (integrator 3b, decision 180: metadata of an unknown product, lib/seo.ts NOT_FOUND_TITLE)
   dates: { today: string; tomorrow: string; hours: string; at: string; midnight: string; startsOn: string; endsOn: string; through: string; until: string };
   // integrator 3b, read by lib/dates.ts (DATE_WORDS_NL): "vandaag", "morgen", "uur", "om", "middernacht", "Begint op", "Eindigt op", "t/m", "tot"
-  discounts: { stack: (percent: string) => string; giftWrap: string };
+  discounts: { stack: (percent: string) => string; giftWrap: string; other: string };
   // integrator 3b, read by lib/pricing.ts (DISCOUNT_TITLES): stack: `Stack-korting ${percent}` ("15%") · giftWrap: "Cadeauverpakking december" (= title of the automatic discount in Shopify, §16.5)
+  // other: "Korting" (integrator 4-6): a Shopify discount without a title that is not the stack, the gift wrap or a code (lib/commerce/shopify/mappers.ts)
   money: MoneyCopy;
   // fixer 3, decision 183: { rangeJoiner: "tot" } for formatMoneyRange ("€15 tot €50"). The object lives in content/copy/money.ts (MoneyCopy, imports nothing) because shared.ts imports lib/money.ts; lib/money.ts reads it there, sharedCopy.money is the same object
 }
@@ -1411,8 +1414,8 @@ export type FormErrorCode = "invalid" | "rate-limited" | "not-configured" | "ups
 export type FormResponse<T = undefined> =
   | { ok: true; data: T }
   | { ok: false; error: FormErrorCode; fieldErrors?: Record<string, string>; fallbackEmail: string };
-/** "pending": confirmation mail sent (double opt-in, §15.2). "already-subscribed": nothing sent. */
-export interface SubscribeResult { status: "pending" | "already-subscribed"; code: "WELKOM10" }
+/** "pending": a mail is on its way (the confirmation link, or "je bent al lid" for a member), for every address (§15.2, decision 199). */
+export interface SubscribeResult { status: "pending"; code: "WELKOM10" }
 export interface SubscribeConfirmRequest { token: string }
 export interface SubscribeConfirmResult { status: "confirmed" | "already-confirmed" }
 export type SubscribeConfirmErrorCode = "expired" | "invalid";   // sent as FormErrorCode "invalid" + fieldErrors.token
@@ -1645,7 +1648,7 @@ export interface CartContextValue {
   removeDiscountCode(code: string): Promise<CartResult>;
   setGiftWrap(enabled: boolean): Promise<CartResult>;
   setNote(note: string): Promise<CartResult>;   // debounced 600 ms by GiftMessageField, not by the provider
-  checkout(): Promise<void>;                      // fires begin_checkout, then location.assign(url) or router.push("/checkout")
+  checkout(): Promise<void>;                      // fires begin_checkout, then window.location.assign(url), also for "/checkout" (decision 192)
   lastError: CartErrorCode | null;
 }
 export function CartProvider(props: { provider: CommerceProviderName; children: ReactNode }): React.JSX.Element;
@@ -1669,7 +1672,7 @@ export function useCartActions(): Pick<CartContextValue, "addToCart" | "openCart
 
 **Shopify-adapter** (`lib/commerce/cart/shopify-adapter.ts`, `createShopifyCartAdapter(): CartAdapter`):
 
-- `fetch("/api/cart", { method: "POST", body: JSON.stringify(request), headers: { "content-type": "application/json" } })`, `GET /api/cart` voor `getCart()`. Time-out 10 s (`AbortSignal.timeout`). Netwerkfout → `{ ok: false, error: "network" }`.
+- `fetch("/api/cart", { method: "POST", body: JSON.stringify(request), headers: { "content-type": "application/json" } })`, `GET /api/cart` voor `getCart()`. Time-out 10 s (`AbortSignal.timeout`). Netwerkfout → `{ ok: false, error: "network" }`. De route heeft één budget van 8,5 s (`CART_DEADLINE_MS`, `lib/deadline.ts`) voor alle Storefront-aanroepen van een verzoek, dus ruim onder die 10 s; na een `network`-fout van een mutatie leest `CartProvider` de tas opnieuw, zodat de lade toont wat de server toch heeft opgeslagen (beslissingen 198 en 200).
 - `getCheckoutUrl()` geeft `cart.checkoutUrl` uit de laatste cart.
 
 **Route handler `app/api/cart/route.ts`** (alleen met `shopify`; met `local` antwoordt hij `{ ok: false, error: "not-configured", cart: null }`):
@@ -2206,7 +2209,7 @@ export const config = {
 };
 ```
 
-Metadata-afbeeldingen zonder extensie (`/opengraph-image`, `/products/x/opengraph-image`, `/drops/x/opengraph-image`, `/icon`, `/apple-icon`) laat de proxy zelf door met `META = /\/(opengraph-image|twitter-image|icon|apple-icon)(-[\w-]+)?$/` (digest E2: anders krijgen ze de wachtlijst-HTML).
+Metadata-afbeeldingen zonder extensie (`/opengraph-image`, `/products/x/opengraph-image`, `/drops/x/opengraph-image`, `/icon`, `/apple-icon`) laat de proxy zelf door met `META = /\/(opengraph-image|twitter-image|icon|apple-icon)(-[\w-]+)?$/` (digest E2: anders krijgen ze de wachtlijst-HTML). Uitzondering: is de pagina erboven (`/products/<handle>`, `/drops/<slug>`) door de dropgate dicht, dan wordt het beeld herschreven naar het merkbeeld `/opengraph-image` (beslissing 201).
 
 ### 11.2 Volgorde in `proxy(request)`
 
@@ -2219,6 +2222,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   // 2. Early-access link: /drops/<slug>?toegang=<token> → valid token: set cookie sparkela_ea_<slug>, 307 without the param.
   //    Invalid token: 307 without the param and no cookie (the gate below decides what is shown).
   // 3. META or /account:
+  //    META: the drop gate of the parent path (step 5) without a preview → rewrite to /opengraph-image (the brand
+  //    image), so the OG image of a hidden drop (product) cannot show it early (decision 201). Otherwise next().
   //    /account + SHOPIFY_CUSTOMER_ACCOUNT_URL → 307 there. Otherwise next().
   // 4. hasPreview = cookie sparkela_preview === sha256(PRELAUNCH_BYPASS_TOKEN). Preview skips 5 and 6.
   // 5. Drop gate (also after launch), for /drops/<slug>, /drops/<slug>/binnenkort and /products/<handle in drop.productHandles>:
@@ -2253,7 +2258,7 @@ Elke response krijgt `x-sparkela-gate: open | wachtlijst | preview | early-acces
 - **Bereik**: de droppagina en de PDP's van `drop.productHandles`, ook tijdens prelaunch. De rest van de shop blijft achter de gate. De cart (`/api/cart`) controleert dezelfde cookie voor dropvarianten (§7.4), zodat afrekenen werkt.
 - **Shopify**: publiceer de dropproducten in het Headless-kanaal **ruim vóór** `earlyAccessAt`, uiterlijk de dag ervoor (beslissing 88), en voeg ze toe aan de handmatige collectie `alle` (positie = volgorde in de drop). Zonder `alle` haalt de catalogus ze los op met een waarschuwing (§7.7, beslissing 114). Een publicatie start geen betrouwbare webhook, en de site verbergt de producten zelf tot de juiste fase (`isListable`, proxy-gate, cart-gate). Na het publiceren ververst Tristan `products` met de curl uit de README (`/api/revalidate`, body `{"tags":["products"]}`).
 - Elke handle in `drops[].productHandles` heeft in Shopify de tag `drop:<slug>`, en andersom. `content/drops.test.ts` controleert dat lokaal; de Shopify-catalogusprovider waarschuwt in de build bij een product met `drop:<slug>` dat niet in de lijst staat (dan schermt de proxy de PDP niet af).
-- `lib/early-access.ts`: `earlyAccessToken(slug, secret): Promise<string>`, `isValidEarlyAccess(slug, cookieValue, secret): Promise<boolean>`, `earlyAccessLink(slug): Promise<string>` (voor het script dat Tristan de link geeft: `npm run early-access-link -- holiday-sparkle`, in `scripts/early-access-link.mjs`, golf 4-6/C1).
+- `lib/early-access.ts`: `earlyAccessToken(slug, secret): Promise<string>`, `isValidEarlyAccess(slug, cookieValue, secret): Promise<boolean>`, `earlyAccessLink(slug, secret, siteUrl): Promise<string>` (zonder runtime-imports, beslissing 191; voor het script dat Tristan de link geeft: `npm run early-access-link -- holiday-sparkle`, in `scripts/early-access-link.mjs`, golf 4-6/C1).
 
 ### 11.6 Wachtlijst: indexering
 
@@ -2267,7 +2272,7 @@ Elke response krijgt `x-sparkela-gate: open | wachtlijst | preview | early-acces
 - Prelaunch- en early-access-tests sturen de header `x-sparkela-test-now: 2026-11-20T12:00:00+01:00` (of `2026-11-26T12:00:00+01:00`) mee met `test.use({ extraHTTPHeaders })`. Alleen de proxy leest die header.
 - **Browserklok standaard op `TEST_NOW`.** De basis-`test` in `tests/e2e/fixtures.ts` heeft de optie `clockAt` (standaard `TEST_NOW`). Vóór elke `goto` doet de fixture `page.clock.install({ time: clockAt })` en daarna `page.clock.resume()`, zodat de browser dezelfde tijd heeft als de statische HTML en de tijd gewoon doorloopt. Specs die de tijd zelf sturen (popup, promobalk, cadeauverpakking, drops, prelaunch, early access) zetten `test.use({ clockAt: "…" })` of `clockAt: null` en installeren de klok zelf. Zonder dit zou de browser (echte tijd, vóór de lancering) na hydration andere varianten tonen dan de server.
 - **Wat E2E niet dekt.** De testbuild staat op `TEST_NOW` (drop live). Wat de server-klok op 26 november doet (dropproducten in `getCatalogProducts` met `listable: false`, `getStackOptionsFor` en `getRecommendedFor` uit de drop, `getDropData` met fase `early-access`), dekt `lib/commerce/commerce.test.ts` met `serverNow()` gemockt op `2026-11-26T12:00:00+01:00`, plus een test van de lokale cart-adapter die een dropvariant met `listable: false` houdt. De cart-gate draait alleen in `/api/cart` (Shopify-provider); de E2E-build gebruikt de lokale provider, waar de adapter geen gate kent. Weigeringen dekken `lib/commerce/cart-gate.test.ts` en `tests/unit/api-cart.test.ts`; `early-access.spec.ts` dekt de proxy, de browser en lokaal toevoegen, met alleen positieve stappen (geen weigering verwachten).
-- Unit: `tests/unit/proxy.test.ts` roept `proxy()` aan met `new NextRequest(url, { headers })` en controleert rewrite (`x-middleware-rewrite`), redirects en cookies; matcher via `unstable_doesProxyMatch` uit `next/experimental/testing/server`.
+- Unit: `tests/unit/proxy.test.ts` roept `proxy()` aan met `new NextRequest(url, { headers })` en controleert rewrite (`x-middleware-rewrite`), redirects en cookies; matcher via `unstable_doesMiddlewareMatch` uit `next/experimental/testing/server` (Next 16.4.3 heeft geen `unstable_doesProxyMatch`, beslissing 191).
 
 ### 11.8 Launch-dag
 
@@ -2372,7 +2377,7 @@ export const campaigns: Campaign[] = [
 
 `getPromoState(now)` (puur, §9.1), in deze volgorde:
 
-1. Een actieve campagne (`startsAt <= now < endsAt`) → campagnebericht met timer naar `endsAt` (als `showTimer`) en de eindtekst ("t/m 30 november").
+1. Een actieve campagne (`startsAt <= now < endsAt`) → campagnebericht met timer naar `endsAt` (als `showTimer`) en de eindtekst ("t/m 30 november"). De lopende timer krijgt het zichtbare voorvoegsel "Nog" ("Nog 3d 11u", `chromeCopy.promo.campaignEndsIn`); de vaste eindtekst niet. Bij regel 2 is dat "Over" (`dropStartsIn`), via de prop `prefix` van `Countdown` (beslissing 201).
 2. Een drop met `startsAt` binnen 7 dagen → "Nieuwe drop: {naam}. Over {timer}." met timer naar `startsAt` en link "Club-leden zijn er 24 uur eerder bij" naar `/sparkela-club`.
 3. Een drop die minder dan 7 dagen live is → "Nu live: {naam}" met link "Bekijk de drop" naar `/drops/<slug>`. Geen timer.
 4. Anders de USP-balk: op mobiel roteert één regel elke 4 s (pauzeknop, pauze bij hover en focus), vanaf `lg` staan de drie USP's naast elkaar.
@@ -2427,7 +2432,7 @@ Extra exports (3b/B1, beslissing 162): `logo-paths.ts` ook `CAP_HEIGHT`, `LOGO_B
 
 | Component | S/C | Props (TypeScript) | Rendert | Bron |
 | --- | --- | --- | --- | --- |
-| `Button` | S (link) / C niet nodig | `ButtonProps = ({ href: string } & AnchorAttrs \| ButtonAttrs) & { variant?: "primair" \| "op-roest" \| "outline" \| "outline-op-donker" \| "ghost" \| "link"; size?: "sm" \| "md" \| "lg"; fullWidth?: boolean; iconOnly?: boolean; loading?: boolean; loadingLabel?: string; iconStart?: ReactNode; iconEnd?: ReactNode }` + `buttonClasses(opts)` | `<a>` voor in-page ankers, `next/link` voor routes, anders `<button type="button">`. Hoogtes sm 36 / md 48 / lg 56 px, tikvlak min 44 px via `before:`. `primair`: `bg-primair text-primair-tekst hover:bg-primair-hover`; `op-roest`: `bg-bot-wit text-roest`; `outline`: `bg-transparent border-tekst text-tekst`; `outline-op-donker`: `bg-transparent border-bot-wit text-bot-wit`; `ghost` en `link` zonder vulling. Er is geen gevulde variant in inkt (brief §5: roest is de enige knopkleur; beslissing 77). `aria-disabled` in plaats van `disabled` tijdens laden (D34) | `Button.tsx` |
+| `Button` | S (link) / C niet nodig | `ButtonProps = ({ href: string } & AnchorAttrs \| ButtonAttrs) & { variant?: "primair" \| "op-roest" \| "outline" \| "outline-op-donker" \| "ghost" \| "link"; size?: "sm" \| "md" \| "lg"; fullWidth?: boolean; iconOnly?: boolean; loading?: boolean; loadingLabel?: string; iconStart?: ReactNode; iconEnd?: ReactNode }` + `buttonClasses(opts)` | `<a>` voor in-page ankers, `next/link` voor routes, anders `<button type="button">`. Hoogtes sm 36 / md 48 / lg 56 px, tikvlak min 44 px via `before:` (bij sm een gecentreerde `before:` van precies 44 px hoog, geen insets: een absolute `before:` staat binnen de rand van 1 px en zou 42 px worden, beslissing 201). `primair`: `bg-primair text-primair-tekst hover:bg-primair-hover`; `op-roest`: `bg-bot-wit text-roest`; `outline`: `bg-transparent border-tekst text-tekst`; `outline-op-donker`: `bg-transparent border-bot-wit text-bot-wit`; `ghost` en `link` zonder vulling. Er is geen gevulde variant in inkt (brief §5: roest is de enige knopkleur; beslissing 77). `aria-disabled` in plaats van `disabled` tijdens laden (D34) | `Button.tsx` |
 | `Pill` | S | `{ tone?: "licht" \| "donker" \| "outline" \| "outline-op-donker"; size?: "sm" \| "md"; icon?: ReactNode; children: ReactNode }` | USP-pill (32 px, 13 px tekst) | `Pill.tsx` |
 | `StatusLabel` | S | `{ id: BadgeId; size?: "kaart" \| "pdp"; className?: string }` | Label uit §4.9, tekst uit `sharedCopy.badges` | `Badge.tsx` |
 | `Chip` | C | `{ pressed?: boolean; onClick?: () => void; href?: string; children: ReactNode; count?: number }` | Togglechip 44 px met `aria-pressed` en vinkje als gekozen; als link een gewone chip (type/vibe/moment op PDP) | `CollectionView.tsx` (FilterChip) |
@@ -2493,7 +2498,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `Header` | S (async) | geen | Haalt `getFeaturedDrop()` en `getVisibleStacks()` voor de `MobileNavFeature` (§2.5): de drop alleen bij `phase === "live"`, anders de eerste stack. Sticky `top-0 z-30 h-header bg-pagina border-b border-rand`; mobiel grid `1fr auto 1fr`: [`MobileNav` + `SearchButton`] [`Logo variant="header"` 120 px, 104 px onder `xs`] [`AccountLink` (vanaf `xs`) + `CartButton`]; vanaf `xl`: [`Logo` 150 px] [`DesktopNav`] [zoeken, account, `CartButton`]. Compacte staat via `HeaderCompactSentinel` (`data-compact` op de header: logo 120 → 104 px, kleinere padding), buitenhoogte blijft gelijk (beslissing 40) | `Header.tsx` |
 | `header/DesktopNav` | C | `{ items: NavItem[] }` | Links met onderstreeplijn (300 ms, `aria-current`), twee `NavDisclosure`-groepen | `header/DesktopNav.tsx` |
 | `header/NavDisclosure` | C | `{ group: NavGroup; images?: Partial<Record<string, AssetKey>> }` | Knop met `aria-expanded`/`aria-controls`, paneel over containerbreedte, z-30, `shadow-zwevend`; Esc sluit en zet focus terug; sluit bij klik buiten, focus buiten en `onNavigate` | nieuw |
-| `header/CartButton` | C | geen | "Tas" + `(n)` in vaste box (`min-w-[4.5ch] tabular`); vóór hydration "Tas" met gereserveerde ruimte; naam "Tas, {n} artikelen"; `aria-haspopup="dialog"`, `aria-expanded` | `header/CartButton.tsx` |
+| `header/CartButton` | C | geen | "Tas" + `(n)` in vaste box (`min-w-[3ch] tabular`, beslissing 194); vóór hydration "Tas" met gereserveerde ruimte; naam "Tas, {n} artikelen"; `aria-haspopup="dialog"`, `aria-expanded` | `header/CartButton.tsx` |
 | `header/SearchButton` | C | geen | Icoonknop 44 px "Zoeken", opent `SearchDialog` | nieuw |
 | `header/AccountLink` | S | geen | Icoonlink 44 px naar `/account`, "Account" | nieuw |
 | `header/HeaderCompactSentinel` | C | geen | 1 px sentinel bovenaan; IntersectionObserver zet `data-compact` | nieuw |
@@ -2645,16 +2650,16 @@ Secties 1, 2 en 16 zijn chrome (§13.5); 6 is de popup (§13.11); 7 is `DropBann
 
 | Component | S/C | Props | Rendert | Golf |
 | --- | --- | --- | --- | --- |
-| `SubscribeForm` | C | `{ source: SubscribeSource; quiz?: QuizAnswers; tone?: "licht" \| "donker"; layout?: "inline" \| "stacked"; submitLabel?: string; onSuccess?(r: SubscribeResult): void }` | E-mailveld, `ConsentCheckbox`, honeypot, knop (standaard `site.club.cta`); succes bij `pending`: "Check je mail en bevestig je aanmelding. Je code WELKOM10 kun je meteen gebruiken."; bij `already-subscribed`: "Je bent al lid. Je code is WELKOM10."; terugval met e-mailadres. Bij elk succes (`ok: true`) roept hij zelf `markSubscribed()` (`lib/subscription.ts`) en `track({ event: "sign_up", method: source })` (`lib/analytics.ts`) aan, daarna `onSuccess` | 4-6/C1 |
+| `SubscribeForm` | C | `{ source: SubscribeSource; quiz?: QuizAnswers; tone?: "licht" \| "donker"; layout?: "inline" \| "stacked"; submitLabel?: string; onSuccess?(r: SubscribeResult): void; className?: string }` | E-mailveld, `ConsentCheckbox`, honeypot, knop (standaard `site.club.cta`); succes (`pending`, voor elk adres, beslissing 199): "Check je mail om je aanmelding af te ronden. Je code WELKOM10 kun je meteen gebruiken."; terugval met e-mailadres. Bij elk succes (`ok: true`) roept hij zelf `markSubscribed()` (`lib/subscription.ts`) en `track({ event: "sign_up", method: source })` (`lib/analytics.ts`) aan, daarna `onSuccess` | 4-6/C1 |
 | `ConfirmSubscription` | C | geen | Op `/nieuwsbrief/bevestigen`: leest `t` met `useSearchParams` (binnen Suspense), haalt `t` direct na het lezen uit de adresbalk met `history.replaceState` (vóór analytics kan lezen) en toont één knop "Bevestig mijn aanmelding" die `POST /api/subscribe/confirm` doet (nooit automatisch bij laden: mailscanners openen links). Succes: "Je bent erbij." met link naar de shop (of de wachtlijst tijdens prelaunch); verlopen of ongeldig: uitleg en `SubscribeForm source="club"` | 4-6/C1 |
-| `ConsentCheckbox` | C | `{ checked; onChange; error?: string; tone? }` | `Checkbox` met label `site.consentText` (exact), daaronder de link `site.privacyLink`. Nooit vooraf aangevinkt | 4-6/C1 |
+| `ConsentCheckbox` | C | `{ checked; onChange; error?: string; tone? }` | Eigen markup in de stijl van `Checkbox` (die heeft geen `tone`, beslissing 191), met label `site.consentText` (exact), daaronder de link `site.privacyLink`. Nooit vooraf aangevinkt | 4-6/C1 |
 | `WithdrawalForm` | C | geen | Velden naam, bestelnummer, e-mailadres, "Welke producten? (optioneel)"; één knop "Herroeping bevestigen"; succes toont de ontvangstbevestiging (referentie, datum en tijd, inhoud) | 4-6/C1 |
 | `ContactForm` | C | geen | Naam, e-mail, bestelnummer (optioneel), bericht | 4-6/C1 |
 | `Honeypot` | S | `{ name?: "website" }` | Verborgen veld (`aria-hidden`, `tabIndex=-1`, `autoComplete="off"`, buiten beeld) | 4-6/C1 |
-| `FormStatus` | C | `{ status: "idle" \| "sending" \| "success" \| "error"; message?: string; fallbackEmail?: string }` | Live region; bij `not-configured` of `upstream`: "Dat lukt nu even niet. Mail ons op {email}." met `mailto:` | 4-6/C1 |
-| `LegalPage` | S | `{ slug: LegalSlug; children?: ReactNode }` | `PageHeader`, `LegalNotice`, Markdown-inhoud, "Laatst bijgewerkt: {updatedAt}" | 4-6/C1 |
+| `FormStatus` | C | `{ status: "idle" \| "sending" \| "success" \| "error"; message?: string; fallbackEmail?: string; mailtoHref?: string; tone?; id?: string; className?: string }` | Live region; bij `not-configured` of `upstream`: "Dat lukt nu even niet. Mail ons op {email}." met `mailto:` | 4-6/C1 |
+| `LegalPage` | S | `{ slug: LegalSlug; children?: ReactNode }` | `PageHeader`, `LegalNotice`, Markdown-inhoud (tokens uit `legalVariables`, `children` op de plek van `<!-- slot -->`), "Laatst bijgewerkt: {updatedAt}". Het bestand exporteert ook `legalSource`, `fillLegalTemplate`, `legalPage`, `formatLegalDate` en `LEGAL_SLOT` | 4-6/C1 |
 | `LegalNotice` | S | geen | Banner `bg-info-vlak`: "TODO: laten controleren" | 4-6/C1 |
-| `Markdown` | S | `{ source: string }` | `marked` (server-side) naar HTML met vaste opmaak (`prose`-achtige eigen klassen); links intern via `next/link` niet nodig (gewone `<a>`) | 4-6/C1 |
+| `Markdown` | S | `{ source: string; className?: string }` | `marked` (server-side) naar HTML met vaste opmaak (`prose`-achtige eigen klassen); links intern via `next/link` niet nodig (gewone `<a>`) | 4-6/C1 |
 | `UpcomingHolidays` | S | geen | Lijst van de komende feestdagen uit `shipping.holidays` (op verzenden-en-retourneren); toont alle feestdagen van 2026 en 2027 (geen klok nodig) | 4-6/C1 |
 | `WaitlistHero` | S | geen | §14.20 | 4-6/C1 |
 | `CheckoutView` | C | geen | Demo-checkout: besteloverzicht (regels, totalen), kortingscodeveld (`applyDiscountCode`), contact- en adresvelden (alleen vorm), `notice` "Demo-checkout: er wordt niet betaald", knop "Bestelling plaatsen (demo)" → `CheckoutState placed` met `DEMO-XXXXXX`, cart leeg | 7-9/D4 |
@@ -2813,7 +2818,7 @@ Normaal stuurt de proxy door naar Shopify. Terugval: `PageHeader` (H1 "Account")
 
 ### 14.19 404
 
-`app/not-found.tsx`: `<ShopChrome><NotFoundView /></ShopChrome>` (de root-404 valt buiten de routegroep, dus zet hij de chrome zelf). `app/(shop)/not-found.tsx`: alleen `<NotFoundView />`. Title "Pagina niet gevonden".
+`app/not-found.tsx`: `<ShopChrome><NotFoundView /></ShopChrome>` (de root-404 valt buiten de routegroep, dus zet hij de chrome zelf). `app/(shop)/not-found.tsx`: alleen `<NotFoundView />`. Title "Pagina niet gevonden". Beide bestaan sinds de fixer van 4-6 (beslissing 201); D4 controleert ze alleen.
 
 ### 14.20 Wachtlijst (`app/(kaal)/wachtlijst/page.tsx`)
 
@@ -2838,7 +2843,7 @@ Statisch, `robots: noindex`, open tijdens prelaunch. `Logo variant="op-donker"`,
 
 ### 15.1 Gedeelde regels
 
-- Elk formulier post JSON naar zijn route met `submitForm<T>(url, body): Promise<FormResponse<T>>` (`components/forms/submitForm.ts`, time-out 10 s).
+- Elk formulier post JSON naar zijn route met `submitForm<T>(url, body): Promise<FormResponse<T>>` (`components/forms/submitForm.ts`, time-out 15 s). Elke formulierroute heeft één tijdsbudget van 12 s (`FORM_DEADLINE_MS` in `lib/deadline.ts`) voor al haar Admin- en Resend-aanroepen samen, zodat de route antwoordt voordat de browser opgeeft (beslissing 198).
 - Validatie twee keer met dezelfde functies uit `lib/forms/validation.ts`: in de browser (direct bij verzenden, fouten per veld) en in de route (leidend).
 - **Honeypot**: veld `website`, visueel verborgen. Gevuld → de route doet niets (geen Shopify, geen mail) en antwoordt met een geldig, typeklopend succes, zodat een bot niets leert en de UI niets ongedefinieerds toont (beslissing 126): subscribe `{ ok: true, data: { status: "pending", code: "WELKOM10" } }`; confirm `{ ok: true, data: { status: "confirmed" } }`; herroepen een `WithdrawalReceipt` met een echte referentie en tijd en een samenvatting van de invoer (zonder mail); contact `{ ok: true, data: undefined }`.
 - **Consent** (aanmelden): een niet aangevinkte checkbox met als label exact `site.consentText`, met daaronder `site.privacyLink`. Verplicht: zonder vinkje de fout "Vink aan dat je de nieuwsbrief wilt ontvangen." (beslissing 38). Bij het veld staat waarvoor je je aanmeldt: `formsCopy.subscribe.what` ("Nieuwe drops, early access en af en toe een actie. Afmelden kan altijd.").
@@ -2869,10 +2874,11 @@ Request `SubscribeRequest`, response `FormResponse<SubscribeResult>`. Altijd dub
 4. Admin API (`lib/commerce/shopify/admin.ts`, GraphQL, versie `2026-10`), altijd met GraphQL-variabelen, nooit met tekst in de query geplakt:
    - `query CustomerByEmail($identifier: CustomerIdentifierInput!) { customerByIdentifier(identifier: $identifier) { id tags defaultEmailAddress { marketingState } } }` met `{ identifier: { emailAddress: email } }`. Dit is een exacte opzoeking, geen zoeksyntax (beslissing 76). We lezen geen beschermd veld dat we niet nodig hebben: geen `email`, geen naam, en niet de verouderde `Customer.email` en `Customer.emailMarketingConsent`; de toestemming staat in `defaultEmailAddress.marketingState` (beslissing 110). C1 controleert in het 2026-10-schema dat `customerByIdentifier(identifier: { emailAddress })` en `defaultEmailAddress` bestaan. Zo niet: stoppen en melden; er is geen terugval op `customers(query:)`, want die vraagt om een vergelijking op het beschermde veld `email`.
    - Geen klant: `customerCreate(input: { email, tags, emailMarketingConsent: { marketingState: PENDING, marketingOptInLevel: CONFIRMED_OPT_IN, consentUpdatedAt } })`, en uit het antwoord alleen `customer { id }`. C1 controleert in het 2026-10-schema of de toestemming nog via dit inputveld gaat of via het nieuwe e-mailadresmodel (`CustomerEmailAddress`), en volgt de niet-verouderde vorm.
-   - Wel een klant: `tagsAdd(id, tags)`. Staat hij op `SUBSCRIBED` → `status: "already-subscribed"`, geen mail. Anders `customerEmailMarketingConsentUpdate` naar `PENDING` / `CONFIRMED_OPT_IN` (nooit een bestaande `SUBSCRIBED` verlagen).
+   - Wel een klant op `SUBSCRIBED` (lid): niets wijzigen (geen tags, geen toestemming), wel een mail (stap 5).
+   - Wel een klant, geen lid: `customerEmailMarketingConsentUpdate` naar `PENDING` / `CONFIRMED_OPT_IN`. De tags gaan pas na de bevestiging naar de klant: ze reizen mee in het ondertekende token (`g`) en `/api/subscribe/confirm` voegt ze toe. Zo kan niemand zonder dubbele opt-in tags op het klantrecord van een ander zetten (beslissing 199).
    - `userErrors` of HTTP-fout → `upstream`. Een GraphQL-fout met `ACCESS_DENIED` of de tekst "not approved to access the Customer object" → ook `upstream`, met `console.error("admin-pii-denied")` (de foutcode, geen persoonsgegevens), zodat Tristan in de Vercel-log ziet dat de app geen toegang tot klantgegevens heeft (§11.9 stap 3).
-5. Bevestigingsmail via `lib/mail.ts`: onderwerp "Bevestig je aanmelding bij Sparkela", één link `https://sparkela.nl/nieuwsbrief/bevestigen?t=<token>` met `token = createConfirmToken(customerId, now)` (`lib/forms/confirm-token.ts`: `base64url(JSON{ c, t })` + `.` + `base64url(HMAC-SHA256(NEWSLETTER_CONFIRM_SECRET, payload))`; `c` = het numerieke deel van de klant-GID uit stap 4, `t` = tijd in ms; 7 dagen geldig). Het token bevat dus geen e-mailadres: de link komt in serverlogs, browsergeschiedenis en (met analytics) in `page_location` terecht, en `ConfirmSubscription` haalt `t` daarna nog uit de URL (beslissing 110). Vaste tekst, geen invoer van de bezoeker in de mail. `Idempotency-Key: subscribe-<sha256(token)>`: per token één sleutel, dus een tweede aanmelding op dezelfde dag (popup en dan footer, of een verloren mail) krijgt een nieuw token, een nieuwe sleutel en een nieuwe mail. Resend 409 `invalid_idempotent_request` of `concurrent_idempotent_requests` → behandelen als verstuurd (`pending`), niet als `upstream` (beslissing 111). Andere mailfout → `upstream`.
-6. Antwoord `{ ok: true, data: { status: "pending", code: "WELKOM10" } }`. De UI zegt dat de bevestigingsmail onderweg is en toont de code (de code is publiek: de popupkaarten tonen hem ook).
+5. Bevestigingsmail via `lib/mail.ts`: onderwerp "Bevestig je aanmelding bij Sparkela", één link `https://sparkela.nl/nieuwsbrief/bevestigen?t=<token>` met `token = createConfirmToken(customerId, now, secret, tagsOnConfirm)` (`lib/forms/confirm-token.ts`: `base64url(JSON{ c, t, g? })` + `.` + `base64url(HMAC-SHA256(NEWSLETTER_CONFIRM_SECRET, payload))`; `c` = het numerieke deel van de klant-GID uit stap 4, `t` = tijd in ms, `g` = de tags voor een bestaande klant, alleen `club`, `bron:…` en `quiz:…`; 7 dagen geldig). Voor een lid in plaats daarvan de vaste mail "Je bent al lid van de Sparkela Club" (`memberMail()`, zonder link, met de code), `Idempotency-Key: subscribe-member-<sha256(customerId:dag)>`, dus hoogstens één per dag (beslissing 199). Het token bevat dus geen e-mailadres: de link komt in serverlogs, browsergeschiedenis en (met analytics) in `page_location` terecht, en `ConfirmSubscription` haalt `t` daarna nog uit de URL (beslissing 110). Vaste tekst, geen invoer van de bezoeker in de mail. `Idempotency-Key: subscribe-<sha256(token)>`: per token één sleutel, dus een tweede aanmelding op dezelfde dag (popup en dan footer, of een verloren mail) krijgt een nieuw token, een nieuwe sleutel en een nieuwe mail. Resend 409 `invalid_idempotent_request` of `concurrent_idempotent_requests` → behandelen als verstuurd (`pending`), niet als `upstream` (beslissing 111). Andere mailfout → `upstream`.
+6. Antwoord `{ ok: true, data: { status: "pending", code: "WELKOM10" } }`, voor elk adres: het antwoord verraadt niet of een adres lid is (beslissing 199). De UI zegt dat er een mail onderweg is en toont de code (de code is publiek: de popupkaarten tonen hem ook).
 7. Geen persoonsgegevens in logs; alleen `console.error` met de foutcode.
 
 **Admin-token** (`getAdminToken()` in `lib/commerce/shopify/admin.ts`, beslissing 75): met `SHOPIFY_ADMIN_ACCESS_TOKEN` die waarde. Anders `POST https://{domain}/admin/oauth/access_token` met `Content-Type: application/x-www-form-urlencoded` en de body `grant_type=client_credentials&client_id=…&client_secret=…` (`URLSearchParams`, geen JSON); `admin.test.ts` controleert header en body. Het token blijft in het geheugen van de module tot `expires_in` min 5 minuten. Bij een 401 van de Admin API één keer een nieuw token halen en het verzoek herhalen. Getest met `tests/fixtures/shopify/admin-token.json`.
@@ -2882,8 +2888,8 @@ Request `SubscribeRequest`, response `FormResponse<SubscribeResult>`. Altijd dub
 Request `SubscribeConfirmRequest`, response `FormResponse<SubscribeConfirmResult>`.
 
 1. Validatie, rate limit (10 per 10 minuten per IP).
-2. `verifyConfirmToken(token, now)` → `{ customerId }` of `"invalid" | "expired"`. Fout → 400 `invalid` met `fieldErrors.token` = `formsCopy.confirm.expired` of `.invalid`.
-3. `query CustomerById($id: ID!) { customer(id: $id) { id defaultEmailAddress { marketingState } } }` met `gid://shopify/Customer/<customerId>`. Geen klant → `invalid`. Al `SUBSCRIBED` → `already-confirmed`. `ACCESS_DENIED` → `upstream` met `admin-pii-denied`. Anders `customerEmailMarketingConsentUpdate` naar `SUBSCRIBED` / `CONFIRMED_OPT_IN` met `consentUpdatedAt = now`.
+2. `verifyConfirmToken(token, now)` → `{ customerId, tags }` of `"invalid" | "expired"`. Fout → 400 `invalid` met `fieldErrors.token` = `formsCopy.confirm.expired` of `.invalid`.
+3. `query CustomerById($id: ID!) { customer(id: $id) { id defaultEmailAddress { marketingState } } }` met `gid://shopify/Customer/<customerId>`. Geen klant → `invalid`. Al `SUBSCRIBED` → `already-confirmed`. `ACCESS_DENIED` → `upstream` met `admin-pii-denied`. Op `PENDING`: eerst `tagsAdd` met de tags uit het token (als die er zijn), dan `customerEmailMarketingConsentUpdate` naar `SUBSCRIBED` / `CONFIRMED_OPT_IN` met `consentUpdatedAt = now`. Elke andere stand (`UNSUBSCRIBED`, `NOT_SUBSCRIBED`, `REDACTED`, `INVALID`) → 400 `invalid` met `fieldErrors.token = formsCopy.confirm.expired`: een oude link (tokens zijn 7 dagen geldig en niet eenmalig) meldt nooit iemand opnieuw aan die zich intussen heeft afgemeld; die krijgt het aanmeldformulier (beslissing 199).
 4. Antwoord `{ ok: true, data: { status } }`. De bevestigingspagina (§14.21) roept dit aan met een knop, nooit vanzelf bij het laden.
 
 In Shopify blijft "dubbele opt-in" aan staan voor de eigen formulieren van Shopify (checkout). Shopify Email verstuurt de Club-mails alleen aan klanten op `SUBSCRIBED`.
@@ -2896,10 +2902,10 @@ Request `WithdrawalRequest`, response `FormResponse<WithdrawalReceipt>`.
 2. `receivedAt = Date.now()` in de handler (route handlers mogen de klok lezen); `reference = "HR-" + 8 hex-tekens uit crypto.randomUUID()`; `receivedAtLabel = formatDateTimeNl(receivedAt)`.
 3. Geen `MAIL_API_KEY`, `MAIL_FROM` of `MAIL_TO` → `not-configured` met `fallbackEmail`. De UI toont dan een `mailto:` met onderwerp "Herroeping bestelling {nummer}" en de ingevulde gegevens als body.
 4. Twee mails via `lib/mail.ts` (`sendMail({ to, subject, text, html, replyTo, idempotencyKey })`). De REST-body is precies `{ from, to: [to], subject, text, html, reply_to }` (snake_case, beslissing 89) naar `POST https://api.resend.com/emails` met `Authorization: Bearer MAIL_API_KEY` en de header `Idempotency-Key: <reference>-klant` of `<reference>-kopie`:
-   - Aan de klant: onderwerp "Ontvangstbevestiging herroeping {nummer}", met naam, bestelnummer, e-mail, producten, "Ontvangen op {receivedAtLabel}", referentie en de volgende stappen (retouradres volgt per mail, hygiëneregel). Vrije tekst (naam, producten) gaat door `sanitizeForCustomerMail()`: HTML-tags eruit, URL's en domeinachtige tekst vervangen door "[link verwijderd]". De mail is tekst eerst; de HTML-versie bevat geen klikbare inhoud van de bezoeker.
+   - Aan de klant: onderwerp "Ontvangstbevestiging herroeping {nummer}", met naam, bestelnummer, e-mail, producten, "Ontvangen op {receivedAtLabel}", referentie en de volgende stappen (retouradres volgt per mail, hygiëneregel). Producten gaan door `sanitizeForCustomerMail()`: HTML-tags eruit, URL's en domeinachtige tekst vervangen door "[link verwijderd]". De naam gaat door `sanitizeNameForCustomerMail()`: tags en URL's eruit, maar domeinachtige tekst blijft staan met een spatie na elke punt ("J.de Vries" → "J. de Vries", "evil.com" → "evil. com"), zodat namen met voorletters leesbaar blijven en niets klikbaar wordt (beslissing 199). De mail is tekst eerst; de HTML-versie bevat geen klikbare inhoud van de bezoeker.
    - Aan `MAIL_TO`: de volledige inhoud, onderwerp "Herroeping {nummer} ({referentie})", `reply_to` = klant.
    - Elke waarde in de HTML-versie gaat door `escapeHtml()` (`& < > " '`), ook in de kopie.
-5. Mail aan de klant mislukt → `upstream` (de klant moet een bevestiging krijgen). Alleen de kopie mislukt → toch `ok` (de klant heeft zijn bevestiging), `console.error`.
+5. Mail aan de klant mislukt → `upstream` (de klant moet een bevestiging krijgen), binnen het budget van 12 s. De kopie is het enige verslag van de herroeping (er is geen database): ze gaat ná het antwoord (`after()` uit `next/server`, de bezoeker wacht alleen op zijn eigen bevestiging) en wordt tot drie keer geprobeerd (na 2 s en 8 s) met dezelfde `Idempotency-Key`. Pas als alle pogingen mislukken: `console.error("herroepen-copy-mail-failed HR-…")` met de referentie (geen persoonsgegeven), zodat Tristan hem aan de bevestiging van de klant kan koppelen (beslissing 199).
 6. Antwoord `{ ok: true, data: { reference, receivedAt (ISO), receivedAtLabel, summary } }`. De pagina toont die bevestiging direct.
 7. Er is precies één knop: "Herroeping bevestigen". Geen extra vinkjes.
 8. Restrisico: iemand kan een bevestiging naar een vreemd adres laten sturen. De inhoud is vast en zonder links, met een rate limit per instance. Dat staat in `docs/COMPLIANCE.md`.
@@ -2973,7 +2979,7 @@ export class ShopifyError extends Error {
 }
 ```
 
-Gewone `fetch` (geen Next-cache-opties; caching zit in de `'use cache'`-functies), `AbortSignal.timeout(8000)`, één herhaling na 500 ms bij HTTP 429/5xx of GraphQL-fout `THROTTLED`. GraphQL `errors` → `ShopifyError("graphql")`.
+Gewone `fetch` (geen Next-cache-opties; caching zit in de `'use cache'`-functies), `AbortSignal.timeout(8000)`, één herhaling na 500 ms bij HTTP 429/5xx of GraphQL-fout `THROTTLED`. Uitzondering: `cartCreate` en `cartLinesAdd` (niet idempotent) geven `retryOn5xx: false` mee; na een 5xx kan Shopify ze al hebben uitgevoerd, dus geen tweede keer (429/`THROTTLED` betekent niet uitgevoerd en blijft herhaald). Met de `deadline` van de route stopt elke poging daar en begint een herhaling alleen als er nog ruimte is (beslissingen 198 en 200). GraphQL `errors` → `ShopifyError("graphql")`.
 
 ### 16.3 Queries (`lib/commerce/shopify/queries.ts`)
 
@@ -3062,6 +3068,7 @@ query VariantGate($ids: [ID!]!) @inContext(country: NL, language: NL) { nodes(id
 
 - `cartCreate`-input: `{ lines, buyerIdentity: { countryCode: NL } }`.
 - Cadeauboodschap: `cartNoteUpdate` (komt op de bestelling als notitie). Geen cart-attributes nodig.
+- **Voorraadwaarschuwingen** (sinds 2024-10 in `warnings`, niet in `userErrors`): `MERCHANDISE_NOT_ENOUGH_STOCK` → `quantity-capped` met notice. Bij `MERCHANDISE_OUT_OF_STOCK` voert Shopify de mutatie wel uit en laat de uitverkochte regel staan; `lib/commerce/shopify/cart.ts` haalt die regel (de `target` van de waarschuwing) er meteen af met `cartLinesRemove` en zet de notice `line-removed` met de producttitel. Antwoord `ok`, of `unavailable` als niets van wat de bezoeker in deze `add` vroeg overblijft (beslissing 200).
 - **Let op 2026-10**: `Cart.discountAllocations` en `CartDiscountAllocation.discountApplication` zijn vanaf 2026-07 verouderd ten gunste van `Cart.discountApplications`, `CartLine.discountAllocations(lineLevelOnly: false)` en `sourceDiscountApplication`. C2 controleert het schema van 2026-10 (introspectie tegen de echte winkel, of de Shopify-documentatie) en kiest de niet-verouderde velden; de mapper is de enige plek die dit raakt, en de fixtures volgen de gekozen vorm (beslissing 51).
 
 ### 16.5 Mapping naar het domein (`mappers.ts`, puur)
@@ -3152,7 +3159,7 @@ Elke regel uit brief §11 plus de stappen die dit plan toevoegt, in deze volgord
 8. **Domein en Online Store**: subdomein (bijvoorbeeld `shop.sparkela.nl`) naar Shopify voor de checkout. De standaard Online Store laten doorsturen naar `https://sparkela.nl` (doorstuurthema of -snippet), **niet** afschermen met een wachtwoord: dat blokkeert ook de checkout van de headless shop (§16.6, beslissing 109). Controle: Online Store › Voorkeuren › "Toegang beperken tot bezoekers met het wachtwoord" staat uit, en geen product is in het kanaal Online Store gepubliceerd.
 9. **Webhooks** (§16.6) naar `/api/revalidate` met `SHOPIFY_WEBHOOK_SECRET`; `REVALIDATE_SECRET` voor de handmatige curl. Goed om te weten: een prijs- of tekstwijziging staat meteen op de productpagina en na één extra bezoek ook in de lijsten (beslissing 130); wie het meteen overal wil, ververst `products` met de README-curl.
 10. **Account**: Customer accounts aanzetten en `SHOPIFY_CUSTOMER_ACCOUNT_URL` zetten.
-11. **Mail en juridisch**: de link "Hier de overeenkomst herroepen" ook in de orderbevestiging van Shopify; Shopify Email voor de nieuwsbrief met dubbele opt-in aan; juridische teksten laten controleren; KvK-nummer, btw-id, adres en het echte e-mailadres invullen; socials bevestigen (`confirmed: true`).
+11. **Mail en juridisch**: de link "Hier de overeenkomst herroepen" (naar `/herroepen`) en een link naar `/algemene-voorwaarden` in de orderbevestiging van Shopify (artikel 5 van de voorwaarden belooft die link, beslissing 201); Shopify Email voor de nieuwsbrief met dubbele opt-in aan; juridische teksten laten controleren; KvK-nummer, btw-id, adres en het echte e-mailadres invullen; socials bevestigen (`confirmed: true`).
 12. **Review-app**: vóór de lancering een review-app kiezen en installeren (bijvoorbeeld Judge.me), zodat de eerste kopers een reviewverzoek krijgen; pas met echte reviews `content/reviews.ts` vullen en `site.flags.showReviews` aanzetten (§22.1). Tot dan tonen reviewblokken en sterren niets, dus de site zelf wacht er niet op.
 13. **Early access**: `EARLY_ACCESS_SECRET` gezet; `npm run early-access-link -- holiday-sparkle` en de link op 25 november in de Club-mail; op 26 november 00.05 uur testen (droppagina, een dropproduct en de Holiday stack in de tas, checkout).
 14. **Lanceringscadeau** en de einddatum bevestigen (beslissing 57).
@@ -3228,7 +3235,7 @@ export function productJsonLd(product: Product): object;   // brand Sparkela, sk
 export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>): object;
 ```
 
-- Uitwerking in 3b (B3, beslissing 177): `STATIC_ROUTES` bevat de 13 indexeerbare statische pagina's (ook alle juridische), zonder collecties, producten, drops, `/wachtlijst` en de noindex-pagina's. De titel van `productMetadata(null)` is `NOT_FOUND_TITLE` (= `sharedCopy.notFound.metaTitle`). In `productJsonLd` hebben cadeaukaart-offers geen verzending en geen retourbeleid, en het retourbeleid noemt geen `returnFees`; het logo van `organizationJsonLd` is `/brand/icon-512.png`. `lib/seo.ts` leest `getEnv()` bij het laden, dus alleen servercode importeert hem.
+- Uitwerking in 3b (B3, beslissing 177): `STATIC_ROUTES` bevat de 13 indexeerbare statische pagina's (ook alle juridische), zonder collecties, producten, drops, `/wachtlijst` en de noindex-pagina's. De titel van `productMetadata(null)` is `NOT_FOUND_TITLE` (= `sharedCopy.notFound.metaTitle`). In `productJsonLd` hebben cadeaukaart-offers geen verzending en geen retourbeleid, en het retourbeleid noemt geen `returnFees`; het logo van `organizationJsonLd` is `/brand/icon-512.png`. `lib/seo.ts` leest `getEnv()` bij het laden, dus alleen servercode importeert hem. Client components linken met de padhelpers uit `lib/paths.ts` (integrator 4-6, beslissing 190); `lib/seo.ts` exporteert dezelfde functies opnieuw.
 - `app/layout.tsx`: `metadataBase: siteUrl`, `title: { default: "Sparkela | Chunky sieraden met een spark", template: "%s | Sparkela" }`, `description`, `openGraph` (locale `OG_LOCALE`, siteName; sinds integrator 3b uit `lib/seo.ts`, beslissingen 153 en 179), `twitter: { card: "summary_large_image" }`, geen root-canonical. `<html lang="nl">`.
 - Elke pagina zet `canonical` via `pageMetadata` (`path`). De homepage gebruikt `{ absolute: … }`.
 - `sitemap.ts`: `STATIC_ROUTES`, alle collecties, `getSitemapProducts()` (listable), drops met fase `live` of `afgelopen`; `lastModified: CONTENT_UPDATED`; geen `images`, video of alternates (D54.3). Noindex-pagina's staan er niet in.
@@ -3523,7 +3530,7 @@ C1 is fase 4 en is na deze golf live te zetten (§11.9). C2 is gesplitst (beslis
 | Agent | Bestanden (exclusief) | Consumeert | Klaar als |
 | --- | --- | --- | --- |
 | **D3 collectie-drops** (paar 1) | `components/collection/*`, `components/drops/*`, `components/stacks/*`, `components/search/*`, `components/sections/*`, `components/giftcards/*`, `app/(shop)/collections/[handle]/page.tsx`, `app/(shop)/drops/[slug]/page.tsx`, `app/(shop)/drops/[slug]/binnenkort/page.tsx`, `app/(shop)/stacks/page.tsx`, `app/(shop)/cadeaukaarten/page.tsx`, `app/(shop)/zoeken/page.tsx`, `content/collections.ts`, `content/copy/collection.ts` | §12, §13.8, §13.12, §14.3, §14.6 tot §14.10 | tests voor filter-URL-parsing en `StackCard`-totalen groen |
-| **D4 finder-popup-pagina's** (paar 1) | `components/finder/*` + test, `components/email/*` + test, `components/checkout/*`, `app/not-found.tsx`, `app/(shop)/not-found.tsx`, `app/(shop)/{spark-finder,sparkela-club,over-sparkela,veelgestelde-vragen,account,checkout}/page.tsx`, `content/copy/pages.ts` | §5.7, §13.11, §13.13, §14.5, §14.9, §14.11, §14.12, §14.17 tot §14.19 | finder-paden en popupregels getest; `CheckoutView` getest op de staten `review` en `placed` |
+| **D4 finder-popup-pagina's** (paar 1) | `components/finder/*` + test, `components/email/*` + test, `components/checkout/*`, `app/(shop)/{spark-finder,sparkela-club,over-sparkela,veelgestelde-vragen,account,checkout}/page.tsx`, `content/copy/pages.ts` | §5.7, §13.11, §13.13, §14.5, §14.9, §14.11, §14.12, §14.17 tot §14.19 | finder-paden en popupregels getest; `CheckoutView` getest op de staten `review` en `placed` |
 | **D1 home** (paar 2) | `components/home/*` + test, `app/(shop)/page.tsx`, `content/home.ts` | §14.1, §13.10, `DropBanner`, `HowToStack`, `FaqList`, `SparkFinder` | `ReviewsCarousel`-test groen; secties in volgorde (test op de volgorde van de koppen met `renderToStaticMarkup(await Page())` en gemockte `lib/shop-data`, §19.1) |
 | **D2 pdp** (paar 2) | `components/pdp/*` + tests, `app/(shop)/products/[handle]/page.tsx`, `app/(shop)/products/layout.tsx`, `content/copy/pdp.ts` | §14.2, §13.9 | tests voor `ProductSpecs` (materiaal per variant, claimtekst) en `ProductAccordions` (hygiëneregel) groen |
 

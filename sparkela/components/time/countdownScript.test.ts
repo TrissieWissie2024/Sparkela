@@ -68,6 +68,12 @@ describe("countdownScript", () => {
     expect(page.text.textContent).toBe(formatCountdown(getCountdown(TARGET - left, TARGET), units));
   });
 
+  it("writes the prefix before the digits, as Countdown does", () => {
+    const page = fakePage("_R_6_");
+    run(countdownScript("_R_6_", TARGET, units, null, "Nog "), page, TARGET - 2 * DAY);
+    expect(page.text.textContent).toBe(`Nog ${formatCountdown(getCountdown(TARGET - 2 * DAY, TARGET), units)}`);
+  });
+
   it("leaves the fixed label with reduced motion", () => {
     const page = fakePage("_R_2_", { reducedMotion: true });
     run(countdownScript("_R_2_", TARGET, units), page, TARGET - DAY);

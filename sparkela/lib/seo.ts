@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { getEnv } from "@/lib/env";
+import { productPath } from "@/lib/paths";
 import { getRatingSummary, getReviews } from "@/lib/reviews";
 import type { Cents, JewelryType, Product, Variant } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
@@ -65,17 +66,8 @@ export function absoluteUrl(path: string): string {
   return new URL(path, siteUrl).toString();
 }
 
-export function productPath(handle: string): string {
-  return `/products/${handle}`;
-}
-
-export function collectionPath(handle: string): string {
-  return `/collections/${handle}`;
-}
-
-export function dropPath(slug: string): string {
-  return `/drops/${slug}`;
-}
+// The path helpers live in the client-safe lib/paths.ts (decision 190); re-exported here for server code.
+export { collectionPath, dropPath, productPath } from "@/lib/paths";
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                    */

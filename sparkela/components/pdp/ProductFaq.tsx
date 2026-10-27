@@ -23,10 +23,14 @@ export function ProductFaq({ items, headingId, className }: { items: FaqItem[]; 
   return (
     <section aria-labelledby={headingId} className={className}>
       <Container>
-        <div className="sectie-kort grid gap-8 border-t border-rand lg:grid-cols-12 lg:gap-x-8">
-          <div className="lg:col-span-4">
+        {/* Phones: heading, questions, then the links (as the home FAQ and CORVANE); from lg the links sit under the heading. */}
+        <div className="sectie-kort grid gap-8 border-t border-rand lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-8 lg:gap-y-0">
+          <div className="lg:col-span-4 lg:row-start-1">
             <SectionHeading id={headingId} eyebrow={copy.eyebrow} title={copy.title} />
-            <p className="mt-5">
+          </div>
+          <FaqList items={items} headingLevel={3} className="lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1" />
+          <div className="lg:col-span-4 lg:row-start-2 lg:mt-5">
+            <p>
               <Link href={copy.allLink.href} className={link}>
                 {copy.allLink.label}
                 <ArrowRight aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
@@ -42,7 +46,6 @@ export function ProductFaq({ items, headingId, className }: { items: FaqItem[]; 
               </Link>
             </p>
           </div>
-          <FaqList items={items} headingLevel={3} className="lg:col-span-7 lg:col-start-6" />
         </div>
       </Container>
     </section>

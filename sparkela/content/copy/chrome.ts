@@ -78,8 +78,10 @@ export interface ChromeCopy {
     current: string;
   };
   footer: {
-    /** Line under the Club title in the footer. */
+    /** Line under the Club title in the footer (what the form line under the field does not say already). */
     clubIntro: string;
+    /** Accessible name of the compact footer's legal links (checkout, search, account). */
+    compactNavLabel: string;
     /** Accessible name of the link columns. */
     navLabel: string;
     socialsLabel: string;
@@ -132,12 +134,12 @@ export const chromeCopy: ChromeCopy = {
   search: {
     title: "Zoeken",
     label: "Waar ben je naar op zoek?",
-    placeholder: "Bijvoorbeeld hoops, goud of festival",
+    placeholder: "Bijvoorbeeld hoops of festival",
     submit: "Zoeken",
     clear: "Zoekveld leegmaken",
     resultsLabel: "Zoekresultaten",
     count: (count) => (count === 1 ? "1 resultaat" : `${count} resultaten`),
-    none: (query) => `Niets gevonden voor "${query}".`,
+    none: (query) => `Niets gevonden voor “${query}”`,
     noneHint: "Probeer een ander woord, zoals oorbellen, armband of date night.",
     all: (count) => (count === 1 ? "Bekijk het resultaat" : `Bekijk alle ${count} resultaten`),
     quickLinksTitle: "Snel naar",
@@ -152,8 +154,9 @@ export const chromeCopy: ChromeCopy = {
     current: "huidige pagina",
   },
   footer: {
-    clubIntro: "Nieuwe drops, styling van Linde en af en toe een cadeautje. Je meldt je zo weer af.",
+    clubIntro: `Stylingtips van Linde en ${EARLY_ACCESS_HOURS} uur eerder shoppen bij elke drop.`,
     navLabel: "Meer van Sparkela",
+    compactNavLabel: "Juridisch en service",
     socialsLabel: "Volg Sparkela",
     companyLabel: "Bedrijfsgegevens",
     kvk: (value) => `KvK ${value}`,

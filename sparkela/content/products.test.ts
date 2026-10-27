@@ -201,7 +201,8 @@ describe("metafields of the pieces (plan §5.4, §6.4, decisions 81, 100, 115)",
   });
 
   it("gives every piece whose description names beads, a shell or colour a material placeholder for that part (decision 185)", () => {
-    const namesOtherPart = /kral|kraal|schelp|kleur|emaille|parel|steentje/i;
+    // "kleur" as a word of its own ("met een kleurtje", "kleurspat"), not inside "goudkleurig" (QA round 1).
+    const namesOtherPart = /kral|kraal|schelp|(?<!goud|zilver)kleur|emaille|parel|steentje/i;
     const mixed = jewelry.filter((product) => namesOtherPart.test(product.description)).map((product) => product.handle);
     expect(mixed).toEqual(Object.keys(MIXED_PARTS));
   });
@@ -211,7 +212,7 @@ describe("metafields of the pieces (plan §5.4, §6.4, decisions 81, 100, 115)",
       const spec = product.metafields.specRegel ?? "";
       const part = MIXED_PARTS[product.handle];
       const pattern = hasZilver(product)
-        ? /^Staal, goud of zilver · \S/
+        ? /^Staal, goud- of zilverkleurig · \S/
         : part === "kralen"
           ? /^Kralen met verguld staal · \S/
           : part

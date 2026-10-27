@@ -15,7 +15,7 @@ import { useCart } from "./useCart";
 /**
  * The totals of the cart (docs/PLAN.md §13.7, §7.4, §8.2; brief §2.5, §6 cart drawer), a <dl> whose rows add up:
  * Subtotaal (the lines before discounts), one row per discount ("Stack-korting 15%  −€8,97", "WELKOM10  −€4,49",
- * "Cadeauverpakking december  −€1,95"), Verzending ("Gratis", the amount, "Berekend bij afrekenen" for Shopify, which
+ * "Gratis cadeauverpakking in december  −€1,95"), Verzending ("Gratis", the amount, "Berekend bij afrekenen" for Shopify, which
  * knows no address yet, decision 34, or "Per mail" for gift cards only) and Totaal. Under it "Je bespaart €X" (all
  * discounts; free shipping is not a saving) and the VAT line by date when something is shipped.
  *
@@ -51,7 +51,11 @@ function shippingText(cart: Cart): string {
 }
 
 function discountLabel(discount: DiscountApplication): string {
-  return discount.kind === "code" && discount.code ? cartCopy.totals.code(discount.code) : discount.title;
+  if (discount.kind === "code" && discount.code) return cartCopy.totals.code(discount.code);
+  // The automatic discount's title ("Cadeauverpakking december") must match Shopify's (decision 180); the row reads
+  // as a sentence instead (QA round 1).
+  if (discount.source === "cadeauverpakking") return cartCopy.totals.giftWrapFree;
+  return discount.title;
 }
 
 export function CartTotals({ cart, className }: { cart: Cart; className?: string }) {

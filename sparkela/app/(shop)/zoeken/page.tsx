@@ -3,6 +3,8 @@ import { Suspense } from "react";
 
 import { pageMetadata } from "@/lib/seo";
 import { collectionCopy } from "@/content/copy/collection";
+import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { SEARCH_QUERY_SCRIPT } from "@/components/collection/collectionQueryScript";
 import { PageHeader } from "@/components/pages/PageHeader";
 import { SearchFallback, SearchView } from "@/components/search/SearchView";
@@ -24,7 +26,14 @@ export const metadata: Metadata = pageMetadata({ title: copy.title, description:
 export default function SearchPage() {
   return (
     <>
-      <PageHeader title={copy.title} intro={copy.intro} />
+      {/* A task page: the compact footer (app/globals.css, QA round 1). */}
+      <div data-compacte-footer="" hidden />
+      <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.shop}
+        title={copy.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         {/* Before the first paint, a deep link with ?q= marks this wrapper: the fallback's links stay invisible. */}
         <div suppressHydrationWarning>

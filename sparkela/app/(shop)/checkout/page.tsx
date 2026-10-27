@@ -26,10 +26,24 @@ export const metadata: Metadata = pageMetadata({
 
 export default function CheckoutPage() {
   const shopify = resolveProviderName() === "shopify";
+  // The demo checkout renders its own header: its intro goes once the order is placed (QA round 1).
+  if (!shopify) {
+    return (
+      <>
+        {/* A task page: the compact footer (app/globals.css, QA round 1). */}
+        <div data-compacte-footer="" hidden />
+        <CheckoutView />
+      </>
+    );
+  }
   return (
     <>
-      <PageHeader title={copy.title} intro={shopify ? undefined : copy.intro} />
-      <Container className="pb-16 md:pb-24">{shopify ? <ShopifyCheckoutNote /> : <CheckoutView />}</Container>
+      {/* A task page: the compact footer (app/globals.css, QA round 1). */}
+      <div data-compacte-footer="" hidden />
+      <PageHeader title={copy.title} />
+      <Container className="pb-16 md:pb-24">
+        <ShopifyCheckoutNote />
+      </Container>
     </>
   );
 }

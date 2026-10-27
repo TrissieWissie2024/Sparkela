@@ -267,6 +267,11 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     [reportFailure, run],
   );
 
+  const navigateRef = useRef<((url: string) => void) | null>(null);
+  const registerNavigation = useCallback((navigate: ((url: string) => void) | null) => {
+    navigateRef.current = navigate;
+  }, []);
+
   const checkout = useCallback(async () => {
     setPendingCount((count) => count + 1);
     try {
@@ -275,9 +280,12 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
       const url = await adapter.getCheckoutUrl();
       const current = cartRef.current;
       if (current && current.lines.length > 0) track(beginCheckoutEvent(current));
-      // A full load also for "/checkout": the demo checkout reads the stored cart, and useRouter() would tie this
-      // provider to a mounted App Router (component tests render it on its own).
-      window.location.assign(url);
+      // The local "/checkout" goes through the App Router when CartDrawerLoader registered it: a cart that lives in
+      // memory only (storage blocked) survives the navigation (QA round 1, brief §7). The provider itself never calls
+      // useRouter(), so component tests can render it on its own; Shopify's external checkout is a full load.
+      const navigate = navigateRef.current;
+      if (navigate && url.startsWith("/") && !url.startsWith("//")) navigate(url);
+      else window.location.assign(url);
     } catch (error) {
       setLastError(error instanceof CartError ? error.code : "upstream");
       announce(sharedCopy.announce.error);
@@ -305,6 +313,7 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
       setGiftWrap,
       setNote,
       checkout,
+      registerNavigation,
       lastError,
     }),
     [
@@ -323,14 +332,15 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
       setGiftWrap,
       setNote,
       checkout,
+      registerNavigation,
       lastError,
     ],
   );
 
   // Every callback here is stable, so this object is created once.
   const actions = useMemo<CartActions>(
-    () => ({ addToCart, openCart, closeCart, setOpen }),
-    [addToCart, openCart, closeCart],
+    () => ({ addToCart, openCart, closeCart, setOpen, registerNavigation }),
+    [addToCart, openCart, closeCart, registerNavigation],
   );
 
   return (

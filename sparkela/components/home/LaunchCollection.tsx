@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Container } from "@/components/ui/Container";
 
 import { HomeProductTabs } from "./HomeProductTabs";
-import { launchTabs, tabHandles } from "./launchTabs";
+import { LAUNCH_CARD_SIZES, launchTabs, poolHandles } from "./launchTabs";
 
 /**
  * "De lanceringscollectie" (docs/PLAN.md §13.10, §14.1 section 5; brief §6 block 5; CORVANE ProductGridSection): eyebrow,
@@ -16,9 +16,12 @@ import { launchTabs, tabHandles } from "./launchTabs";
  * products each (featuredRank), two columns on phones and four on desktop, and a button to the collection of the open
  * tab ("Bekijk alles" → /collections/alle).
  *
- * A server component: every card is rendered here once and handed to the client island (HomeProductTabs) as a node,
- * with only the sort fields of the products, so the card code and the full product data stay out of the payload.
- * The cards are 2 columns wide on phones and 4 on desktop, hence their own `sizes`. Renders nothing without products.
+ * A server component: the cards of the first tab ("Alles", the one in the static HTML) are rendered here and handed
+ * to the client island (HomeProductTabs) as nodes, with only the sort fields of the products. The other tabs render
+ * their cards in the browser from the client catalog when they open (integrator 10, decision 212): Radix only mounts
+ * the open panel, so their server-rendered cards were never in the HTML, yet they made up about 50 KB of the page's
+ * RSC payload. The cards are 2 columns wide on phones and 4 on desktop, hence their own `sizes`
+ * (LAUNCH_CARD_SIZES). Renders nothing without products.
  */
 
 export interface LaunchCollectionProps {
@@ -27,8 +30,6 @@ export interface LaunchCollectionProps {
   className?: string;
 }
 
-/** next/image sizes of a card in this grid: half the screen below lg, a quarter of the 1240 px frame from lg. */
-const CARD_SIZES = "(min-width: 1280px) 290px, (min-width: 1024px) 25vw, 50vw";
 
 export function LaunchCollection({ products, className }: LaunchCollectionProps) {
   const headingId = useId();
@@ -36,14 +37,18 @@ export function LaunchCollection({ products, className }: LaunchCollectionProps)
   const tabs = launchTabs(products, copy);
   if (tabs.length === 0) return null;
 
-  const handles = tabHandles(tabs);
-  const shown = handles
+  // The sort fields of every piece in any tab's pool: another sort picks the tab's eight from the whole pool.
+  const shown = poolHandles(tabs)
     .map((handle) => products.find((product) => product.handle === handle))
     .filter((product): product is CatalogProduct => product !== undefined);
 
+  // Server-rendered cards for the first tab only; the others come from the client catalog (see above).
+  const firstTab = new Set(tabs[0].handles);
   const cards: Record<string, ReactNode> = {};
-  for (const product of shown)
-    cards[product.handle] = <ProductCard product={product} headingLevel={3} sizes={CARD_SIZES} />;
+  for (const product of shown) {
+    if (firstTab.has(product.handle))
+      cards[product.handle] = <ProductCard product={product} headingLevel={3} sizes={LAUNCH_CARD_SIZES} />;
+  }
   const sortFields = shown.map(({ handle, featuredRank, priceRange, publishedAt, availableForSale }) => ({
     handle,
     featuredRank,

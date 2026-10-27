@@ -94,7 +94,8 @@ export function PhotoStrip({ content, products, divider = false, className }: Ph
           >
             {items.map((item) => (
               <li key={item.image} className="w-[42%] shrink-0 snap-start sm:w-[30%] md:w-[28%] lg:w-auto">
-                <Link href={productPath(item.handle)} className="group/foto relative block rounded-kaart">
+                {/* A small radius and bottom padding: the focus ring goes around the caption instead of through it. */}
+                <Link href={productPath(item.handle)} className="group/foto relative block rounded-[8px] pb-2">
                   <PhotoSlot
                     assetKey={item.image}
                     label={assets.images[item.image]?.label ?? item.title}

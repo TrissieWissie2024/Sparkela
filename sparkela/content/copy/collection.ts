@@ -1,5 +1,5 @@
 import { EARLY_ACCESS_HOURS } from "@/content/drops";
-import { stackDiscount } from "@/content/offers";
+import { stackDiscount, welcomeCode } from "@/content/offers";
 
 /**
  * Collection copy (docs/PLAN.md §5.1, §13.8, §13.12, §14.3, §14.6 to §14.10): the collection page (banner, filters,
@@ -63,6 +63,10 @@ export interface CollectionCopy {
     noneHint: string;
     suggestionsTitle: string;
     suggestionsLabel: string;
+    /** Pages next to the collections (what the product search cannot find: gift cards, stacks, the finder). */
+    suggestionPages: Array<{ label: string; href: string }>;
+    /** The tile that closes the result grid. */
+    more: { title: string; text: string; links: Array<{ label: string; href: string }> };
   };
   stacks: {
     title: string;
@@ -176,7 +180,7 @@ export const collectionCopy: CollectionCopy = {
     text: `In de Sparkela Club hoor je als eerste wanneer de volgende drop komt. Leden zijn er ${EARLY_ACCESS_HOURS} uur eerder bij.`,
     cta: clubLink,
   },
-  stylingTile: { eyebrow: "Styling-tip" },
+  stylingTile: { eyebrow: "Stylingtip" },
   search: {
     title: "Zoeken",
     intro: "Zoek op naam, soort, vibe of moment.",
@@ -189,9 +193,22 @@ export const collectionCopy: CollectionCopy = {
     resultsLabel: "Zoekresultaten",
     count: (n) => (n === 1 ? "1 resultaat" : `${n} resultaten`),
     none: (query) => `Niets gevonden voor “${query}”`,
-    noneHint: "Check de spelling of probeer een ander woord. Of begin bij een collectie.",
-    suggestionsTitle: "Begin bij een collectie",
-    suggestionsLabel: "Collecties",
+    noneHint: "Check de spelling of probeer een ander woord. Of begin hieronder.",
+    suggestionsTitle: "Waar wil je beginnen?",
+    suggestionsLabel: "Collecties en pagina's",
+    more: {
+      title: "Niet gevonden wat je zocht?",
+      text: "Laat de Spark Finder kiezen, of kijk alles rustig door.",
+      links: [
+        { label: "Naar de Spark Finder", href: "/spark-finder" },
+        { label: "Alle sieraden", href: "/collections/alle" },
+      ],
+    },
+    suggestionPages: [
+      { label: "Cadeaukaarten", href: "/cadeaukaarten" },
+      { label: "Stacks", href: "/stacks" },
+      { label: "Spark Finder", href: "/spark-finder" },
+    ],
   },
   stacks: {
     title: "Stacks van Linde",
@@ -250,7 +267,7 @@ export const collectionCopy: CollectionCopy = {
     runsUntil: (endLabel) => `Loopt ${endLabel}`,
     earlyAccess: (startLabel) => `Jij bent er ${EARLY_ACCESS_HOURS} uur eerder bij. Publiek live op ${startLabel}.`,
     ended: "Deze drop is voorbij",
-    endedText: "In de Club hoor je als eerste van de volgende.",
+    endedText: `In de Club hoor je als eerste van de volgende drop. Plus ${welcomeCode.percent}% op je eerste bestelling.`,
     productsTitle: "De drop",
     gridLabel: (dropName) => `Stukken uit ${dropName}`,
     empty: (startLabel) => `De stukken zie je hier vanaf ${startLabel}.`,
@@ -262,7 +279,7 @@ export const collectionCopy: CollectionCopy = {
     eyebrow: "Binnenkort",
     startsOn: (startLabel) => `Live op ${startLabel}`,
     formTitle: `Shop ${EARLY_ACCESS_HOURS} uur eerder`,
-    formText: "Word lid van de Sparkela Club. Je krijgt bij elke drop een eigen link, nog voor iedereen.",
+    formText: `Word lid van de Sparkela Club. Je krijgt bij elke drop een eigen link, plus ${welcomeCode.percent}% op je eerste bestelling.`,
     metaDescription: (dropName) => `${dropName} komt eraan. Club-leden zijn er ${EARLY_ACCESS_HOURS} uur eerder bij.`,
   },
 };

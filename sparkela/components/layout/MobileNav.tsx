@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/Button";
 
 import { XL_QUERY } from "./header/nav";
 
-/** The sheet (Radix Dialog, links, accordion, featured card) in a chunk of its own (plan §18.4). */
-const MobileNavSheet = dynamic(() => import("@/components/layout/MobileNavSheet").then((module) => module.MobileNavSheet), {
+/** The sheet (Radix Dialog, links, accordion, featured card), lazily from the shared islands chunk (plan §18.4, decision 216). */
+const MobileNavSheet = dynamic(() => import("@/components/layout/islands").then((module) => module.MobileNavSheet), {
   ssr: false,
 });
 

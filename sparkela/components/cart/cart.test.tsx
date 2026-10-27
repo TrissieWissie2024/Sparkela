@@ -75,6 +75,7 @@ function cartContext(cart: Cart | null, overrides: Partial<CartContextValue> = {
     setGiftWrap: answer,
     setNote: answer,
     checkout: async () => {},
+    registerNavigation: () => {},
     lastError: null,
     ...overrides,
   };
@@ -160,7 +161,8 @@ describe("CartLineItem (decision 117, brief §2.5)", () => {
   it("shows the stack discount as its own row and never a struck price", () => {
     expect(noorLine).toBeDefined();
     const html = withCart(cart, <CartLineItem line={noorLine!} onRemove={() => {}} />);
-    expect(html).toContain(escape("Stack-korting −€2,24"));
+    // Tabular figures on the amount only: in Inter they also widen the hyphen of "Stack-korting" (QA round 1).
+    expect(html).toContain(`${escape("Stack-korting ")}<span class="tabular">${escape("−€2,24")}</span>`);
     expect(html).toContain(escape(cartCopy.line.total("€12,71")));
     expect(html).toContain(escape("€14,95"));
     expect(html).not.toMatch(/<s[\s>]/);

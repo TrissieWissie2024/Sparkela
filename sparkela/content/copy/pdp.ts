@@ -86,6 +86,8 @@ export interface PdpCopy {
     trust: string;
     /** Visually hidden h2 above the accordions. */
     details: string;
+    /** The same heading on the gift card's page (QA round 1: "stuk" is a piece of jewellery). */
+    detailsGiftCard: string;
   };
   gallery: {
     /** Accessible name of the gallery. */
@@ -108,6 +110,8 @@ export interface PdpCopy {
     lowStock: (count: number) => string;
     /** Opens the ring size guide. */
     sizeGuide: string;
+    /** A ring without a chosen size (no size is preselected): the add asks for one. */
+    chooseSize: string;
     /** Under the gift card amounts. */
     giftCardNote: string;
   };
@@ -131,7 +135,7 @@ export interface PdpCopy {
     description: string;
   };
   addToCart: {
-    /** "In winkelwagen · €19,95" (the price follows, after an aria-hidden dot). */
+    /** "In je tas · €19,95" (the price follows, after an aria-hidden dot). */
     label: string;
     /** Stack mode: "Voeg de stack toe · €50,88". */
     stack: string;
@@ -182,6 +186,8 @@ export interface PdpCopy {
     end: string;
     /** role="img" name: "Statement-meter: 4 van 5, indicatief". */
     name: (value: number, max: number) => string;
+    /** Accessible name of the meter heading, one string ("Statement-meter, indicatief"). */
+    headingName: string;
     note: string;
   };
   chips: {
@@ -249,7 +255,7 @@ const rate = formatMoney(nl.rate);
 const stackPercent = `${stackDiscount.percent}%`;
 const returnDays = site.returnDays;
 const months = site.guarantee.months;
-const [firstPayment = "", ...otherPayments] = site.paymentMethods;
+const [firstPayment = "", ...otherPayments] = site.paymentMethodsInText;
 const otherPaymentList =
   otherPayments.length > 1
     ? `${otherPayments.slice(0, -1).join(", ")} en ${otherPayments[otherPayments.length - 1]}`
@@ -297,6 +303,7 @@ export const pdpCopy: PdpCopy = {
     delivery: "Levering",
     trust: "Bestellen bij Sparkela",
     details: "Meer over dit stuk",
+    detailsGiftCard: "Meer over de cadeaukaart",
   },
   gallery: {
     label: (title) => `Foto's van ${title}`,
@@ -310,6 +317,7 @@ export const pdpCopy: PdpCopy = {
     soldOut: "uitverkocht",
     lowStock: (count) => `Nog ${count}`,
     sizeGuide: "Welke maat heb ik?",
+    chooseSize: "Kies eerst je maat.",
     giftCardNote: "Jij kiest het bedrag, de ander kiest zelf een spark.",
   },
   sizeGuide: {
@@ -321,20 +329,20 @@ export const pdpCopy: PdpCopy = {
     measureTitle: "Meten met een touwtje",
     steps: [
       "Leg een touwtje of een strookje papier om je vinger, op de plek waar de ring komt.",
-      "Zet een streepje waar het touwtje elkaar raakt. Niet te strak: de ring moet over je knokkel.",
+      "Zet een streepje waar de uiteinden elkaar raken. Niet te strak: de ring moet over je knokkel.",
       "Leg het touwtje langs een liniaal en meet tot het streepje. Dat is je omtrek.",
       "Zoek in de tabel de omtrek die het dichtst in de buurt komt. Daar staat je maat.",
     ],
     ringTitle: "Heb je al een ring die past?",
     ringText: "Meet de binnenkant van rand tot rand, recht door het midden. Dat is je binnendiameter.",
-    tip: "Twijfel je? Kies de grotere maat.",
+    tip: "Zit je tussen twee maten in? Kies dan de grotere.",
   },
   giftWrap: {
     label: "Cadeauverpakking",
     description: "Feestelijk ingepakt, klaar om te geven. Je ziet het vinkje terug in je tas.",
   },
   addToCart: {
-    label: "In winkelwagen",
+    label: "In je tas",
     stack: "Voeg de stack toe",
     separator: "·",
     adding: "Bezig met toevoegen",
@@ -367,12 +375,12 @@ export const pdpCopy: PdpCopy = {
       {
         id: "garantie",
         title: `${months} maanden garantie`,
-        text: `Verkleurd binnen ${months} maanden? Wat balen! We sturen je een nieuwe.`,
+        text: `Verkleurd binnen ${months} maanden? Dan sturen we je een nieuwe.`,
       },
       {
         id: "bedenktijd",
         title: `${returnDays} dagen bedenktijd`,
-        text: "Toch niet jouw spark? Stuur het binnen die tijd terug.",
+        text: "Toch niet jouw spark? Laat het ons binnen die tijd weten.",
         link: { label: "Zo werkt retourneren", href: "/verzenden-en-retourneren" },
       },
     ],
@@ -399,6 +407,7 @@ export const pdpCopy: PdpCopy = {
     start: "Subtiel",
     end: "Chunky",
     name: (value, max) => `Statement-meter: ${value} van ${max}, indicatief`,
+    headingName: "Statement-meter, indicatief",
     note: "Lindes eigen inschatting, vergeleken met de rest van de collectie. Geen meting: hoe groot iets oogt, hangt ook af van je outfit.",
   },
   chips: {
@@ -421,7 +430,7 @@ export const pdpCopy: PdpCopy = {
       items: [
         `Op werkdagen vóór ${shipping.cutoff.label} besteld, dezelfde dag verstuurd met ${shipping.carrier}.`,
         `Verzenden kost ${rate}. Vanaf ${freeFrom} verzenden we gratis.`,
-        `Je hebt ${returnDays} dagen bedenktijd. Bedenk je je, dan stuur je het stuk binnen die tijd terug.`,
+        `Je hebt ${returnDays} dagen bedenktijd. Bedenk je je, laat het ons dan binnen die tijd weten. Daarna heb je nog ${returnDays} dagen om het terug te sturen.`,
       ],
       link: { label: "Alles over verzenden en retourneren", href: "/verzenden-en-retourneren" },
     },

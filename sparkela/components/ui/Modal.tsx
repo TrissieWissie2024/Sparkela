@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { sharedCopy } from "@/content/copy/shared";
 
 import { Button } from "./Button";
-import { overlayClasses, useReturnFocus } from "./Sheet";
+import { keepLocalEscape, overlayClasses, useReturnFocus } from "./Sheet";
 
 /**
  * Centred dialog on Radix Dialog with the API of Sheet minus `side` (plan §13.2): focus trap, Esc and a click on the
@@ -20,9 +20,11 @@ import { overlayClasses, useReturnFocus } from "./Sheet";
  * and the dialog only grows downwards. `tone="donker"` renders on --donker with data-vlak="donker",
  * so the focus ring turns bot-wit. Port of CORVANE components/ui/Modal.tsx.
  *
- * When the body overflows (the ring size guide on a phone), it becomes a focusable region named by the title
- * (tabIndex 0, role="region", an inset focus ring), so keyboard users can scroll it (WCAG 2.1.1); a body that fits
- * adds no tab stop.
+ * When the body overflows (the ring size guide on a phone), it becomes a focusable region (tabIndex 0, role="region",
+ * an inset focus ring, named sharedCopy.ui.dialogBody: the title would repeat the dialog's own name), so keyboard users can scroll it (WCAG 2.1.1); a body that fits
+ * adds no tab stop. Once the body is scrolled, a hairline appears under the title row, so content sliding under it
+ * reads as scrolled content (QA round 1). `descriptionInBody` puts the description at the top of the scrolling body
+ * instead of under the title (the popup), so only the title row stays fixed.
  */
 
 export type ModalSize = "sm" | "md" | "lg";
@@ -44,6 +46,8 @@ export interface ModalProps {
   hideTitle?: boolean;
   description?: ReactNode;
   hideDescription?: boolean;
+  /** Render the description at the top of the scrolling body, so only the title row stays fixed. */
+  descriptionInBody?: boolean;
   headerExtra?: ReactNode;
   footer?: ReactNode;
   /** Accessible name of the close button. Default sharedCopy.ui.close ("Sluiten"). */
@@ -107,6 +111,7 @@ export function Modal({
   hideTitle = false,
   description,
   hideDescription = false,
+  descriptionInBody = false,
   headerExtra,
   footer,
   closeLabel = sharedCopy.ui.close,
@@ -119,9 +124,14 @@ export function Modal({
   children,
 }: ModalProps) {
   const dark = tone === "donker";
-  const { handleOpenAutoFocus, handleCloseAutoFocus } = useReturnFocus(Boolean(trigger), onOpenAutoFocus, onCloseAutoFocus);
+  const { handleOpenAutoFocus, handleCloseAutoFocus, handleClickCapture } = useReturnFocus(
+    Boolean(trigger),
+    onOpenAutoFocus,
+    onCloseAutoFocus,
+  );
   const titleId = useId();
   const [bodyRef, overflowing] = useOverflowing();
+  const [scrolled, setScrolled] = useState(false);
 
   return (
     <Dialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -134,6 +144,8 @@ export function Modal({
           aria-labelledby={titleId}
           onOpenAutoFocus={handleOpenAutoFocus}
           onCloseAutoFocus={handleCloseAutoFocus}
+          onClickCapture={handleClickCapture}
+          onEscapeKeyDown={keepLocalEscape}
           className={cn(
             "fixed inset-0 z-60 mx-auto flex h-fit w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-kaart shadow-zwevend outline-none",
             "motion-safe:anim-modal",
@@ -145,7 +157,7 @@ export function Modal({
         >
           <div
             className={cn(
-              "flex shrink-0 items-start gap-3 px-5 pt-4 md:px-7 md:pt-5",
+              "relative flex shrink-0 items-start gap-3 px-5 pt-4 pb-2 md:px-7 md:pt-5",
               hideTitle && !headerExtra && "absolute top-0 right-0 z-10",
             )}
           >
@@ -158,12 +170,21 @@ export function Modal({
                 <X aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />
               </Button>
             </Dialog.Close>
+            {/* The hairline under the title row while the body is scrolled. */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "pointer-events-none absolute inset-x-0 bottom-0 h-px transition-opacity duration-150",
+                dark ? "bg-rand-op-donker" : "bg-rand",
+                scrolled && !hideTitle ? "opacity-100" : "opacity-0",
+              )}
+            />
           </div>
 
-          {description ? (
+          {description && !descriptionInBody ? (
             <Dialog.Description
               className={cn(
-                hideDescription ? "sr-only" : "px-5 pt-2 leading-relaxed md:px-7",
+                hideDescription ? "sr-only" : "px-5 leading-relaxed md:px-7",
                 dark ? "text-tekst-2-op-donker" : "text-tekst-2",
               )}
             >
@@ -173,13 +194,28 @@ export function Modal({
 
           <div
             ref={bodyRef}
-            {...(overflowing ? { tabIndex: 0, role: "region", "aria-labelledby": titleId } : {})}
+            {...(overflowing ? { tabIndex: 0, role: "region", "aria-label": sharedCopy.ui.dialogBody } : {})}
+            onScroll={(event) => {
+              const next = event.currentTarget.scrollTop > 2;
+              setScrolled((current) => (current === next ? current : next));
+            }}
             className={cn(
               "min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:-outline-offset-2",
-              padded && "px-5 pt-5 pb-6 md:px-7 md:pb-7",
+              padded && "px-5 pb-6 md:px-7 md:pb-7",
+              padded && (description && !descriptionInBody ? "pt-5" : "pt-3"),
               bodyClassName,
             )}
           >
+            {description && descriptionInBody ? (
+              <Dialog.Description
+                className={cn(
+                  hideDescription ? "sr-only" : "mb-5 leading-relaxed",
+                  dark ? "text-tekst-2-op-donker" : "text-tekst-2",
+                )}
+              >
+                {description}
+              </Dialog.Description>
+            ) : null}
             {children}
           </div>
 

@@ -2,6 +2,7 @@ import { ArrowUpRight, Check } from "lucide-react";
 
 import { formatDayMonth, formatStartLabel } from "@/lib/dates";
 import { cn } from "@/lib/cn";
+import { assets } from "@/content/assets";
 import { formsCopy } from "@/content/copy/forms";
 import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
@@ -16,15 +17,18 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 /**
  * The waitlist (docs/PLAN.md §14.20, §11.8; brief §6 Prelaunch; decisions 67, 119, 136). On donker, top to bottom on a
  * phone: the logo, the H1 "Sparkela komt eraan" with the promise (the date from site.launchAt, never retyped), the photo
- * of Linde (only when its file is supplied; without it there is no photo block at all, never a grey placeholder on the
- * only public page), the Club sign-up with the reward stated up front, the launch line and the socials.
+ * of Linde, the Club sign-up with the reward stated up front, the launch line and the socials. The photo block shows
+ * when its file is supplied, and in local, test and preview builds also as the "FOTO: Linde, wachtlijst" placeholder
+ * (site.flags.hideMissingOptionalMedia false, as PhotoStrip and VideoRow do; QA round 1), so the two-column layout
+ * the brief asks for is built and checked before the photo arrives. Production without the file keeps no photo block
+ * (decision 119): never a grey placeholder on the only public page.
  *
  * At launchAt the TimeGate swaps "De shop opent op …" for "We zijn live." with a button to the shop, in the same height
  * (no layout shift). The button is a plain <a href="/"> (not next/link): a full page load, so the proxy serves the shop
  * and not a cached waitlist.
  *
- * From lg two columns (text and form left, photo right); without a photo one centred column. Server component; the form
- * and the TimeGate are client islands.
+ * From lg two columns (text and form left, photo right); without a photo one 44rem column on the container's left edge,
+ * in line with the MiniFooter below (QA round 1). Server component; the form and the TimeGate are client islands.
  */
 
 const PHOTO_KEY = "linde.wachtlijst";
@@ -33,9 +37,10 @@ const LOGO_WIDTH = 160;
 /** The logo's built-in free space, trimmed on the left so its letters line up with the H1 (as in Header). */
 const logoTrim = { marginLeft: -logoLayout(LOGO_WIDTH).clearSpace };
 
-export function WaitlistHero() {
+export function WaitlistHero({ hideMissing = site.flags.hideMissingOptionalMedia }: { hideMissing?: boolean } = {}) {
   const copy = formsCopy.waitlist;
-  const photo = suppliedImage(PHOTO_KEY);
+  const supplied = suppliedImage(PHOTO_KEY);
+  const photo = supplied ?? (hideMissing ? null : (assets.images[PHOTO_KEY] ?? null));
   // "27 november" never breaks between day and month.
   const launchLabel = formatDayMonth(site.launchAt).replace(/ /g, "\u00a0");
   const column = photo ? "lg:col-start-1" : undefined;
@@ -43,10 +48,8 @@ export function WaitlistHero() {
   return (
     <section data-vlak="donker" aria-labelledby={TITLE_ID} className="flex-1 bg-donker text-tekst-op-donker">
       <Container className="py-10 md:py-14 lg:py-12">
-        {/* Without a photo one centred 44rem column; Container keeps its own max width (cn() does not merge classes). */}
-        <div
-          className={cn("grid gap-8", photo ? "lg:grid-cols-2 lg:items-center lg:gap-x-16 lg:gap-y-8" : "mx-auto max-w-[44rem]")}
-        >
+        {/* Without a photo one 44rem column on the left edge; Container keeps its own max width (cn() does not merge). */}
+        <div className={cn("grid gap-8", photo ? "lg:grid-cols-2 lg:items-center lg:gap-x-16 lg:gap-y-8" : "max-w-[44rem]")}>
           <div className={column}>
             <div style={logoTrim}>
               <Logo variant="op-donker" width={LOGO_WIDTH} />
@@ -63,7 +66,7 @@ export function WaitlistHero() {
                 assetKey={PHOTO_KEY}
                 label={photo.label}
                 aspect="4:5"
-                preload
+                preload={supplied !== null}
                 tone="donker"
                 sizes="(min-width: 1024px) 40vw, 100vw"
                 className="overflow-hidden rounded-kaart"

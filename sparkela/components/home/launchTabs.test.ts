@@ -5,7 +5,7 @@ import { home } from "@/content/home";
 import { localCatalogProducts } from "@/tests/fixtures/local-catalog";
 import { TEST_NOW } from "@/tests/test-env.mjs";
 
-import { fillTileClassName, LAUNCH_TAB_MAX, launchTabs, tabHandles } from "./launchTabs";
+import { fillTileClassName, LAUNCH_TAB_MAX, launchTabs, poolHandles, sortedTabHandles, tabHandles } from "./launchTabs";
 
 /** The tabs of "De lanceringscollectie" and the cell of the styling tile (docs/PLAN.md §14.1 section 5). */
 
@@ -23,6 +23,21 @@ describe("launchTabs", () => {
     expect(bracelets?.viewAll).toEqual({ label: "Bekijk alle armbanden", href: "/collections/armbanden" });
     expect(tabs[0]?.viewAll).toEqual({ label: home.productGrid.viewAll, href: "/collections/alle" });
     expect(new Set(tabHandles(tabs)).size).toBe(tabHandles(tabs).length);
+  });
+
+  it("sorts by price over the whole tab, not only the eight featured pieces (QA round 1)", () => {
+    const tabs = launchTabs(listable, home.productGrid);
+    const alles = tabs[0];
+    const cheapest = Math.min(...listable.filter((product) => !product.isGiftCard).map((product) => product.priceRange.min.cents));
+    const byPrice = sortedTabHandles(alles, listable, "prijs-oplopend");
+    expect(byPrice).toHaveLength(alles.handles.length);
+    const first = listable.find((product) => product.handle === byPrice[0]);
+    expect(first?.priceRange.min.cents).toBe(cheapest);
+    // "uitgelicht" keeps the server's eight as they are.
+    expect(sortedTabHandles(alles, listable, "uitgelicht")).toEqual(alles.handles);
+    // Every pool handle is in poolHandles, once.
+    expect(poolHandles(tabs).length).toBe(new Set(poolHandles(tabs)).size);
+    expect(poolHandles(tabs)).toEqual(expect.arrayContaining(byPrice));
   });
 
   it("fills short tabs with a styling tile whose photo slot exists", () => {

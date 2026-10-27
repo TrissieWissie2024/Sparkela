@@ -63,13 +63,12 @@ export function SparkPill({ onOpen, onDismiss, openRef, className }: SparkPillPr
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
+          // One string: "Kies je spark, 10% op je eerste bestelling" (an sr-only span added a space before the comma).
+          aria-label={`${site.emailCapture.pillLabel}${copy.pillSuffix}`}
           className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-full py-1 pr-3.5 pl-2 text-left text-[0.8125rem] leading-tight font-semibold transition-colors hover:bg-current/5"
         >
           <PillCards />
-          <span className="min-w-0">
-            {site.emailCapture.pillLabel}
-            <span className="sr-only">{copy.pillSuffix}</span>
-          </span>
+          <span className="min-w-0">{site.emailCapture.pillLabel}</span>
         </button>
         <span aria-hidden="true" className="h-5 w-px shrink-0 bg-rand" />
         <button

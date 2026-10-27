@@ -144,7 +144,7 @@ export const collections: CollectionDefinition[] = [
     bannerImage: null,
     stylingTile: tile(
       "Welke ringmaat heb je?",
-      "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grootste.",
+      "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
       "linde.portret",
       "/veelgestelde-vragen",
     ),

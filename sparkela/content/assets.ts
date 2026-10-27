@@ -27,8 +27,8 @@ function image(key: AssetKey, src: string, size: Pick<ImageAsset, "aspect" | "wi
 
 const momentShots = [
   { moment: "festival", label: "Festival", alt: "Linde op een festival met chunky oorbellen en armbanden", brief: "Festivalsfeer buiten, kleurige outfit, oorbellen en armbanden goed in beeld." },
-  { moment: "date-night", label: "Date night", alt: "Close-up van gouden oorbellen bij een avondoutfit", brief: "Avondlicht, zwarte of donkere outfit, oorbellen en ketting in focus." },
-  { moment: "kantoor-maar-niet-saai", label: "Kantoor maar niet saai", alt: "Blazer met een gouden schakelarmband en ringetjes", brief: "Blazer of overhemd, daglicht, subtiele maar opvallende stukken." },
+  { moment: "date-night", label: "Date night", alt: "Close-up van goudkleurige oorbellen bij een avondoutfit", brief: "Avondlicht, zwarte of donkere outfit, oorbellen en ketting in focus." },
+  { moment: "kantoor-maar-niet-saai", label: "Kantoor maar niet saai", alt: "Blazer met een goudkleurige schakelarmband en ringetjes", brief: "Blazer of overhemd, daglicht, subtiele maar opvallende stukken." },
   { moment: "strand", label: "Strand", alt: "Schelp- en kralensieraden in de zon", brief: "Buiten in de zon, zomeroutfit, kleurige oorbellen en kralen." },
   { moment: "feestdagen", label: "Feestdagen", alt: "Goud en glitter bij een feestelijke outfit", brief: "Warm licht, feestelijke outfit, de stukken van Holiday Sparkle." },
 ] as const;
@@ -37,12 +37,12 @@ const photoStripCount = 8;
 
 const images: Record<AssetKey, ImageAsset> = {
   "hero.desktop": image("hero.desktop", "/images/hero/hero-desktop.webp", wide, {
-    alt: "Linde met chunky gouden oorbellen en een stack armbanden",
+    alt: "Linde met chunky goudkleurige oorbellen en een stack armbanden",
     label: "Hero desktop",
     brief: "Grote draagfoto, liggend. Linde rechts in beeld, oorbellen en armbanden scherp, ruimte links voor de kop.",
   }),
   "hero.mobiel": image("hero.mobiel", "/images/hero/hero-mobiel.webp", portrait, {
-    alt: "Linde met chunky gouden oorbellen en een stack armbanden",
+    alt: "Linde met chunky goudkleurige oorbellen en een stack armbanden",
     label: "Hero mobiel",
     brief: "Zelfde shoot als de desktopversie, staand uitgesneden. Gezicht en oorbellen in de bovenste helft.",
   }),
@@ -57,7 +57,7 @@ const images: Record<AssetKey, ImageAsset> = {
     ]),
   ),
   "home.statement": image("home.statement", "/images/home/statement.webp", portrait, {
-    alt: "Chunky gouden hoops en een brede bangle",
+    alt: "Chunky goudkleurige hoops en een brede bangle",
     label: "Statement",
     brief: "Draagfoto met grote, chunky stukken. Eén duidelijk statement, rustige achtergrond.",
   }),
@@ -67,7 +67,7 @@ const images: Record<AssetKey, ImageAsset> = {
     brief: "Draagfoto met de subtiele lijn: mini hoops, fijne ketting, dun armbandje.",
   }),
   "linde.portret": image("linde.portret", "/images/linde/portret.webp", portrait, {
-    alt: "Portret van Linde, de oprichter van Sparkela",
+    alt: "Portret van Linde, eigenaar van Sparkela",
     label: "Linde, portret",
     brief: "Portret van Linde met haar favoriete stukken, daglicht, ontspannen.",
   }),

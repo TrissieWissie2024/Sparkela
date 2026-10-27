@@ -6,7 +6,9 @@ import { EARLY_ACCESS_PARAM, earlyAccessCookieName, isValidEarlyAccess } from "@
 import { readEnv, readSecret } from "@/lib/env";
 import { hashToken, hasValidPreview, isPreviewToken, PREVIEW_COOKIE, PREVIEW_COOKIE_MAX_AGE, PREVIEW_PARAM } from "@/lib/preview";
 import type { Drop } from "@/lib/types";
+import { collections } from "@/content/collections";
 import { drops, isDropSlug } from "@/content/drops";
+import { giftWrap } from "@/content/offers";
 
 /**
  * Prelaunch, preview, early access and the drop gate (docs/PLAN.md §11, decisions 17 to 21, 53, 91, 136). Runs per
@@ -25,7 +27,9 @@ import { drops, isDropSlug } from "@/content/drops";
  *    hidden, or early access without the cookie → rewrite to the teaser; early access with the cookie → open;
  *    the teaser in phase live or ended → 307 to the drop page.
  * 6. Before launchAt: the allowlist passes, everything else is rewritten to /wachtlijst (status 200).
- * 7. After the launch: /wachtlijst → 307 to /sparkela-club.
+ * 7. After the launch: /wachtlijst → 307 to /sparkela-club. A collection or drop slug that does not exist, and the
+ *    gift wrap's product page, are rewritten to a path without a route, so they get the root 404 at once instead of
+ *    the route's Suspense 404 pattern (which logs React error #419 in the browser; QA round 1, decision 216).
  *
  * Every response carries x-sparkela-gate: open | wachtlijst | preview | early-access | teaser. Secrets shorter than
  * 32 characters count as missing (fail closed). The time is requestNow(): the test header only with the test clock.
@@ -59,6 +63,10 @@ const PRELAUNCH_OPEN = new Set([
 ]);
 
 const DROP_PATH = /^\/drops\/([^/]+)(\/binnenkort)?\/?$/;
+const COLLECTION_PATH = /^\/collections\/([^/]+)\/?$/;
+const COLLECTION_HANDLES = new Set(collections.map((collection) => collection.handle));
+/** A path without a route: the static root 404 (app/not-found.tsx) answers it. */
+const NOT_FOUND_PATH = "/niet-gevonden";
 const PRODUCT_PATH = /^\/products\/([^/]+)\/?$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -129,6 +137,26 @@ async function isDropLocked(drop: Drop, request: NextRequest, now: number, early
   if (phase !== "early-access") return false;
   const cookie = request.cookies.get(earlyAccessCookieName(drop.slug))?.value;
   return !(await isValidEarlyAccess(drop.slug, cookie, earlyAccessSecret));
+}
+
+/** True when the request holds a valid early-access cookie for a drop that is in its early-access phase now. */
+async function hasEarlyAccessNow(request: NextRequest, now: number, earlyAccessSecret: string | null): Promise<boolean> {
+  for (const drop of drops) {
+    if (getDropPhase(drop, now) !== "early-access") continue;
+    const cookie = request.cookies.get(earlyAccessCookieName(drop.slug))?.value;
+    if (await isValidEarlyAccess(drop.slug, cookie, earlyAccessSecret)) return true;
+  }
+  return false;
+}
+
+/** A collection or drop that does not exist, or the gift wrap's product page: known 404s without a page render. */
+function isKnownMissing(pathname: string): boolean {
+  const collection = COLLECTION_PATH.exec(pathname);
+  if (collection) return !COLLECTION_HANDLES.has(safeDecode(collection[1]));
+  const drop = DROP_PATH.exec(pathname);
+  if (drop) return !isDropSlug(safeDecode(drop[1]));
+  const product = PRODUCT_PATH.exec(pathname);
+  return product !== null && safeDecode(product[1]) === giftWrap.productHandle;
 }
 
 /** Only an absolute https URL counts as the account address. */
@@ -224,10 +252,17 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     if (teaser) return redirect(new URL(`/drops/${drop.slug}`, request.url), "open");
   }
 
-  // 6. Prelaunch.
-  if (prelaunch) return PRELAUNCH_OPEN.has(pathname) ? next("open") : rewrite(request, "/wachtlijst", "wachtlijst");
+  // 6. Prelaunch. The demo checkout is open to a visitor with early access to a drop in its early-access phase, so
+  // the local early-access flow ends in the checkout instead of the waitlist (QA round 1; Shopify's checkout is
+  // external and never passes here). /checkout is noindex, and the cart gate still refuses ordinary products.
+  if (prelaunch) {
+    if (PRELAUNCH_OPEN.has(pathname)) return next("open");
+    if (pathname === "/checkout" && (await hasEarlyAccessNow(request, now, earlyAccessSecret))) return next("early-access");
+    return rewrite(request, "/wachtlijst", "wachtlijst");
+  }
 
   // 7. After the launch.
   if (pathname === "/wachtlijst") return redirect(new URL("/sparkela-club", request.url), "open");
+  if (isKnownMissing(pathname)) return rewrite(request, NOT_FOUND_PATH, "open");
   return next("open");
 }

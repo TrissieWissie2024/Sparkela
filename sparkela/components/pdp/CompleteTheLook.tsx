@@ -37,7 +37,7 @@ export interface CompleteTheLookProps {
 const SIZES: Record<2 | 3 | 4, string> = {
   2: "(min-width: 1024px) 22rem, 50vw",
   3: "(min-width: 768px) 33vw, 50vw",
-  4: "(min-width: 1024px) 25vw, 50vw",
+  4: "(min-width: 1280px) 290px, (min-width: 1024px) 25vw, 50vw",
 };
 
 export function CompleteTheLook({ products, stackHint = false, variant = "look", headingId, className }: CompleteTheLookProps) {
@@ -64,7 +64,8 @@ export function CompleteTheLook({ products, stackHint = false, variant = "look",
           <div className={cn(split && "lg:col-span-4")}>
             <SectionHeading
               id={headingId}
-              eyebrow={copy.eyebrow}
+              // No "Stylen" eyebrow above the gift card's "Of kies zelf een spark" (QA round 1).
+              eyebrow={variant === "giftcard" ? undefined : copy.eyebrow}
               title={variant === "giftcard" ? copy.giftCardTitle : copy.title}
               intro={variant === "giftcard" ? copy.giftCardIntro : stackHint ? copy.stackIntro : copy.intro}
               action={split ? undefined : (link ?? undefined)}

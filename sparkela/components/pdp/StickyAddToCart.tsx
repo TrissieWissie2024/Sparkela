@@ -161,13 +161,15 @@ export function StickyAddToCart({ targetRef, title, summary, price, onAdd, label
           <p className="kop-4 leading-5 text-tekst">{title}</p>
           {parts.length > 0 ? (
             <p className="mt-0.5 text-xs leading-4 text-tekst-2">
-              {parts.map((part, index) => (
-                <Fragment key={`${index}-${part}`}>
-                  {index > 0 ? <span aria-hidden="true">{` ${pdpCopy.addToCart.separator} `}</span> : null}
-                  {index > 0 ? <span className="sr-only">, </span> : null}
-                  <span className="whitespace-nowrap">{part}</span>
-                </Fragment>
-              ))}
+              <span className="sr-only">{parts.join(", ")}</span>
+              <span aria-hidden="true">
+                {parts.map((part, index) => (
+                  <Fragment key={`${index}-${part}`}>
+                    {index > 0 ? ` ${pdpCopy.addToCart.separator} ` : null}
+                    <span className="whitespace-nowrap">{part}</span>
+                  </Fragment>
+                ))}
+              </span>
             </p>
           ) : null}
         </div>

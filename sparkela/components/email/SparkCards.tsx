@@ -19,6 +19,8 @@ import { Spark } from "@/components/brand/Spark";
  * - After the turn the chosen card keeps focus (aria-disabled, a second press does nothing) and the other two leave
  *   the tab order, so the next Tab reaches the email field. The face is only mounted once turned, so a face-down card
  *   holds no text.
+ * - Turned, the cards become a short row (4:3 instead of 3:4, no spark on the face; QA round 1), so the email field,
+ *   the consent and "Ik doe mee" fit in the modal on a phone and on a 1280 × 800 laptop.
  */
 
 export const CARD_COUNT = 3;
@@ -53,6 +55,7 @@ function CardBack({ className }: { className?: string }) {
 
 /** Card face: the same reward on every card. Its text is part of the button's name (no aria-label overrides it). */
 function CardFace({ chosen }: { chosen: boolean }) {
+  // Always the compact face: it is only mounted once the cards are turned (and the row is short).
   const face = pagesCopy.popup.cardFace;
   return (
     <span
@@ -66,8 +69,10 @@ function CardFace({ chosen }: { chosen: boolean }) {
       <span className="font-display text-[11cqw] leading-none font-extrabold tracking-[-0.01em] whitespace-nowrap">
         {face.value}
       </span>{" "}
-      <Spark className="my-2 size-3 text-roest sm:my-2.5 sm:size-3.5" />{" "}
-      <span className="max-w-[12ch] text-[0.6875rem] leading-[1.3] text-tekst-2 sm:text-[0.8125rem]">{face.line}</span>
+      {/* 7.6em is about 12 digits of Inter: em, not ch, so the line breaks stay put through the font swap. */}
+      <span className="mt-1.5 max-w-[7.6em] text-[0.6875rem] leading-[1.3] text-tekst-2 sm:mt-2 sm:text-[0.8125rem]">
+        {face.line}
+      </span>
     </span>
   );
 }
@@ -103,8 +108,8 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
               data-card={number}
               data-revealed={revealed || undefined}
               className={cn(
-                "group relative block aspect-[3/4] w-full rounded-[12px] perspective-[1000px]",
-                revealed ? "cursor-default" : "cursor-pointer",
+                "group relative block w-full rounded-[12px] perspective-[1000px]",
+                revealed ? "aspect-[4/3] cursor-default" : "aspect-[3/4] cursor-pointer",
               )}
             >
               <span

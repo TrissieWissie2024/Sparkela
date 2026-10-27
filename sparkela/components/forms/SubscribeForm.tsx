@@ -31,6 +31,8 @@ import { submitForm } from "./submitForm";
  *   kun je meteen gebruiken.", the same for members, decision 199) and focus moves there.
  * - not-configured or upstream: "Dat lukt nu even niet. Mail ons op hallo@sparkela.nl." with a mailto link.
  * - The button keeps focus while sending (aria-disabled, aria-busy).
+ * - The <form> has method="post" (like every form with personal data): pressed before hydration, the browser posts to
+ *   the page itself instead of adding ?email=… to the URL, where it would reach logs (decision 212).
  *
  * `tone="donker"` on dark surfaces (waitlist, footer): bot-wit labels, a white field. The order is always field, its
  * error, what you sign up for, the consent checkbox and then the button, on screen and in tab order, so nobody presses
@@ -181,8 +183,9 @@ export function SubscribeForm({
   return (
     <form
       ref={formRef}
+      method="post"
       noValidate
-      aria-label={copy.formLabel}
+      aria-label={copy.formLabelBySource[source] ?? copy.formLabel}
       aria-busy={sending || undefined}
       onSubmit={handleSubmit}
       className={cn("relative", className)}

@@ -22,7 +22,7 @@ import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
  *   (countdownScript) writes the running digits into the same box before the first paint, and hydration keeps them
  *   (suppressHydrationWarning), so the hand-over is invisible.
  * - After mount it ticks every second through useNow(1000): "2d 5u" above a day, "05:12:09" in the last 24 hours, in
- *   tabular figures in a box of at least 8 characters, so the layout does not move as digits change. `prefix`
+ *   tabular figures in a box of at least 8 digit widths (in em), so the layout does not move as digits change. `prefix`
  *   ("Nog ") stands before the running digits only, so sighted users see what counts down; the fixed label has none. The digits are
  *   aria-hidden; screen readers get `srLabel` ("Eindigt op …") and no live region.
  * - A pause button with a fixed label ("Aftellen pauzeren") and aria-pressed (WCAG 2.2.2). Paused, the fixed label
@@ -32,6 +32,13 @@ import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
  *   An unparseable target renders nothing (fail closed). Without JavaScript at all the fixed label stays, so a
  *   countdown whose target can pass while the page is cached still sits inside a TimeSwitch on that target (§12.4).
  */
+
+/**
+ * The advance of the digit 0 in Inter 600, in em (measured: 0.6597). The text box reserves (8 + prefix) of these in
+ * em rather than in `ch`: `ch` follows the font that is painting, and the fallback face's 0 is 14% narrower, so the box
+ * (and the centred promo bar around it) changed width when Inter swapped in (integrator 10, decision 212).
+ */
+const INTER_SEMIBOLD_ZERO_EM = 0.66;
 
 export interface CountdownProps {
   /** Fixed date from content/drops.ts or content/offers.ts, never computed. */
@@ -45,6 +52,8 @@ export interface CountdownProps {
   tone?: "op-donker" | "op-roest" | "licht";
   /** Default true; hidden with reduced motion (then the fixed label shows). */
   showPause?: boolean;
+  /** Extra classes of the pause button (the campaign bar puts it at the bar's right edge on phones). */
+  pauseClassName?: string;
   /** Visible word before the running digits only ("Nog ", "Over "), never before the fixed label (decision 201). */
   prefix?: string;
   className?: string;
@@ -85,6 +94,7 @@ export function Countdown({
   fallbackLabel,
   tone = "licht",
   showPause = true,
+  pauseClassName,
   prefix = "",
   className,
 }: CountdownProps) {
@@ -107,7 +117,7 @@ export function Countdown({
   return (
     <span id={id} suppressHydrationWarning className={cn("inline-flex items-center gap-1", tones[tone], className)}>
       <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block font-semibold"
-        style={{ minWidth: `${8 + prefix.length}ch` }}>
+        style={{ minWidth: `${((8 + prefix.length) * INTER_SEMIBOLD_ZERO_EM).toFixed(3)}em` }}>
         {text}
       </span>
       <VisuallyHidden {...hideAttribute} suppressHydrationWarning>
@@ -124,6 +134,7 @@ export function Countdown({
           className={cn(
             "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full text-inherit hover:bg-current/10",
             "before:absolute before:-inset-1.5 before:content-[''] motion-reduce:hidden",
+            pauseClassName,
           )}
         >
           {paused ? (

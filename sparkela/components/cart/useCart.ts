@@ -46,11 +46,16 @@ export interface CartContextValue {
   setNote(note: string): Promise<CartResult>;
   /** Fires begin_checkout, then goes to the checkout (cart.checkoutUrl, or "/checkout" for the local demo). */
   checkout(): Promise<void>;
+  /**
+   * The App Router's navigation, registered by CartDrawerLoader: the local "/checkout" is then a client navigation,
+   * so a cart that only lives in memory (no storage) survives it. null without a router (tests): a full page load.
+   */
+  registerNavigation(navigate: ((url: string) => void) | null): void;
   lastError: CartErrorCode | null;
 }
 
 /** The actions that never change identity. */
-export type CartActions = Pick<CartContextValue, "addToCart" | "openCart" | "closeCart" | "setOpen">;
+export type CartActions = Pick<CartContextValue, "addToCart" | "openCart" | "closeCart" | "setOpen" | "registerNavigation">;
 
 /** One message for the live region; `id` changes on every message, so the same text is read again. */
 export interface CartAnnouncement {

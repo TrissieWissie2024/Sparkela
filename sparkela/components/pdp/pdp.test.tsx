@@ -279,7 +279,7 @@ describe("ProductInfo", () => {
     const lola = product("lola-chunky-hoops");
     const html = render(<ProductInfo product={lola} badges={["nieuw", "op-voorraad"]} />);
     expect(html).toMatch(/<h1[^>]*>Lola chunky hoops<\/h1>/);
-    expect(html).toContain("Staal, goud of zilver · 30 mm");
+    expect(html).toContain("Staal, goud- of zilverkleurig · 30 mm");
     expect(html).toContain("€19,95");
     expect(html).toContain(site.vat.before);
     expect(html).toContain(">Nieuw<");

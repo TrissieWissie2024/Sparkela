@@ -43,7 +43,9 @@ import {
  *   consent banner is open, above the sticky bar on product pages (--onderbalk). Its × hides it for this visit and
  *   stores nothing more (last-shown is already there). After a sign-up it never shows again.
  * - While it shows, <html> gets a scroll-padding-bottom that clears it (WCAG 2.4.11, plan §4.8), handed back on hide
- *   unless the consent banner or the sticky bar wrote their own value in the meantime ("sparkela:sticky-atc").
+ *   unless the consent banner or the sticky bar wrote their own value in the meantime ("sparkela:sticky-atc"). It also
+ *   sets --pill-ruimte on <html> (the pill's height and offset above a sticky bar): the footer adds it as bottom
+ *   padding, so at the end of the page the pill sits on empty footer instead of over the wordmark (QA round 1).
  *
  * Modal (rules 4 and 5, components/ui/Modal: focus trap, Esc, focus back to the pill):
  * - Title "Kies je spark.", the promise "Elke kaart geeft 10% op je eerste bestelling." and its conditions before the
@@ -61,6 +63,9 @@ const RETRY_MS = 1000;
 
 /** Space kept clear above the pill when the browser scrolls a focused element into view. */
 const FOCUS_CLEARANCE_PX = 16;
+
+/** CSS variable on <html> with the room the footer keeps free under its content while the pill shows. */
+const PILL_SPACE_VAR = "--pill-ruimte";
 
 /** Window event of StickyAddToCart (7-9/D2) after it changed body padding or scroll-padding (decision 194). */
 const STICKY_ATC_EVENT = "sparkela:sticky-atc";
@@ -153,6 +158,9 @@ export function EmailCapture() {
       ours = `${Math.ceil(pill.offsetHeight + bottom + FOCUS_CLEARANCE_PX)}px`;
       lastPaddingRef.current = ours;
       root.style.scrollPaddingBottom = ours;
+      // The sticky bar already pads <body> by its own height; the footer only needs room for the pill above it.
+      const bar = Number.parseFloat(getComputedStyle(document.body).getPropertyValue("--onderbalk")) || 0;
+      root.style.setProperty(PILL_SPACE_VAR, `${Math.ceil(pill.offsetHeight + bottom - bar + FOCUS_CLEARANCE_PX)}px`);
     };
     const onStickyBar = () => {
       // The bar wrote its own value: keep it for later and put ours (which clears bar and pill) back on top.
@@ -168,6 +176,7 @@ export function EmailCapture() {
       observer?.disconnect();
       window.removeEventListener("resize", apply);
       window.removeEventListener(STICKY_ATC_EVENT, onStickyBar);
+      root.style.removeProperty(PILL_SPACE_VAR);
       // Hand the edge back only if nobody else wrote it since (the consent banner keeps its own value).
       if (root.style.scrollPaddingBottom === ours) {
         if (theirs) root.style.scrollPaddingBottom = theirs;
@@ -217,6 +226,7 @@ export function EmailCapture() {
         onOpenChange={setOpen}
         size="md"
         anchor="top"
+        descriptionInBody
         onCloseAutoFocus={handleCloseAutoFocus}
         title={onCode ? popup.reward.title : copy.title}
         description={
@@ -236,7 +246,8 @@ export function EmailCapture() {
               <SparkCards chosen={chosen} onChoose={setChosen} />
             </div>
 
-            <p aria-live="polite" className="mt-4 text-[0.9375rem] leading-6 text-tekst">
+            {/* Once a card is turned the line is only announced: the caption "Jouw kaart" and the form say it. */}
+            <p aria-live="polite" className={chosen === null ? "mt-4 text-[0.9375rem] leading-6 text-tekst" : "sr-only"}>
               {chosen === null ? popup.chooseHint : popup.chosenLine}
             </p>
 

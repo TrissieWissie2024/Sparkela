@@ -8,13 +8,13 @@ import { site } from "@/content/site";
 import { CartDrawerLoader } from "@/components/cart/CartDrawerLoader";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
-import { AnalyticsLoader } from "@/components/consent/AnalyticsLoader";
-import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { AnalyticsLoader, ConsentBanner } from "@/components/consent/ConsentSlots";
 import { EmailCaptureLoader } from "@/components/email/EmailCaptureLoader";
 import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
 import { ClockProvider } from "@/components/time/ClockProvider";
 
 import { AnnouncementBar } from "./AnnouncementBar";
+import { FirstPaintMarker } from "./FirstPaintMarker";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 
@@ -51,6 +51,7 @@ export async function ShopChrome({ children }: { children: ReactNode }) {
           <Header />
           {/* tabIndex -1: the skip link and RouteFocus move focus here; no ring around the whole page. */}
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+            <FirstPaintMarker />
             {children}
           </main>
           <ReviewsCarousel reviews={getReviews()} variant="footer" />

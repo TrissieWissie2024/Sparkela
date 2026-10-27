@@ -500,7 +500,8 @@ export function normalizeSearchText(value: string): string {
     .trim();
 }
 
-type Searchable = Pick<CatalogProduct, "title" | "type" | "tags" | "featuredRank">;
+type Searchable = Pick<CatalogProduct, "title" | "type" | "tags" | "featuredRank"> &
+  Partial<Pick<CatalogProduct, "variants" | "specRegel">>;
 
 function haystackOf(item: Searchable): string {
   const { type: typeLabels, vibe: vibeLabels, moment: momentLabels } = sharedCopy.vocab;
@@ -508,12 +509,25 @@ function haystackOf(item: Searchable): string {
   if (item.type) parts.push(item.type, item.type in typeLabels ? typeLabels[item.type as JewelryType] : "");
   for (const vibe of item.tags.vibes) parts.push(vibe, vibeLabels[vibe]);
   for (const moment of item.tags.moments) parts.push(moment, momentLabels[moment]);
-  return normalizeSearchText(parts.join(" "));
+  // QA round 1: the colours ("Goud", "Zilver"), the spec line ("Verguld staal · 45 mm") and the drop's name.
+  for (const variant of item.variants ?? []) if (variant.swatch) parts.push(variant.title);
+  if (item.specRegel) parts.push(item.specRegel);
+  for (const slug of item.tags.drops) {
+    const drop = allDrops.find((candidate) => candidate.slug === slug);
+    if (drop) parts.push(drop.name);
+  }
+  const text = normalizeSearchText(parts.join(" "));
+  const words = new Set(text.split(" "));
+  // Words people type that the catalog says differently ("kerst" for feestdagen, "goud" for verguld).
+  const extra = Object.entries(sharedCopy.searchSynonyms)
+    .filter(([word]) => words.has(word))
+    .map(([, synonyms]) => normalizeSearchText(synonyms));
+  return extra.length > 0 ? `${text} ${extra.join(" ")}` : text;
 }
 
 /**
- * Search over title, type, vibe and moment (slugs and the labels of sharedCopy.vocab), insensitive to case and
- * diacritics (plan §7.3). Every word of the query must occur. Best match first: the title equals the query, starts
+ * Search over title, type, vibe and moment (slugs and the labels of sharedCopy.vocab), the colour variants, the spec
+ * line and the drop's name, plus sharedCopy.searchSynonyms (QA round 1), insensitive to case and diacritics (plan §7.3). Every word of the query must occur. Best match first: the title equals the query, starts
  * with it, contains it, contains every word; then the rest. Ties by featuredRank. An empty query finds nothing.
  * The caller passes the visible products (useCatalog().products); this function does not filter visibility.
  */

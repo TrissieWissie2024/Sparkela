@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { CartErrorCode } from "@/lib/commerce/types";
 import type { CatalogProduct, Product } from "@/lib/types";
@@ -74,7 +74,11 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   }, [product]);
 
   const variant = resolveVariant(product, choice.variantId);
-  const soldOut = !variant.availableForSale;
+  // A ring size is never preselected (QA round 1): until one is chosen the add asks for it instead of adding size 16.
+  const sizeMissing = variantKind(product) === "maat" && product.variants.length > 1 && !choice.variantId;
+  const [sizeError, setSizeError] = useState(false);
+  const sizeErrorId = `${useId()}-maat`;
+  const soldOut = !sizeMissing && !variant.availableForSale;
   const stackable = !product.isGiftCard && product.availableForSale && isStackEligible(product.type) && defaultStack !== null;
   const options = useMemo(() => stackOptionsFor(stackCandidates), [stackCandidates]);
   const stackChoice: StackChoice = stackable && choice.stack?.mode === "stack" ? choice.stack : { mode: "los" };
@@ -88,7 +92,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   const reason = soldOut && product.availableForSale ? pdpCopy.addToCart.variantSoldOut(variant.title) : null;
 
   const summary: string[] = [];
-  if (product.options.length > 0) {
+  if (product.options.length > 0 && !sizeMissing) {
     // "Maat 17" says more than "17"; a colour or an amount speaks for itself.
     summary.push(variantKind(product) === "maat" ? `${pdpCopy.variant.labels.maat} ${variant.title}` : variant.title);
   }
@@ -96,6 +100,13 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   if (giftWrapOn) summary.push(pdpCopy.stickyBar.giftWrap);
 
   const handleAdd = async () => {
+    if (sizeMissing) {
+      setSizeError(true);
+      // Focus (and so scroll to) the first size that is for sale; the message is linked to the group.
+      const group = document.getElementById(sizeErrorId)?.parentElement;
+      group?.querySelector<HTMLInputElement>("input[type=radio]:not(:disabled)")?.focus();
+      return;
+    }
     if (soldOut || addingRef.current) return;
     addingRef.current = true;
     setError(null);
@@ -119,7 +130,16 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
     <div className={cn("flex flex-col gap-7", className)}>
       <h2 className="sr-only">{pdpCopy.sections.buy}</h2>
 
-      <VariantPicker product={product} value={variant.id} onChange={(variantId) => update({ variantId })} />
+      <VariantPicker
+        product={product}
+        value={sizeMissing ? null : variant.id}
+        onChange={(variantId) => {
+          setSizeError(false);
+          update({ variantId });
+        }}
+        errorId={variantKind(product) === "maat" ? sizeErrorId : undefined}
+        error={sizeMissing && sizeError ? pdpCopy.variant.chooseSize : null}
+      />
 
       {stackable ? (
         <StackPicker

@@ -2,9 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { formsCopy } from "@/content/copy/forms";
+import { welcomeCode } from "@/content/offers";
 import { site } from "@/content/site";
 import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
-import { ConfirmFallback } from "@/components/forms/ConfirmSubscription";
+import { CONFIRM_FALLBACK_SCRIPT, ConfirmFallback } from "@/components/forms/ConfirmSubscription";
 import { ConsentCheckbox } from "@/components/forms/ConsentCheckbox";
 import { ContactForm } from "@/components/forms/ContactForm";
 import { FormStatus } from "@/components/forms/FormStatus";
@@ -29,6 +30,10 @@ function count(html: string, pattern: RegExp): number {
 }
 
 describe("SubscribeForm (brief §2.8)", () => {
+  it("states the reward next to every sign-up field, whatever the page around it says (QA round 1)", () => {
+    expect(formsCopy.subscribe.what).toContain(`${welcomeCode.percent}% op je eerste bestelling`);
+  });
+
   for (const tone of ["licht", "donker"] as const) {
     for (const layout of ["inline", "stacked"] as const) {
       it(`shows the consent sentence on an unchecked box, the privacy link and what you sign up for (${tone}, ${layout})`, () => {
@@ -144,6 +149,47 @@ describe("Honeypot, ConfirmFallback and CookieSettingsButton", () => {
     expect(html).toContain(escape(formsCopy.confirm.button));
     expect(html).toContain("<noscript>");
     expect(html).toContain(site.email);
+  });
+
+  it("the fallback also carries the no-token state, hidden, and the script that picks it before the first paint", () => {
+    const html = renderToStaticMarkup(<ConfirmFallback />);
+    expect(html).toMatch(/<div data-confirm-variant="knop">/);
+    expect(html).toMatch(/<div data-confirm-variant="opnieuw" hidden="">/);
+    expect(html).toContain(escape(formsCopy.confirm.invalid));
+    expect(html).toContain(escape(formsCopy.confirm.retryTitle));
+    expect(html).toContain(escape(site.consentText));
+    expect(html).toContain(CONFIRM_FALLBACK_SCRIPT);
+  });
+
+  for (const [search, showsRetry] of [
+    ["", true],
+    ["?t=", true],
+    ["?x=1", true],
+    ["?t=abc.def", false],
+    ["?utm_source=mail&t=abc.def", false],
+  ] as const) {
+    it(`the fallback script ${showsRetry ? "shows the new sign-up" : "keeps the button"} for "${search}"`, () => {
+      const knop = { hidden: false };
+      const opnieuw = { hidden: true };
+      const parent = {
+        querySelector: (selector: string) =>
+          selector.includes("knop") ? knop : selector.includes("opnieuw") ? opnieuw : null,
+      };
+      const run = new Function("document", "window", CONFIRM_FALLBACK_SCRIPT);
+      run({ currentScript: { parentNode: parent } }, { location: { search } });
+      expect(knop.hidden).toBe(showsRetry);
+      expect(opnieuw.hidden).toBe(!showsRetry);
+    });
+  }
+
+  it("posts every form with personal data, so a submit before hydration never puts the address in the URL", () => {
+    for (const html of [
+      renderToStaticMarkup(<SubscribeForm source="footer" />),
+      renderToStaticMarkup(<WithdrawalForm />),
+      renderToStaticMarkup(<ContactForm />),
+    ]) {
+      expect(html).toMatch(/<form[^>]*method="post"/);
+    }
   });
 
   it("renders no cookie settings button while analytics is off", () => {

@@ -33,6 +33,8 @@ export interface SiteConfig {
   socials: SocialLink[];
   /** Neutral text badges in the footer and the drawer (decision 93); add "Klarna" only once it is on (decision 142). */
   paymentMethods: string[];
+  /** The same methods for running text: common nouns in lower case ("met Bancontact, creditcard en Apple Pay"). */
+  paymentMethodsInText: string[];
   /** VAT line by date (brief §4): `before` until switchAt, `after` from switchAt. Prices stay the same. */
   vat: { switchAt: IsoDateTime; before: string; after: string };
   /** "Laatste stuks" at a real stock of 1 to this number (brief §2.7). */
@@ -42,6 +44,11 @@ export interface SiteConfig {
   /** Sparkela's own promise, allowed everywhere (brief §2.6). */
   guarantee: { months: number; short: string };
   returnDays: number;
+  /**
+   * How soon a mail gets an answer, as it reads in a sentence ("1 werkdag"). An assumption of the plan (§14.15,
+   * decision 216): Linde and Tristan confirm it in TODO-LAUNCH; contact page, FAQ card and terms follow this value.
+   */
+  responseTime: string;
   /** The rotating USP bar (brief §6, block 1). */
   usps: [string, string, string];
   /** Exact label of the unchecked consent checkbox at every sign-up field (brief §2.8). */
@@ -84,6 +91,12 @@ const reward = `${welcomeCode.percent}% op je eerste bestelling`;
 const guaranteeMonths = 6;
 const guaranteeShort = `${guaranteeMonths} maanden garantie op verkleuring`;
 
+/** Payment methods as badges (decision 93); add "Klarna" only once it is on (decision 142). */
+const PAYMENT_METHODS = ["iDEAL | Wero", "Bancontact", "Creditcard", "Apple Pay"];
+
+/** Not a brand name: the badge says "Creditcard", a sentence "creditcard" (QA round 1). */
+const COMMON_NOUN_METHODS = new Set(["Creditcard"]);
+
 export const site: SiteConfig = {
   name: "Sparkela",
   description: "Chunky sieraden met een spark. Statement oorbellen en armbanden, gestyled door Linde.",
@@ -102,7 +115,8 @@ export const site: SiteConfig = {
     { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@sparkela.nl", confirmed: false },
     { id: "pinterest", label: "Pinterest", href: "https://www.pinterest.com/sparkelanl", confirmed: false },
   ],
-  paymentMethods: ["iDEAL | Wero", "Bancontact", "Creditcard", "Apple Pay"],
+  paymentMethods: PAYMENT_METHODS,
+  paymentMethodsInText: PAYMENT_METHODS.map((method) => (COMMON_NOUN_METHODS.has(method) ? method.toLowerCase() : method)),
   vat: {
     switchAt: "2027-01-01T00:00:00+01:00",
     before: "Prijzen inclusief 21% btw",
@@ -112,6 +126,7 @@ export const site: SiteConfig = {
   badges: { enabled: ["nieuw", "limited", "laatste-stuks"] },
   guarantee: { months: guaranteeMonths, short: guaranteeShort },
   returnDays: shipping.returnDays,
+  responseTime: "1 werkdag",
   usps: [`Gratis verzending vanaf ${freeFrom}`, `Vóór ${cutoff} besteld, vandaag verstuurd`, guaranteeShort],
   consentText:
     "Ja, ik wil de nieuwsbrief van Sparkela. Ben je jonger dan 16? Vraag dan eerst toestemming aan je ouder.",

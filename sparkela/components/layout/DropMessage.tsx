@@ -33,10 +33,11 @@ export function DropMessage({ drop, state }: { drop: Drop; state: "upcoming" | "
   }
 
   return (
-    <div className="flex w-full flex-col items-center justify-center text-center lg:flex-row lg:gap-x-3">
+    // Below lg the pause button sits at the bar's right edge, as in CampaignMessage (QA round 1).
+    <div className="relative flex w-full flex-col items-center justify-center text-center max-lg:px-10 lg:flex-row lg:gap-x-3">
       <p className="flex flex-wrap items-center justify-center gap-x-2.5">
         <span>{chromeCopy.promo.dropUpcoming(drop.name)}</span>
-        <span className="-my-1.5 inline-flex items-center gap-1.5 motion-reduce:my-0 lg:my-0">
+        <span className="inline-flex items-center gap-1.5">
           <Timer aria-hidden="true" className="size-3.5 shrink-0 text-tekst-2-op-donker" strokeWidth={1.75} />
           <Countdown
             target={drop.startsAt}
@@ -45,6 +46,7 @@ export function DropMessage({ drop, state }: { drop: Drop; state: "upcoming" | "
             fallbackLabel={formatStartLabel(drop.startsAt)}
             tone="op-donker"
             prefix={chromeCopy.promo.dropStartsIn}
+            pauseClassName="max-lg:absolute max-lg:top-1/2 max-lg:right-0 max-lg:-translate-y-1/2"
           />
         </span>
       </p>

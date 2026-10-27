@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/Button";
 
 import { XL_QUERY } from "./nav";
 
-/** The dialog (Radix, the live result list) in a chunk of its own, loaded after the page has settled (plan §18.4). */
-const SearchDialog = dynamic(() => import("@/components/layout/SearchDialog").then((module) => module.SearchDialog), {
+/** The dialog (Radix, the live result list) from the shared islands chunk, loaded after the page has settled (plan §18.4, decision 216). */
+const SearchDialog = dynamic(() => import("@/components/layout/islands").then((module) => module.SearchDialog), {
   ssr: false,
 });
 

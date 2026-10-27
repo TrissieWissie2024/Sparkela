@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useId } from "react";
 
 import type { CartLine } from "@/lib/types";
 import { MAX_LINE_QUANTITY } from "@/lib/catalog";
@@ -36,6 +37,9 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
   const title = merchandise.productTitle;
   const discounts = line.discounts.filter((discount) => discount.amount.cents > 0);
   const max = Math.max(line.quantity, Math.min(MAX_LINE_QUANTITY, merchandise.quantityAvailable ?? MAX_LINE_QUANTITY));
+  // At the stock limit the "+" turns grey: say why (QA round 1), not at the general cap of 99.
+  const stockLimited = !readOnly && max < MAX_LINE_QUANTITY && line.quantity >= max;
+  const maxHintId = `${useId()}-max`;
 
   return (
     <li className="flex gap-4 py-5">
@@ -47,7 +51,11 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
             <Link
               href={productPath(merchandise.productHandle)}
               data-cart-line-focus=""
-              className="kop-4 text-tekst decoration-1 underline-offset-4 hover:underline"
+              className={cn(
+                "kop-4 relative text-tekst decoration-1 underline-offset-4 hover:underline",
+                // A 44 px tall target around the one-line name (AGENTS.md touch targets).
+                "before:absolute before:-inset-x-1 before:-inset-y-3 before:content-['']",
+              )}
             >
               {title}
             </Link>
@@ -61,8 +69,10 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
           <div className="mt-1.5 text-right">
             <ul className="tekst-klein text-succes">
               {discounts.map((discount) => (
-                <li key={discount.source} className="tabular">
-                  {cartCopy.line.discount(cartCopy.line.discountLabels[discount.source], formatMoney(-discount.amount.cents))}
+                // Tabular figures only on the amount: in Inter they also widen the hyphen ("Stack - korting").
+                <li key={discount.source}>
+                  {cartCopy.line.discount(cartCopy.line.discountLabels[discount.source], "")}
+                  <span className="tabular">{formatMoney(-discount.amount.cents)}</span>
                 </li>
               ))}
             </ul>
@@ -78,6 +88,7 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
               <QuantityStepper
                 value={line.quantity}
                 max={max}
+                maxHintId={stockLimited ? maxHintId : undefined}
                 itemName={title}
                 onChange={(next) => {
                   void updateQuantity(line.id, next);
@@ -89,6 +100,11 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
             </>
           )}
         </div>
+        {stockLimited ? (
+          <p id={maxHintId} className="tekst-klein mt-2 text-tekst-2">
+            {cartCopy.line.maxStock(max)}
+          </p>
+        ) : null}
       </div>
     </li>
   );

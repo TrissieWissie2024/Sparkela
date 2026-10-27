@@ -22,6 +22,8 @@ export interface CartCopy {
   line: {
     /** A discount on a line is its own row, never a struck price (decision 117): "Stack-korting −€2,24". */
     discount: (label: string, amount: string) => string;
+    /** Under the stepper at the stock limit, so the grey "+" has a reason. */
+    maxStock: (count: number) => string;
     /** The label of a line discount per source. */
     discountLabels: Record<DiscountSource, string>;
     /** The line total under its discount rows. */
@@ -77,6 +79,8 @@ export interface CartCopy {
     total: string;
     /** A discount code row: "Code WELKOM10". */
     code: (code: string) => string;
+    /** The row of the free gift wrap in December (the discount's own title stays Shopify's). */
+    giftWrapFree: string;
     removeCode: string;
     removeCodeLabel: (code: string) => string;
     /** Why a stored code does not count right now (DiscountCodeState.reason). */
@@ -125,6 +129,8 @@ export interface CartCopy {
     soldOut: string;
     soldOutLabel: (title: string) => string;
     closePanel: string;
+    /** A ring: "In tas" pressed before a size is chosen (no size is preselected). */
+    chooseSizeFirst: string;
   };
 }
 
@@ -137,6 +143,7 @@ export const cartCopy: CartCopy = {
   linesLabel: "Artikelen in je tas",
   line: {
     discount: (label, amount) => `${label} ${amount}`,
+    maxStock: (count) => `Meer hebben we er nu niet: maximaal ${count}.`,
     discountLabels: {
       stack: "Stack-korting",
       code: "Kortingscode",
@@ -183,6 +190,7 @@ export const cartCopy: CartCopy = {
     shippingNone: "Per mail",
     total: "Totaal",
     code: (code) => `Code ${code}`,
+    giftWrapFree: "Gratis cadeauverpakking in december",
     removeCode: "Verwijderen",
     removeCodeLabel: (code) => `Verwijderen: code ${code}`,
     codeReasons: {
@@ -237,5 +245,6 @@ export const cartCopy: CartCopy = {
     soldOut: "Uitverkocht",
     soldOutLabel: (title) => `Uitverkocht: ${title}`,
     closePanel: "Keuze sluiten",
+    chooseSizeFirst: "Kies eerst je maat.",
   },
 };

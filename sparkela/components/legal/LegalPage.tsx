@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { MONTHS_NL } from "@/lib/dates";
 import type { IsoDate } from "@/lib/types";
 import { legalPages, legalReviewNotice, legalUi, legalVariables, type LegalPageMeta, type LegalSlug } from "@/content/legal";
+import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/pages/PageHeader";
 
@@ -85,14 +87,23 @@ export function LegalPage({ slug, children }: LegalPageProps) {
   const [before, after] = legalSource(slug).split(LEGAL_SLOT);
   return (
     <>
-      <PageHeader title={page.title} />
+      <PageHeader
+        eyebrow={slug === "verzenden-en-retourneren" ? pagesCopy.pageEyebrows.service : pagesCopy.pageEyebrows.legal}
+        title={page.title}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: page.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         <LegalNotice className="max-w-[42rem]" />
         <Updated isoDate={page.updatedAt} />
         <div className="mt-8 md:mt-10">
           <Markdown source={before} />
           {children}
-          {after ? <Markdown source={after} /> : null}
+          {/* The part after the slot starts with an h2 whose top margin Markdown drops as a first child: keep the rhythm. */}
+          {after ? (
+            <div className={children ? "mt-10" : undefined}>
+              <Markdown source={after} />
+            </div>
+          ) : null}
         </div>
       </Container>
     </>

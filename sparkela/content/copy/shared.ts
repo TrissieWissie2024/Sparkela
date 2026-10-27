@@ -71,6 +71,8 @@ export interface SharedCopy {
     rating: (average: string, count: number) => string;
     /** Counter under a text field with a maximum length (TextField). */
     charactersLeft: (left: number) => string;
+    /** Name of a dialog's body while it scrolls (Modal): not the dialog's own name again (axe landmark-unique). */
+    dialogBody: string;
   };
   announce: {
     added: (title: string) => string;
@@ -78,6 +80,11 @@ export interface SharedCopy {
     updated: (title: string, quantity: number) => string;
     error: string;
   };
+  /**
+   * Search synonyms (lib/catalog.ts searchProducts): a word in a product's searchable text, normalised, and the extra
+   * words that should find it too.
+   */
+  searchSynonyms: Record<string, string>;
   vocab: {
     type: Record<JewelryType, string>;
     vibe: Record<Vibe, string>;
@@ -208,12 +215,19 @@ export const sharedCopy: SharedCopy = {
     imageAlt: (title, kind) => `${title}, ${kind}`,
     rating: (average, count) => `Gemiddeld ${average} van 5 sterren (aantal beoordelingen: ${count})`,
     charactersLeft: (left) => (left === 1 ? "Nog 1 teken" : `Nog ${left} tekens`),
+    dialogBody: "Inhoud van het venster",
   },
   announce: {
     added: (title) => `Toegevoegd: ${title}`,
     removed: (title) => `Verwijderd: ${title}`,
     updated: (title, quantity) => `${title}: aantal ${quantity}`,
     error: "Dat lukte niet. Probeer het opnieuw.",
+  },
+  searchSynonyms: {
+    verguld: "goud goudkleurig",
+    goudkleurig: "goud",
+    zilverkleurig: "zilver",
+    feestdagen: "kerst kerstmis",
   },
   vocab: {
     type: {

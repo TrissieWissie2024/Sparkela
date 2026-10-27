@@ -24,6 +24,8 @@ export interface QuantityStepperProps {
   min?: number;
   /** Default MAX_LINE_QUANTITY (99). */
   max?: number;
+  /** Id of a visible line that explains the limit; the "+" button points to it while it is at the limit. */
+  maxHintId?: string;
   size?: "sm" | "md";
   className?: string;
 }
@@ -45,6 +47,7 @@ export function QuantityStepper({
   itemName,
   min = 1,
   max = MAX_LINE_QUANTITY,
+  maxHintId,
   size = "sm",
   className,
 }: QuantityStepperProps) {
@@ -91,6 +94,7 @@ export function QuantityStepper({
         type="button"
         aria-label={labels.increase(itemName)}
         aria-disabled={atMax || undefined}
+        aria-describedby={atMax && maxHintId ? maxHintId : undefined}
         onClick={() => {
           if (!atMax) step(1);
         }}

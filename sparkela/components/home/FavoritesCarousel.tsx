@@ -19,8 +19,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  *
  * On --vlak, so the white cards stand out. A swipeable Carousel (region, slides "n van totaal", "Vorige" and
  * "Volgende", no autoplay) of the shared ProductCard: 62% of the width on phones (the next card peeks in), 40% from
- * sm, a third from md and four visible from xl. The cards get their width from the slide and keep their natural
- * height, so QuickAdd's choice list opens in the flow. Server component; renders nothing without products.
+ * sm, a third from md and four visible from xl. The row bleeds to the screen edge like the moment tiles and the photo
+ * strip (QA round 1), so the peeking card is not cut off at the container. Server component; renders nothing without
+ * products.
  */
 
 export interface FavoritesCarouselProps {
@@ -41,7 +42,9 @@ export function FavoritesCarousel({ products, useSalesTitle, className }: Favori
   const title = useSalesTitle ? copy.titleWithSales : copy.title;
 
   return (
-    <section aria-labelledby={headingId} className={cn("bg-vlak text-tekst", className)}>
+    // No aria-labelledby: the carousel region inside carries the same name, and two landmarks with one name read
+    // as a duplicate (axe landmark-unique, QA round 1).
+    <section className={cn("bg-vlak text-tekst", className)}>
       <Container className="sectie">
         <SectionHeading
           id={headingId}
@@ -62,6 +65,7 @@ export function FavoritesCarousel({ products, useSalesTitle, className }: Favori
           label={title}
           className="mt-8 md:mt-12"
           itemClassName={SLIDE}
+          listClassName="-mx-5 scroll-px-5 px-5 md:-mx-8 md:scroll-px-8 md:px-8"
           items={products.map((product) => (
             <ProductCard key={product.handle} product={product} headingLevel={3} sizes={CARD_SIZES} />
           ))}

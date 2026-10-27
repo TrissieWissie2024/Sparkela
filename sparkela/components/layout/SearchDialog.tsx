@@ -72,7 +72,6 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       open={open}
       onOpenChange={onOpenChange}
       title={chromeCopy.search.title}
-      hideTitle
       onOpenAutoFocus={(event) => {
         event.preventDefault();
         inputRef.current?.focus();
@@ -169,7 +168,7 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
             </div>
           ) : (
             <div className="mt-6">
-              <p className="font-semibold text-tekst">{chromeCopy.search.none(trimmed)}</p>
+              <p className="font-semibold break-words text-tekst [overflow-wrap:anywhere]">{chromeCopy.search.none(trimmed)}</p>
               <p className="tekst-klein mt-1 text-tekst-2">{chromeCopy.search.noneHint}</p>
             </div>
           )

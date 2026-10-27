@@ -24,7 +24,11 @@ import { MobileNav } from "./MobileNav";
  *   104 px below xs] [account from xs, "Tas (n)"]. Below 380 px the account icon goes (the menu has it), so nothing
  *   scrolls sideways at 320 px.
  * - From xl: [logo, 150 px, its letters on the container edge] [DesktopNav with the two expanding groups] [search,
- *   account, "Tas (n)"]. The megamenu panels hang under the header (it is their positioned ancestor).
+ *   account, "Tas (n)"], in the same 1fr auto 1fr grid: the nav is centred on the page, not between its neighbours,
+ *   so it never moves when the right-hand group changes width. A slow phone or a busy laptop can paint the header
+ *   while the HTML is still arriving; with the old auto 1fr auto grid the nav then jumped 165 px sideways as the
+ *   account link and the bag were parsed in (CLS 0.0026 at 1440 px, integrator 10, decision 212). The megamenu panels
+ *   hang under the header (it is their positioned ancestor).
  * - Compact on scroll: HeaderCompactSentinel sets data-compact on the header once it sticks; the logo then scales
  *   to 104/120 within the same height (motion-safe), so nothing moves (no CLS).
  *
@@ -72,7 +76,7 @@ export function HeaderView({ feature }: { feature: MobileNavFeature | null }) {
         data-site-header=""
         className="group/header sticky top-0 z-30 h-header border-b border-rand bg-pagina print:hidden"
       >
-        <Container className="grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-8">
+        <Container className="grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center xl:gap-8">
           <div className="-ml-3 flex min-w-0 items-center justify-start xl:hidden">
             <MobileNav feature={feature} />
             <SearchButton placement="mobile" />
@@ -82,7 +86,7 @@ export function HeaderView({ feature }: { feature: MobileNavFeature | null }) {
             href="/"
             aria-label={chromeCopy.header.home}
             style={logoVars}
-            className="mx-(--logo-trim-sm) flex items-center justify-center xs:mx-(--logo-trim-md) xl:mr-0 xl:ml-(--logo-trim-xl) xl:justify-start"
+            className="mx-(--logo-trim-sm) flex items-center justify-center xs:mx-(--logo-trim-md) xl:mr-0 xl:ml-(--logo-trim-xl) xl:justify-self-start"
           >
             <Logo
               variant="header"

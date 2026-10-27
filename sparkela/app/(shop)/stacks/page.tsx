@@ -26,8 +26,8 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 const copy = collectionCopy.stacks;
 
-/** FAQ items on this page (content/faq.ts ids). */
-const FAQ_IDS = ["stack-korting"];
+/** FAQ items on this page (content/faq.ts ids): three existing answers around a stack (QA round 1: no one-item FAQ). */
+const FAQ_IDS = ["stack-korting", "welkomstcode", "retourneren"];
 
 export const metadata: Metadata = pageMetadata({ title: copy.title, description: copy.metaDescription, path: "/stacks" });
 

@@ -141,11 +141,12 @@ describe("AddStackButton", () => {
 describe("StackGrid", () => {
   it("never leaves a ragged row", () => {
     expect(stackGridClasses(3)).toEqual({ list: expect.stringContaining("xl:grid-cols-3"), last: "md:col-span-2 xl:col-span-1" });
-    expect(stackGridClasses(4).list).not.toMatch(/xl:grid-cols/);
+    // Not a multiple of 3: one stack per row from xl, so each card gets the wide 6 : 5 layout (decision 216d).
+    expect(stackGridClasses(4).list).toContain("xl:grid-cols-1");
     expect(stackGridClasses(4).last).toBe("");
-    expect(stackGridClasses(2).list).not.toMatch(/xl:grid-cols/);
-    expect(stackGridClasses(1).last).toBe("md:col-span-2");
-    expect(stackGridClasses(5).last).toBe("md:col-span-2");
+    expect(stackGridClasses(2).list).toContain("xl:grid-cols-1");
+    expect(stackGridClasses(1).last).toBe("md:col-span-2 xl:col-span-1");
+    expect(stackGridClasses(5).last).toBe("md:col-span-2 xl:col-span-1");
   });
 
   it("renders one card per stack in a named list, and nothing without stacks", () => {

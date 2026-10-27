@@ -164,6 +164,7 @@ export function WithdrawalForm() {
   return (
     <form
       ref={formRef}
+      method="post"
       noValidate
       aria-labelledby={`${id}-title`}
       aria-busy={sending || undefined}

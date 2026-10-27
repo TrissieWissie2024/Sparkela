@@ -96,7 +96,7 @@ export const products: LocalProductInput[] = [
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "vibe:retro", "moment:festival", "moment:date-night", "nieuw"],
     metafields: {
       ...sharedMetafields,
-      specRegel: "Staal, goud of zilver · 30 mm",
+      specRegel: "Staal, goud- of zilverkleurig · 30 mm",
       materiaal: MATERIAAL_TWEE_KLEUREN,
       afmetingen: "Doorsnede 30 mm, dikte 6 mm",
       gewicht: "8 g",
@@ -113,7 +113,7 @@ export const products: LocalProductInput[] = [
     handle: "bo-statement-druppels",
     title: "Bo statement druppels",
     description:
-      "Grote gouden druppels die bij elke beweging het licht vangen. Zet ze bij een simpele zwarte top en je bent klaar.",
+      "Grote goudkleurige druppels die bij elke beweging het licht vangen. Zet ze bij een simpele zwarte top en je bent klaar.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:date-night", "moment:feestdagen", "nieuw"],
     metafields: {
       ...sharedMetafields,
@@ -133,7 +133,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "mila-color-pop",
     title: "Mila color pop",
-    description: "Een vrolijke kleurspat aan je oor, op een gouden basis. Je outfit mag simpel blijven, Mila doet de rest.",
+    description: "Een vrolijke kleurspat aan je oor, op een goudkleurige basis. Je outfit mag simpel blijven, Mila doet de rest.",
     tags: ["type:oorbellen", "vibe:kleurrijk-en-speels", "moment:festival", "moment:strand"],
     metafields: {
       ...sharedMetafields,
@@ -154,7 +154,7 @@ export const products: LocalProductInput[] = [
     handle: "fenna-retro-schijfjes",
     title: "Fenna retro schijfjes",
     description:
-      "Platte gouden schijfjes met een knipoog naar de jaren zeventig. Strak genoeg voor kantoor, leuk genoeg voor de borrel erna.",
+      "Platte goudkleurige schijfjes met een knipoog naar de jaren zeventig. Strak genoeg voor kantoor, leuk genoeg voor de borrel erna.",
     tags: ["type:oorbellen", "vibe:retro", "moment:kantoor-maar-niet-saai", "moment:date-night"],
     metafields: {
       ...sharedMetafields,
@@ -179,7 +179,7 @@ export const products: LocalProductInput[] = [
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:kantoor-maar-niet-saai", "nieuw"],
     metafields: {
       ...sharedMetafields,
-      specRegel: "Staal, goud of zilver · 15 mm",
+      specRegel: "Staal, goud- of zilverkleurig · 15 mm",
       materiaal: MATERIAAL_TWEE_KLEUREN,
       afmetingen: "Doorsnede 15 mm, dikte 5 mm",
       gewicht: "4 g",
@@ -196,7 +196,7 @@ export const products: LocalProductInput[] = [
     handle: "jet-vonk-oorbellen",
     title: "Jet vonk oorbellen",
     description:
-      "Een gouden vonk voor als je outfit wel wat extra mag. Draag ze met je haar omhoog, dan zie je ze het best.",
+      "Een goudkleurige vonk voor als je outfit wel wat extra mag. Draag ze met je haar omhoog, dan zie je ze het best.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:feestdagen", "moment:date-night", "nieuw"],
     metafields: {
       ...sharedMetafields,
@@ -217,7 +217,7 @@ export const products: LocalProductInput[] = [
     handle: "sam-schelp-oorbellen",
     title: "Sam schelp oorbellen",
     description:
-      "Kleine gouden hoops met een schelpje eraan. Vakantiegevoel, ook als je gewoon op de fiets naar college gaat.",
+      "Kleine goudkleurige hoops met een schelpje eraan. Vakantiegevoel, ook als je gewoon op de fiets naar college gaat.",
     tags: ["type:oorbellen", "vibe:kleurrijk-en-speels", "moment:strand", "moment:festival"],
     metafields: {
       ...sharedMetafields,
@@ -241,7 +241,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "tess-schakelarmband",
     title: "Tess schakelarmband",
-    description: "Een stevige schakelarmband met flink wat goud. Mooi alleen, nog mooier met twee anderen erbij.",
+    description: "Een stevige, goudkleurige schakelarmband. Mooi alleen, nog mooier met twee andere erbij.",
     tags: ["type:armbanden", "vibe:chunky-en-bold", "moment:kantoor-maar-niet-saai", "moment:date-night", "nieuw"],
     metafields: {
       ...sharedMetafields,
@@ -262,7 +262,7 @@ export const products: LocalProductInput[] = [
     handle: "roos-brede-bangle",
     title: "Roos brede bangle",
     description:
-      "Een brede gouden bangle die je pols meteen een statement geeft. Schuif er een dun armbandje naast voor een volle stack.",
+      "Een brede goudkleurige bangle die je pols meteen een statement geeft. Schuif er een dun armbandje naast voor een volle stack.",
     tags: ["type:armbanden", "vibe:retro", "vibe:chunky-en-bold", "moment:festival"],
     metafields: {
       ...sharedMetafields,
@@ -282,7 +282,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "lieke-kralenarmband",
     title: "Lieke kralenarmband",
-    description: "Kleurige kralen met gouden accentjes, op elastiek. Draag er één, of schuif er drie tegelijk om.",
+    description: "Kleurige kralen met goudkleurige accentjes, op elastiek. Draag er één, of schuif er drie tegelijk om.",
     tags: ["type:armbanden", "vibe:kleurrijk-en-speels", "moment:strand", "moment:festival"],
     metafields: {
       ...sharedMetafields,
@@ -329,7 +329,7 @@ export const products: LocalProductInput[] = [
     handle: "evi-dikke-schakelketting",
     title: "Evi dikke schakelketting",
     description:
-      "Een dikke gouden schakelketting die je outfit in één keer afmaakt. Mooi op een zwarte top of over een coltrui.",
+      "Een dikke goudkleurige schakelketting die je outfit in één keer afmaakt. Mooi op een zwarte top of over een coltrui.",
     tags: ["type:kettingen", "vibe:chunky-en-bold", "moment:date-night", "nieuw"],
     metafields: {
       ...sharedMetafields,
@@ -349,7 +349,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "femke-muntketting",
     title: "Femke muntketting",
-    description: "Een fijne ketting met een gouden muntje. Een beetje retro, en toch draag je hem gewoon elke dag.",
+    description: "Een fijne ketting met een goudkleurig muntje. Een beetje retro, en toch draag je hem gewoon elke dag.",
     tags: ["type:kettingen", "vibe:retro", "moment:kantoor-maar-niet-saai"],
     metafields: {
       ...sharedMetafields,
@@ -369,7 +369,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "sterre-hartketting",
     title: "Sterre hartketting",
-    description: "Een gouden hartje met een kleurtje, aan een fijne ketting. Lief, maar met een randje.",
+    description: "Een goudkleurig hartje met een kleurtje, aan een fijne ketting. Lief, maar met een randje.",
     tags: ["type:kettingen", "vibe:kleurrijk-en-speels", "vibe:retro", "moment:date-night"],
     metafields: {
       ...sharedMetafields,
@@ -393,7 +393,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "nina-chunky-ring",
     title: "Nina chunky ring",
-    description: "Een dikke gouden ring die je ziet zodra je zwaait. Twijfel je over je maat? Kijk even in de ringmaatgids.",
+    description: "Een dikke goudkleurige ring die je ziet zodra je zwaait. Twijfel je over je maat? Kijk even in de ringmaatgids.",
     tags: ["type:ringen", "vibe:chunky-en-bold", "moment:festival", "moment:date-night", "nieuw"],
     metafields: {
       ...sharedMetafields,
@@ -414,7 +414,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "vera-zegelring",
     title: "Vera zegelring",
-    description: "Een klassieke zegelring met een glad gouden vlak. Draag hem los of samen met een paar dunne ringen.",
+    description: "Een klassieke zegelring met een glad, goudkleurig vlak. Draag hem los of samen met een paar dunne ringen.",
     tags: ["type:ringen", "vibe:retro", "moment:kantoor-maar-niet-saai"],
     metafields: {
       ...sharedMetafields,
@@ -442,7 +442,7 @@ export const products: LocalProductInput[] = [
     tags: ["type:oorbellen", "vibe:clean-en-classy", "moment:kantoor-maar-niet-saai"],
     metafields: {
       ...sharedMetafields,
-      specRegel: "Staal, goud of zilver · 12 mm",
+      specRegel: "Staal, goud- of zilverkleurig · 12 mm",
       materiaal: MATERIAAL_TWEE_KLEUREN,
       afmetingen: "Doorsnede 12 mm, dikte 2 mm",
       gewicht: "2 g",
@@ -482,7 +482,7 @@ export const products: LocalProductInput[] = [
     tags: ["type:armbanden", "vibe:clean-en-classy", "moment:kantoor-maar-niet-saai"],
     metafields: {
       ...sharedMetafields,
-      specRegel: "Staal, goud of zilver · 18 cm",
+      specRegel: "Staal, goud- of zilverkleurig · 18 cm",
       materiaal: MATERIAAL_TWEE_KLEUREN,
       afmetingen: "Lengte 18 cm, schakel 2 mm",
       gewicht: "3 g",
@@ -498,7 +498,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "jade-stipjes",
     title: "Jade stipjes",
-    description: "Kleine gouden stipjes in je oren. Simpel, en mooi naast een paar hoops in je tweede gaatje.",
+    description: "Kleine goudkleurige stipjes in je oren. Simpel, en mooi naast een paar hoops in je tweede gaatje.",
     tags: ["type:oorbellen", "vibe:clean-en-classy", "moment:kantoor-maar-niet-saai", "moment:strand"],
     metafields: {
       ...sharedMetafields,
@@ -522,7 +522,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "holiday-ster-oorbellen",
     title: "Ster oorbellen",
-    description: "Grote gouden sterren voor de feestdagen. Van kerstdiner tot oudejaarsavond.",
+    description: "Grote goudkleurige sterren voor de feestdagen. Van kerstdiner tot oudejaarsavond.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {
       ...sharedMetafields,
@@ -562,7 +562,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "holiday-sparkle-armband",
     title: "Sparkle armband",
-    description: "Een gouden schakelarmband met kleine glinsters. Samen met de Ster oorbellen heb je je kerstlook rond.",
+    description: "Een goudkleurige schakelarmband met kleine glinsters. Samen met de Ster oorbellen heb je je kerstlook rond.",
     tags: ["type:armbanden", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {
       ...sharedMetafields,
@@ -582,7 +582,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "holiday-ster-ketting",
     title: "Ster ketting",
-    description: "Een gouden ster aan een stevige schakelketting. Draag hem op een zwarte jurk of over je kersttrui.",
+    description: "Een goudkleurige ster aan een stevige schakelketting. Draag hem op een zwarte jurk of over je kersttrui.",
     tags: ["type:kettingen", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {
       ...sharedMetafields,

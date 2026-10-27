@@ -191,7 +191,7 @@ export const home: HomeContent = {
     tileByTab: {
       ringen: {
         title: "Welke ringmaat heb je?",
-        text: "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grootste.",
+        text: "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
         image: "linde.portret",
         href: "/veelgestelde-vragen",
       },
@@ -304,7 +304,7 @@ export const home: HomeContent = {
         text: "De vaste collectie is van roestvrij staal met een goudlaag. Dat gaat lang mee.",
       },
       {
-        title: "Zo blijft hij mooi",
+        title: "Zo blijven ze mooi",
         text: "Doe je sieraden af bij zwemmen, sporten en douchen en bewaar ze droog in het zakje.",
       },
     ],

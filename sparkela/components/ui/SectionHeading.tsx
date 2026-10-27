@@ -55,7 +55,7 @@ export function SectionHeading({
       <Heading id={id} className={cn(headingClasses[level], dark ? "text-tekst-op-donker" : "text-tekst")}>
         {title}
       </Heading>
-      {intro ? <div className={cn("tekst-groot mt-3 max-w-[36rem]", soft)}>{intro}</div> : null}
+      {intro ? <div className={cn("tekst-groot mt-3 max-w-[36rem] text-pretty", soft)}>{intro}</div> : null}
     </div>
   );
 

@@ -56,13 +56,14 @@ export function StackCard({ stack, products, headingLevel = 3, className }: Stac
     <article
       className={cn("@container flex h-full flex-col overflow-hidden rounded-kaart border border-rand bg-kaart text-tekst", className)}
     >
-      <div className="flex h-full flex-col @min-[34rem]:grid @min-[34rem]:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @min-[48rem]:grid-cols-2 @min-[60rem]:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+      {/* Photo and text side by side from 34rem: half and half, from 60rem 6 : 5 (QA round 1: no narrow 2 : 3 sliver). */}
+      <div className="flex h-full flex-col @min-[34rem]:grid @min-[34rem]:grid-cols-2 @min-[60rem]:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
         <div className="relative aspect-[4/5] w-full @min-[34rem]:aspect-auto @min-[34rem]:h-full @min-[34rem]:min-h-[24rem]">
           <PhotoSlot
             assetKey={stack.image}
             label={image?.label ?? stack.name}
             aspect="fill"
-            sizes="(min-width: 1280px) 400px, (min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 1280px) 640px, (min-width: 768px) 50vw, 100vw"
           />
         </div>
         <div className="flex flex-1 flex-col p-5 @min-[24rem]:p-6 @min-[40rem]:p-8 @min-[60rem]:p-10">
@@ -74,11 +75,16 @@ export function StackCard({ stack, products, headingLevel = 3, className }: Stac
             {products.map((product) => {
               const variant = defaultVariant(product);
               return (
-                <li key={product.handle} className="flex items-center gap-3 py-3">
+                <li key={product.handle} className="relative flex items-center gap-3 py-3">
                   <ProductThumb image={product.images[0] ?? null} title={product.title} sizes="48px" className="w-12" />
+                  {/* Stretched link: the whole row is the target (QA round 1: the name alone was 24 px high). */}
                   <Link
                     href={productPath(product.handle)}
-                    className="min-w-0 flex-1 text-[0.9375rem] font-medium text-tekst decoration-1 underline-offset-4 hover:underline"
+                    className={cn(
+                      "min-w-0 flex-1 text-[0.9375rem] font-medium text-tekst decoration-1 underline-offset-4 hover:underline",
+                      "after:absolute after:inset-0 after:content-[''] focus-visible:outline-none",
+                      "focus-visible:after:outline-2 focus-visible:after:outline-offset-0 focus-visible:after:outline-solid focus-visible:after:[outline-color:var(--ring)]",
+                    )}
                   >
                     {product.title}
                   </Link>

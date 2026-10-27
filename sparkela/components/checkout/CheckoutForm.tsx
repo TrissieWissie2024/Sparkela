@@ -104,7 +104,7 @@ export function CheckoutForm({ values, onChange, needsAddress, total, placing, o
   );
 
   return (
-    <form noValidate aria-label={copy.formLabel} onSubmit={handleSubmit} className={className}>
+    <form method="post" noValidate aria-label={copy.formLabel} onSubmit={handleSubmit} className={className}>
       <fieldset>
         <legend className="kop-3 text-tekst">{copy.contact.title}</legend>
         <div className="mt-5 grid gap-5">{field("email", { type: "email", hint: copy.contact.emailHint })}</div>

@@ -11,7 +11,9 @@ import { collections } from "@/content/collections";
 import { collectionCopy } from "@/content/copy/collection";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
 import { clearQueryMark, SEARCH_QUERY_ATTRIBUTE } from "@/components/collection/collectionQueryScript";
-import { ProductGrid } from "@/components/product/ProductGrid";
+import { stylingTilePlacement } from "@/components/collection/filterParams";
+import { ProductCard } from "@/components/product/ProductCard";
+import { productGridClassName } from "@/components/product/ProductGrid";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 
@@ -117,7 +119,17 @@ export function SearchView() {
               </h2>
               <p className="tabular tekst-klein text-tekst-2">{collectionCopy.search.count(results.length)}</p>
             </div>
-            <ProductGrid products={results} label={collectionCopy.search.resultsLabel} headingLevel={3} className="mt-8 md:mt-10" />
+            <ul role="list" aria-label={collectionCopy.search.resultsLabel} className={cn(productGridClassName, "mt-8 md:mt-10")}>
+              {results.map((product) => (
+                <li key={product.handle} className="min-w-0">
+                  <ProductCard product={product} headingLevel={3} />
+                </li>
+              ))}
+              {/* Closes the grid: it fills the cells the last row leaves empty (or a row of its own), never ragged. */}
+              <li className={cn("min-w-0", stylingTilePlacement(results.length, results.length).className)}>
+                <SearchMoreTile />
+              </li>
+            </ul>
           </section>
         ) : (
           <div className="mt-10 md:mt-14">
@@ -211,6 +223,26 @@ function SearchForm({ value, onChange, onSubmit, onClear, inputRef, describedBy 
   );
 }
 
+/** The tile at the end of the results (QA round 1: no ragged last row): the Spark Finder and all jewellery. */
+function SearchMoreTile() {
+  const copy = collectionCopy.search.more;
+  return (
+    <div className="flex h-full min-h-[12rem] flex-col justify-center rounded-kaart border border-rand bg-vlak p-4 md:p-6">
+      <p className="kop-4 text-tekst">{copy.title}</p>
+      <p className="tekst-klein mt-1.5 text-tekst-2">{copy.text}</p>
+      <ul role="list" className="mt-3 flex flex-col items-start">
+        {copy.links.map((link) => (
+          <li key={link.href}>
+            <Button href={link.href} variant="link" size="sm">
+              {link.label}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** The collections to start from, as link chips (the same pills as the product page's chips). */
 function SearchSuggestions({ className }: { className?: string }) {
   const id = useId();
@@ -223,6 +255,11 @@ function SearchSuggestions({ className }: { className?: string }) {
         {SUGGESTED.map((collection) => (
           <li key={collection.handle} className="shrink-0">
             <Chip href={collectionPath(collection.handle)}>{collection.title}</Chip>
+          </li>
+        ))}
+        {collectionCopy.search.suggestionPages.map((page) => (
+          <li key={page.href} className="shrink-0">
+            <Chip href={page.href}>{page.label}</Chip>
           </li>
         ))}
       </ul>

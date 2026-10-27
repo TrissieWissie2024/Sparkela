@@ -10,8 +10,8 @@ import { site } from "@/content/site";
 
 import { isBlockedPath } from "./state";
 
-/** The pill, the modal (Radix Dialog), the cards, the form and the code in a chunk of their own (plan §18.4). */
-const EmailCapture = dynamic(() => import("@/components/email/EmailCapture").then((module) => module.EmailCapture), {
+/** The pill, the modal (Radix Dialog), the cards, the form and the code, lazily from the shared islands chunk (plan §18.4, decision 216). */
+const EmailCapture = dynamic(() => import("@/components/layout/islands").then((module) => module.EmailCapture), {
   ssr: false,
 });
 

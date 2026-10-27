@@ -5,6 +5,7 @@ import { useId, useState, type RefObject } from "react";
 
 import type { CatalogProduct, QuizAnswers, QuizConfig } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { REDUCED_MOTION_QUERY } from "@/lib/hooks/useMediaQuery";
 import { hasSubscribed } from "@/lib/subscription";
 import { pagesCopy } from "@/content/copy/pages";
 import { quiz } from "@/content/quiz";
@@ -83,9 +84,19 @@ export function FinderResult({
   const [alreadyInClub] = useState(hasSubscribed);
   const [emailOpen, setEmailOpen] = useState(true);
 
+  /**
+   * "Liever zonder e-mail verder": the email block collapses, so the page gets shorter and would leave the visitor at
+   * the footer's sign-up. Bring the results back into view and focus their heading (QA round 1).
+   */
   function skipEmail() {
     setEmailOpen(false);
-    headingRef?.current?.focus({ preventScroll: true });
+    requestAnimationFrame(() => {
+      const heading = headingRef?.current;
+      if (!heading) return;
+      const reduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+      heading.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+      heading.focus({ preventScroll: true });
+    });
   }
 
   return (

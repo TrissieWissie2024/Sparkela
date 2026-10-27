@@ -71,11 +71,13 @@ export default function VeelgesteldeVragenPage() {
                 <li key={group.id} className="lg:border-b lg:border-rand">
                   <a
                     href={`#faq-${group.id}`}
+                    // One string that matches the visible text ("Sieraden 3"; the count shows from lg), so no
+                    // stray space before a separator span (QA round 1).
+                    aria-label={`${group.label} ${group.items.length}`}
                     className="flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-tekst ring-1 ring-rand-sterk ring-inset transition-colors hover:bg-current/5 hover:ring-tekst lg:justify-between lg:rounded-none lg:px-0 lg:py-3 lg:text-[0.9375rem] lg:ring-0 lg:hover:bg-transparent lg:hover:underline lg:hover:underline-offset-4"
                   >
-                    {group.label}
-                    <span className="tabular hidden text-[0.8125rem] font-normal text-tekst-2 lg:inline">
-                      <span className="sr-only">, </span>
+                    {group.label}{" "}
+                    <span aria-hidden="true" className="tabular hidden text-[0.8125rem] font-normal text-tekst-2 lg:inline">
                       {group.items.length}
                     </span>
                   </a>

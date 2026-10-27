@@ -28,7 +28,8 @@ export function DropCountdown({ target, kind, liveLabel, className }: DropCountd
   return (
     <span
       className={cn(
-        "inline-flex min-h-11 items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-[0.9375rem] text-bot-wit ring-1 ring-bot-wit/50 ring-inset",
+        // pr-1.5 leaves room for the pause button; with reduced motion there is none, so the label gets pl-4's mirror.
+        "inline-flex min-h-11 items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-[0.9375rem] text-bot-wit ring-1 ring-bot-wit/50 ring-inset motion-reduce:pr-4",
         className,
       )}
     >

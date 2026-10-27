@@ -13,9 +13,10 @@ import { Countdown } from "@/components/time/Countdown";
  * it gets the end labels: before mount and when paused "t/m 30 november", for screen readers "Eindigt op maandag
  * 30 november om middernacht". It never resets; at the end the bar's TimeSwitch shows the next segment.
  *
- * Below lg two lines: the short message with the link, then the timer (its 32 px pause button overlaps the line
- * box by a negative margin, so the bar stays 48 px; with reduced motion there is no button and no negative margin, so
- * the fixed end label does not overlap the first line); from lg one line with the full message and thin dividers.
+ * Below lg two lines: the short message with the link, then the timer; the 32 px pause button (44 px target) sits at
+ * the bar's right edge, vertically centred, like the USP bar's buttons (QA round 1): inline under "Shop nieuw" its
+ * target covered half the link and its focus ring was cut off by the header. The text keeps 40 px clear on both
+ * sides, so it never runs under the button. From lg one line with the full message and thin dividers.
  * Screen readers get the full message once (the short one is aria-hidden). Text wraps rather than clips
  * (WCAG 1.4.12). A server component without hooks: the bar renders it as a TimeSwitch variant.
  * Port of CORVANE components/layout/promo/CampaignMessage.tsx.
@@ -39,7 +40,7 @@ export function CampaignMessage({ campaign }: { campaign: Campaign }) {
       </Link>
     ) : null;
   const timer = campaign.showTimer ? (
-    <span className="-my-1.5 inline-flex items-center gap-1.5 motion-reduce:my-0 lg:my-0">
+    <span className="inline-flex items-center gap-1.5">
       <Timer aria-hidden="true" className="size-3.5 shrink-0 text-tekst-2-op-donker" strokeWidth={1.75} />
       <Countdown
         target={campaign.endsAt}
@@ -47,12 +48,13 @@ export function CampaignMessage({ campaign }: { campaign: Campaign }) {
         fallbackLabel={formatEndLabel(campaign.endsAt)}
         tone="op-donker"
         prefix={chromeCopy.promo.campaignEndsIn}
+        pauseClassName="max-lg:absolute max-lg:top-1/2 max-lg:right-0 max-lg:-translate-y-1/2"
       />
     </span>
   ) : null;
 
   return (
-    <div className="flex w-full flex-col items-center justify-center text-center lg:flex-row lg:gap-x-3">
+    <div className="relative flex w-full flex-col items-center justify-center text-center max-lg:px-10 lg:flex-row lg:gap-x-3">
       <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
         <span aria-hidden="true" className="lg:hidden">
           {promo.short}

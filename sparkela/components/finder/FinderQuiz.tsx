@@ -271,25 +271,31 @@ function QuestionStep({
             </span>
           ) : null}
         </p>
-        <div className="flex items-center gap-3">
-          {index > 0 ? (
+        {/*
+          "Terug" and the submit side by side; in a narrow form (360 px phones and less, QA round 1) the submit takes
+          the full width with "Terug" under it, so the row never overflows (WCAG 1.4.10 reflow at 320 px).
+        */}
+        <div className="@container">
+          <div className="flex items-center gap-2 @max-[19rem]:flex-col-reverse @max-[19rem]:items-stretch">
+            {index > 0 ? (
+              <Button
+                variant={t.back}
+                onClick={onBack}
+                iconStart={<ArrowLeft aria-hidden="true" className="size-4" strokeWidth={1.75} />}
+                className="-ml-3 px-3 @max-[19rem]:ml-0 @max-[19rem]:self-start sm:-ml-4 sm:px-4"
+              >
+                {copy.back}
+              </Button>
+            ) : null}
             <Button
-              variant={t.back}
-              onClick={onBack}
-              iconStart={<ArrowLeft aria-hidden="true" className="size-4" strokeWidth={1.75} />}
-              className="-ml-3 px-4 sm:-ml-4"
+              type="submit"
+              variant="primair"
+              iconEnd={<ArrowRight aria-hidden="true" className="size-4" strokeWidth={1.75} />}
+              className="ml-auto @max-[19rem]:ml-0 @max-[19rem]:w-full"
             >
-              {copy.back}
+              {last ? copy.showResult : copy.next}
             </Button>
-          ) : null}
-          <Button
-            type="submit"
-            variant="primair"
-            iconEnd={<ArrowRight aria-hidden="true" className="size-4" strokeWidth={1.75} />}
-            className="ml-auto"
-          >
-            {last ? copy.showResult : copy.next}
-          </Button>
+          </div>
         </div>
       </div>
     </form>

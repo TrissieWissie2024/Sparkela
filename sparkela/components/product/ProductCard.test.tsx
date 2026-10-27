@@ -263,7 +263,11 @@ describe("ProductCard: content and structure", () => {
   });
 
   it("shows the spec line, and nothing without the metafield", () => {
-    expect(render(<ProductCard product={product} />)).toContain(">Verguld staal · 20 mm</p>");
+    const html = render(<ProductCard product={product} />);
+    // Screen readers get the line as written; the visual parts carry the separator in a ::before (QA round 1).
+    expect(html).toContain('<span class="sr-only">Verguld staal · 20 mm</span>');
+    expect(html).toMatch(/before:content-\[&#x27;·&#x27;\][^>]*>Verguld staal<\/span>/);
+    expect(html).toMatch(/before:content-\[&#x27;·&#x27;\][^>]*>20 mm<\/span>/);
     expect(render(<ProductCard product={jade} />)).not.toContain("tekst-klein mt-1");
   });
 

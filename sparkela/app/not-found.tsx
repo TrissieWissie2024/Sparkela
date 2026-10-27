@@ -11,7 +11,8 @@ import { NotFoundView } from "@/components/pages/NotFoundView";
  */
 export const metadata: Metadata = {
   title: sharedCopy.notFound.metaTitle,
-  robots: { index: false, follow: true },
+  // No robots here: Next already writes <meta name="robots" content="noindex"> on every 404, and a second tag made
+  // the head say it twice (integrator 10, decision 212).
 };
 
 export default function NotFound() {

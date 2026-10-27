@@ -23,13 +23,23 @@ export interface SortSelectProps {
   label?: string;
   /** Keep the label for screen readers only. */
   hideLabel?: boolean;
+  /** Classes of the <select> itself (a fixed width in a right-aligned bar). */
+  selectClassName?: string;
   className?: string;
 }
 
 /** The options in SORT_KEYS order. */
 export const SORT_OPTIONS: readonly SelectOption[] = SORT_KEYS.map((key) => ({ value: key, label: sharedCopy.vocab.sort[key] }));
 
-export function SortSelect({ value, onChange, id, label = cardCopy.sort.label, hideLabel = false, className }: SortSelectProps) {
+export function SortSelect({
+  value,
+  onChange,
+  id,
+  label = cardCopy.sort.label,
+  hideLabel = false,
+  selectClassName,
+  className,
+}: SortSelectProps) {
   return (
     <Select
       id={id}
@@ -41,6 +51,7 @@ export function SortSelect({ value, onChange, id, label = cardCopy.sort.label, h
       onChange={(next) => {
         if (isSortKey(next)) onChange(next);
       }}
+      selectClassName={selectClassName}
       className={className}
     />
   );

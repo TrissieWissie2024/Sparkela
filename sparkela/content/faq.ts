@@ -13,7 +13,7 @@ import { site } from "@/content/site";
  * ever appear through getVerifiedClaims() (lib/claims.ts).
  */
 
-const paymentList = `${site.paymentMethods.slice(0, -1).join(", ")} en ${site.paymentMethods[site.paymentMethods.length - 1]}`;
+const paymentList = `${site.paymentMethodsInText.slice(0, -1).join(", ")} en ${site.paymentMethodsInText[site.paymentMethodsInText.length - 1]}`;
 
 export const faq: FaqItem[] = [
   {
@@ -84,7 +84,7 @@ export const faq: FaqItem[] = [
     id: "ringmaat",
     question: "Hoe weet ik welke ringmaat ik heb?",
     answer:
-      "Meet de binnenkant van een ring die goed om je vinger past, in millimeters. Bij elke ring staat een ringmaatgids die je laat zien welke maat daarbij hoort. Zit je tussen twee maten in? Kies dan de grootste.",
+      "Meet de binnenkant van een ring die goed om je vinger past, in millimeters. Bij elke ring staat een ringmaatgids die je laat zien welke maat daarbij hoort. Zit je tussen twee maten in? Kies dan de grotere.",
     category: "sieraden",
     onHome: false,
     onProduct: false,
@@ -92,7 +92,7 @@ export const faq: FaqItem[] = [
   {
     id: "cadeauverpakking",
     question: "Kunnen jullie mijn bestelling als cadeau inpakken?",
-    answer: `Ja. Zet in je winkelwagen het vinkje bij cadeauverpakking aan, voor ${formatMoney(giftWrap.price)}. In december is inpakken gratis. Je kunt er ook een cadeauboodschap bij schrijven.`,
+    answer: `Ja. Zet in je tas het vinkje bij cadeauverpakking aan, voor ${formatMoney(giftWrap.price)}. In december is inpakken gratis. Je kunt er ook een cadeauboodschap bij schrijven.`,
     category: "cadeaus",
     onHome: false,
     onProduct: false,
@@ -100,7 +100,7 @@ export const faq: FaqItem[] = [
   {
     id: "welkomstcode",
     question: "Hoe werkt de welkomstcode?",
-    answer: `Meld je aan voor de Sparkela Club en je krijgt de code ${welcomeCode.code}: ${welcomeCode.percent}% op je eerste bestelling. De code gaat niet samen met de stack-korting van ${stackDiscount.percent}%. Kan allebei, dan krijg je de hoogste korting.`,
+    answer: `Meld je aan voor de Sparkela Club en je krijgt de code ${welcomeCode.code}: ${welcomeCode.percent}% op je eerste bestelling. Hij werkt niet op cadeaukaarten en niet samen met de stack-korting van ${stackDiscount.percent}%. Kom je voor allebei in aanmerking? Dan krijg je de hoogste korting.`,
     category: "bestellen",
     onHome: false,
     onProduct: false,

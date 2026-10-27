@@ -1,18 +1,22 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useId, useState } from "react";
 
 import type { Facets, SortKey } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { useLatch } from "@/lib/hooks/useLatch";
 import { collectionCopy } from "@/content/copy/collection";
 import { SortSelect } from "@/components/product/SortSelect";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 
 import { FACET_GROUP_LABELS, facetValueLabel } from "./facetLabels";
-import { FilterSheet } from "./FilterSheet";
 import { activeFilterCount, emptyFilters, FACET_KEYS, toggleFilter, type FacetCounts, type FacetKey } from "./filterParams";
+
+/** The filter sheet (Radix Dialog) from the shared lazy dialog chunk, only once it is first opened (decision 216). */
+const FilterSheet = dynamic(() => import("@/components/layout/islands").then((module) => module.FilterSheet), { ssr: false });
 
 /**
  * The filter and sort bar of a collection (docs/PLAN.md §13.8, §14.3, decision 36; CORVANE CollectionView's single
@@ -49,6 +53,7 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
   const copy = collectionCopy.filters;
   const id = useId();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetUsed = useLatch(sheetOpen);
   const keys = FACET_KEYS.filter((key) => facets[key].length > 0);
   const primary: FacetKey | null = keys[0] ?? null;
   const rest = keys.filter((key) => key !== primary);
@@ -125,8 +130,12 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
                 {copy.clear}
               </Button>
             ) : null}
+            {/*
+              A fixed width (fits "Prijs hoog naar laag" and the chevron): a native select is as wide as its widest
+              parsed <option>, so a paint while the HTML still streamed made this right-aligned group jump (QA round 1).
+            */}
             <div className="hidden lg:block">
-              <SortSelect value={sort} onChange={onSortChange} />
+              <SortSelect value={sort} onChange={onSortChange} selectClassName="w-[12.75rem]!" />
             </div>
           </div>
         </div>
@@ -144,7 +153,7 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
           </ul>
         ) : null}
 
-        {keys.length > 0 ? (
+        {keys.length > 0 && sheetUsed ? (
           <FilterSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}

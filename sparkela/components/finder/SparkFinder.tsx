@@ -86,13 +86,17 @@ function FinderPage({ id, className }: { id: string; className?: string }) {
     <Container id={id} className={cn("grid grid-cols-1 gap-10 pb-12 md:gap-12 md:pb-16 lg:grid-cols-12 lg:gap-x-8", className)}>
       <FinderQuiz config={quiz} tone="licht" headingLevel={2} className="lg:col-span-8 lg:col-start-5 lg:row-start-1" />
 
-      <aside aria-labelledby={stepsId} className="lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:pt-2 lg:pr-6">
+      {/* Sticky next to a long result, as in the home section (decision 209o), so the left column is never an empty band. */}
+      <aside
+        aria-labelledby={stepsId}
+        className="lg:sticky lg:top-[calc(var(--header-hoogte)+2rem)] lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:self-start lg:pt-2 lg:pr-6"
+      >
         <h2 id={stepsId} className="kop-3 text-tekst">
           {steps.title}
         </h2>
         <ol className="mt-6 border-t border-rand">
           {steps.items.map((step, index) => (
-            <li key={step.title} className="flex gap-4 border-b border-rand py-5">
+            <li key={step.title} className="flex gap-4 border-b border-rand py-5 last:border-b-0 last:pb-0">
               <span
                 aria-hidden="true"
                 className="tabular flex size-9 shrink-0 items-center justify-center rounded-full border border-rand-sterk text-sm font-semibold text-tekst"

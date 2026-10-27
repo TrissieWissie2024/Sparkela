@@ -1,3 +1,4 @@
+import type { SubscribeSource } from "@/lib/types";
 import { welcomeCode } from "@/content/offers";
 import { site } from "@/content/site";
 
@@ -12,6 +13,11 @@ export interface FormsCopy {
   subscribe: {
     /** Accessible name of every sign-up form. */
     formLabel: string;
+    /**
+     * The form's name per source where another sign-up can be on the same page (the footer's): two form landmarks
+     * with one name read as duplicates (axe landmark-unique, QA round 1). Others use formLabel.
+     */
+    formLabelBySource: Partial<Record<SubscribeSource, string>>;
     emailLabel: string;
     emailPlaceholder: string;
     /** Next to every sign-up field: what you sign up for (brief §2.8). */
@@ -34,6 +40,8 @@ export interface FormsCopy {
     success: string;
     successText: string;
     already: string;
+    /** H1 of the "invalid" state (an expired or broken link, or no token at all). */
+    invalidTitle: string;
     expired: string;
     invalid: string;
     /** Heading above the sign-up form shown after an expired or invalid link; states the reward up front (brief §2.8). */
@@ -183,9 +191,14 @@ const days = String(site.returnDays);
 export const formsCopy: FormsCopy = {
   subscribe: {
     formLabel: "Aanmelden voor de Sparkela Club",
+    formLabelBySource: {
+      popup: "Aanmelden via de Spark-kaarten",
+      finder: "Aanmelden na de Spark Finder",
+      wachtlijst: "Aanmelden voor de wachtlijst",
+    },
     emailLabel: "Je e-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
-    what: "Nieuwe drops, early access en af en toe een actie. Afmelden kan altijd.",
+    what: `${percent}% op je eerste bestelling, nieuwe drops en af en toe een actie. Afmelden kan altijd.`,
     consentError: "Vink aan dat je de nieuwsbrief wilt ontvangen.",
     pending: `Check je mail om je aanmelding af te ronden. Je code ${code} kun je meteen gebruiken.`,
     sending: "Je aanmelding wordt verstuurd.",
@@ -199,8 +212,9 @@ export const formsCopy: FormsCopy = {
     success: "Je bent erbij.",
     successText: `Je hoort als eerste van nieuwe drops en krijgt early access. Je code ${code} geeft ${percent}% op je eerste bestelling.`,
     already: "Je aanmelding was al bevestigd. Je zit al in de Club.",
-    expired: "Deze link is verlopen. Meld je opnieuw aan, dan sturen we je een nieuwe.",
-    invalid: "Deze link werkt niet. Meld je opnieuw aan, dan sturen we je een nieuwe.",
+    invalidTitle: "Deze link werkt niet meer",
+    expired: "Deze link is verlopen. Hieronder vraag je een nieuwe aan.",
+    invalid: "Geen probleem: hieronder vraag je een nieuwe link aan.",
     retryTitle: `Meld je opnieuw aan en krijg ${percent}% op je eerste bestelling`,
     toShop: "Naar de shop",
     toWaitlist: "Naar de wachtlijst",
@@ -236,7 +250,7 @@ export const formsCopy: FormsCopy = {
       next: (d) => [
         "We mailen je het adres waar je de producten naartoe stuurt.",
         `Stuur de producten binnen ${d} dagen na je herroeping terug, goed verpakt.`,
-        `We betalen je binnen ${d} dagen na je herroeping terug. We mogen daarmee wachten tot we de producten terug hebben.`,
+        `We betalen je binnen ${d} dagen na je herroeping terug. We mogen daarmee wachten tot we de producten terug hebben, of tot je laat zien dat je ze hebt teruggestuurd.`,
         site.hygieneRule,
       ],
     },
@@ -253,10 +267,10 @@ export const formsCopy: FormsCopy = {
   },
   contact: {
     title: "Contact",
-    metaDescription: "Vraag over je bestelling of een sieraad? Mail ons of stuur een bericht. Je hoort binnen 1 werkdag van ons.",
+    metaDescription: `Vraag over je bestelling of een sieraad? Mail ons of stuur een bericht. Je hoort binnen ${site.responseTime} van ons.`,
     intro: "Vraag over je bestelling, een sieraad of je stack? Stuur ons een bericht, we helpen je graag.",
     emailTitle: "Mail ons",
-    responseTime: "Binnen 1 werkdag antwoord",
+    responseTime: `Binnen ${site.responseTime} antwoord`,
     formTitle: "Stuur een bericht",
     fields: {
       name: "Je naam",
@@ -267,7 +281,7 @@ export const formsCopy: FormsCopy = {
     },
     submit: "Verstuur bericht",
     sending: "Je bericht wordt verstuurd.",
-    success: "Dank je. We reageren binnen 1 werkdag.",
+    success: `Dank je. We reageren binnen ${site.responseTime}.`,
     sendAnother: "Nog een bericht sturen",
     companyTitle: "Bedrijfsgegevens",
     moreTitle: "Misschien staat je antwoord er al",

@@ -56,6 +56,7 @@ function cartContext(): CartContextValue {
     setGiftWrap: answer,
     setNote: answer,
     checkout: async () => {},
+    registerNavigation: () => {},
     lastError: null,
   };
 }

@@ -87,9 +87,12 @@ describe("LegalPage", () => {
 });
 
 describe("UpcomingHolidays", () => {
-  it("lists every holiday of the launch year and the year after, without a clock", () => {
+  it("lists the holidays from the launch day to the end of the year after, without a clock", () => {
     const html = renderToStaticMarkup(<UpcomingHolidays />);
-    const expected = shipping.holidays.filter((holiday) => /^202[67]-/.test(holiday.date));
+    const expected = shipping.holidays.filter((holiday) => /^202[67]-/.test(holiday.date) && holiday.date >= "2026-11-27");
+    // Nothing from before the shop opened (QA round 1).
+    expect(html).not.toContain('dateTime="2026-01-01"');
+    expect(html).toContain('dateTime="2027-01-01"');
     expect(html.match(/<time/g)?.length).toBe(expected.length);
     expect(html).toContain('dateTime="2026-12-25"');
     expect(html).toContain("vrijdag 25 december");

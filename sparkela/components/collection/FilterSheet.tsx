@@ -96,8 +96,9 @@ function FacetFieldset({
             label={
               <>
                 {facetValueLabel(facetKey, item)}
+                {counts ? " " : null}
                 {counts ? (
-                  <span className="tabular ml-1.5 text-tekst-2">
+                  <span className="tabular ml-1 text-tekst-2">
                     ({counts[facetKey][item] ?? 0})
                   </span>
                 ) : null}

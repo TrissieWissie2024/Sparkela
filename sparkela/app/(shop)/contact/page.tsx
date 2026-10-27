@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { pageMetadata } from "@/lib/seo";
 import { formsCopy } from "@/content/copy/forms";
+import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
 import { ContactForm } from "@/components/forms/ContactForm";
 import { PageHeader } from "@/components/pages/PageHeader";
@@ -22,7 +24,14 @@ export default function ContactPage() {
   const { company } = site;
   return (
     <>
-      <PageHeader title={copy.title} intro={copy.intro} />
+      {/* A task page: the compact footer (app/globals.css, QA round 1). */}
+      <div data-compacte-footer="" hidden />
+      <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.service}
+        title={copy.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="grid gap-10 pb-16 md:pb-24 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
         <div className="min-w-0">
           <ContactForm />

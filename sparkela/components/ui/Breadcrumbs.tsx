@@ -29,7 +29,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
               {crumb.href && !last ? (
                 <Link
                   href={crumb.href}
-                  className="inline-flex min-h-11 items-center text-link underline-offset-4 hover:text-link-hover hover:underline"
+                  className="relative inline-flex min-h-11 items-center text-link underline-offset-4 before:absolute before:inset-y-0 before:-inset-x-1.5 before:content-[''] hover:text-link-hover hover:underline"
                 >
                   {crumb.label}
                 </Link>

@@ -229,6 +229,17 @@ describe("early access (plan §11.5)", () => {
     expect(rewrittenPath(shop)).toBe("/wachtlijst");
   });
 
+  it("opens the demo checkout with an early-access cookie during the early-access phase only (QA round 1)", async () => {
+    const token = await earlyAccessToken("holiday-sparkle", EA_SECRET);
+    const cookies = { "sparkela_ea_holiday-sparkle": token };
+    const open = await proxy(request("/checkout", { at: EARLY_ACCESS, cookies }));
+    expect(isNext(open)).toBe(true);
+    expect(gate(open)).toBe("early-access");
+    // Without the cookie, or before early access (the drop is still hidden), it stays the waitlist.
+    expect(rewrittenPath(await proxy(request("/checkout", { at: EARLY_ACCESS })))).toBe("/wachtlijst");
+    expect(rewrittenPath(await proxy(request("/checkout", { at: PRELAUNCH, cookies })))).toBe("/wachtlijst");
+  });
+
   it("shows the teaser without the cookie, or with a cookie of another drop", async () => {
     const other = await earlyAccessToken("love-club", EA_SECRET);
     for (const cookies of [undefined, { "sparkela_ea_holiday-sparkle": other }]) {
@@ -277,8 +288,13 @@ describe("drop gate per phase (plan §11.2 step 5)", () => {
     }
   });
 
-  it("leaves unknown drop slugs to the page (404) after the launch", async () => {
-    for (const path of ["/drops/iets", "/drops/iets/binnenkort"]) {
+  it("sends unknown drop and collection slugs and the gift wrap page to the root 404 after the launch", async () => {
+    for (const path of ["/drops/iets", "/drops/iets/binnenkort", "/collections/zzz", "/products/cadeauverpakking"]) {
+      const response = await proxy(request(path, { at: LAUNCHED }));
+      expect(rewrittenPath(response), path).toBe("/niet-gevonden");
+    }
+    // Known slugs and ordinary product handles go to their page (an unknown product handle 404s there).
+    for (const path of ["/collections/oorbellen", "/drops/holiday-sparkle", "/products/zzz"]) {
       const response = await proxy(request(path, { at: LAUNCHED }));
       expect(isNext(response), path).toBe(true);
     }

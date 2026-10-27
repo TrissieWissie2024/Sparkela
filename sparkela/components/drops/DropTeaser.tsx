@@ -47,10 +47,11 @@ export function DropTeaser({ drop }: DropTeaserProps) {
             </h1>
             <p className="tekst-groot mt-4 max-w-[30rem] text-bot-wit">{drop.teaser.text}</p>
             <p className="mt-7 font-semibold text-bot-wit md:mt-8">{copy.startsOn(formatStartLabel(drop.startsAt))}</p>
+            {/* With reduced motion the countdown is the fixed start label, the same date as the line above: left out. */}
             <TimeGate
               at={drop.startsAt}
-              className="mt-3 min-h-11"
-              before={<DropCountdown target={drop.startsAt} kind="start" liveLabel={live} />}
+              className="mt-3 min-h-11 motion-reduce:mt-0 motion-reduce:min-h-0"
+              before={<DropCountdown target={drop.startsAt} kind="start" liveLabel={live} className="motion-reduce:hidden" />}
               after={
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-3">
                   <Pill tone="outline-op-donker">{live}</Pill>

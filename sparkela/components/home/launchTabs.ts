@@ -1,4 +1,4 @@
-import type { CatalogProduct, JewelryType } from "@/lib/types";
+import type { CatalogProduct, JewelryType, SortKey } from "@/lib/types";
 import { sortProducts } from "@/lib/catalog";
 import { collectionPath } from "@/lib/paths";
 import type { HomeContent } from "@/content/home";
@@ -8,7 +8,8 @@ import type { HomeContent } from "@/content/home";
  * without React or Next.
  *
  * - Each tab holds at most LAUNCH_TAB_MAX products in "uitgelicht" order (featuredRank, sold out last), so a sold-out
- *   piece never takes one of the eight places while there are others.
+ *   piece never takes one of the eight places while there are others. `pool` keeps the whole tab in that order: another
+ *   sort picks its eight from the whole pool, so "Prijs laag naar hoog" starts at the cheapest piece (QA round 1).
  * - "alles" takes every product; a type tab only that type. A tab without products is left out, so a visitor never
  *   opens an empty tab.
  * - Every tab links to its collection below the grid: "alles" to /collections/alle, a type to /collections/<type>.
@@ -20,11 +21,16 @@ import type { HomeContent } from "@/content/home";
 /** Products per tab (plan §14.1: "elk max 8"). */
 export const LAUNCH_TAB_MAX = 8;
 
+/** next/image sizes of a card in this grid: half the screen below lg, a quarter of the 1240 px frame from lg. */
+export const LAUNCH_CARD_SIZES = "(min-width: 1280px) 290px, (min-width: 1024px) 25vw, 50vw";
+
 export interface HomeTab {
   id: string;
   label: string;
-  /** Handles in "uitgelicht" order; the visitor's sort reorders them. */
+  /** The first `max` handles in "uitgelicht" order (the server-rendered cards of the first tab). */
   handles: string[];
+  /** Every handle of the tab in "uitgelicht" order; another sort takes its first `handles.length` from here. */
+  pool: string[];
   viewAll: { label: string; href: string };
 }
 
@@ -49,6 +55,7 @@ export function launchTabs(
       id: tab.id,
       label: tab.label,
       handles,
+      pool: pool.map((product) => product.handle),
       viewAll:
         tab.id === "alles"
           ? { label: copy.viewAll, href: collectionPath("alle") }
@@ -61,6 +68,27 @@ export function launchTabs(
 /** Every handle that occurs in a tab, once, in first-seen order (the cards the server renders). */
 export function tabHandles(tabs: readonly HomeTab[]): string[] {
   return [...new Set(tabs.flatMap((tab) => tab.handles))];
+}
+
+/** Every handle of every tab's pool, once (the products whose sort fields the client needs). */
+export function poolHandles(tabs: readonly HomeTab[]): string[] {
+  return [...new Set(tabs.flatMap((tab) => tab.pool))];
+}
+
+/** A tab's handles for `sort`: the eight of "uitgelicht" as they are, else the first as many of the sorted pool. */
+export function sortedTabHandles<T extends Pick<CatalogProduct, "handle" | "featuredRank" | "priceRange" | "publishedAt" | "availableForSale">>(
+  tab: Pick<HomeTab, "handles" | "pool">,
+  products: readonly T[],
+  sort: SortKey,
+): string[] {
+  if (sort === "uitgelicht") return tab.handles;
+  const pool = new Set(tab.pool);
+  return sortProducts(
+    products.filter((product) => pool.has(product.handle)),
+    sort,
+  )
+    .slice(0, tab.handles.length)
+    .map((product) => product.handle);
 }
 
 /*

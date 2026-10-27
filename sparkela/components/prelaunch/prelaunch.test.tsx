@@ -39,9 +39,25 @@ describe("WaitlistHero", () => {
     expect(html).toContain(`href="${site.privacyLink.href}"`);
   });
 
-  it("leaves the photo block out while the photo of Linde is not supplied (no grey placeholder)", () => {
+  it("leaves the photo block out in production while the photo of Linde is not supplied (no grey placeholder)", () => {
     expect(SUPPLIED.has("linde.wachtlijst")).toBe(false);
-    expect(html).not.toContain("FOTO:");
+    const production = renderToStaticMarkup(
+      <ClockProvider serverNow={PRELAUNCH}>
+        <WaitlistHero hideMissing />
+      </ClockProvider>,
+    );
+    expect(production).not.toContain("FOTO:");
+    expect(production).not.toContain("lg:grid-cols-2");
+  });
+
+  it("shows the placeholder in the two-column layout outside production, so that layout is checked (QA round 1)", () => {
+    const local = renderToStaticMarkup(
+      <ClockProvider serverNow={PRELAUNCH}>
+        <WaitlistHero hideMissing={false} />
+      </ClockProvider>,
+    );
+    expect(local).toContain("FOTO: Linde, wachtlijst");
+    expect(local).toContain("lg:grid-cols-2");
   });
 
   it("has both launch variants in fixed height: the opening line before, a plain link to the shop after", () => {

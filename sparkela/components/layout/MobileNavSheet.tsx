@@ -51,7 +51,7 @@ function CurrentDot() {
 }
 
 /** Unbounded 700, 20 px, 52 px high (plan §2.5), for the main links and the two group triggers. */
-const primaryClasses = "flex min-h-[52px] items-center gap-3 font-display text-xl leading-tight font-bold text-tekst";
+const primaryClasses = "flex min-h-[52px] items-center gap-3 font-display-bold text-xl leading-tight font-bold text-tekst";
 const primaryLinkClasses = cn(primaryClasses, "decoration-1 underline-offset-4 hover:underline");
 
 function SubLink({ link, pathname, onNavigate }: { link: NavLink; pathname: string | null; onNavigate(): void }) {

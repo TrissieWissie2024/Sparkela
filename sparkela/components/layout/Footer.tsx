@@ -1,12 +1,12 @@
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 import { chromeCopy } from "@/content/copy/chrome";
 import { sharedCopy } from "@/content/copy/shared";
-import { footerNav } from "@/content/navigation";
+import { footerNav, legalNav } from "@/content/navigation";
 import { site } from "@/content/site";
 import { Logo } from "@/components/brand/Logo";
-import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
+import { CookieSettingsButton } from "@/components/consent/ConsentSlots";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { VatNotice } from "@/components/time/VatNotice";
 import { Container } from "@/components/ui/Container";
@@ -18,17 +18,22 @@ import { PaymentBadges } from "./PaymentBadges";
  * data-vlak="donker" (bot-wit focus ring); SubscribeForm and CookieSettingsButton are its only client islands.
  *
  * Top to bottom:
- * 1. The Sparkela Club sign-up: site.club.title as heading, a line, the three benefits and SubscribeForm
- *    source="footer" (the exact consent sentence on an unchecked checkbox, the privacy link, double opt-in). A page
- *    that shows its own Club sign-up marks it with data-eigen-club; app/globals.css then hides this block (and the
- *    hairline above the links), so the same form never shows twice in a row (fix 7-9).
+ * 1. The Sparkela Club sign-up: site.club.title as heading, one line and SubscribeForm source="footer" (the exact
+ *    consent sentence on an unchecked checkbox, the privacy link, double opt-in; the reward is in the title and in
+ *    the line under the field). A page that shows its own Club sign-up marks it with data-eigen-club; app/globals.css
+ *    then hides this block (and the hairline above the links), so the same form never shows twice in a row (fix 7-9).
+ *    QA round 1 (brief §5, 70/20/10): no benefit checklist any more (title and form line say it), tighter padding,
+ *    and a wordmark of at most 36rem, so the dark footer no longer fills most of a short page.
  * 2. Link columns Shop / Klantenservice / Sparkela / Juridisch (footerNav): 2 columns on phones, 4 from md. The
  *    Juridisch column gets "Cookie-instellingen" only while analytics is on.
  * 3. Payment methods as neutral text badges and the socials (open in a new window, ↗, rel="noopener").
  * 4. The company details (placeholders until TODO-LAUNCH), the VAT line by date, the withdrawal link
  *    <a href="/herroepen">Hier de overeenkomst herroepen</a> (exactly this label and target, on every page) and the
  *    copyright with the year as a literal from content.
- * 5. The wordmark across the container width (decorative: the name is in the copyright line).
+ * 5. The wordmark, the container width on phones and at most 36rem from md (decorative: the name is in the copyright
+ *    line; it keeps its built-in free space, brief §3).
+ * Task pages (checkout, search, account, contact) mark themselves with data-compacte-footer: app/globals.css then shows only
+ * the compact legal row (legalNav), the withdrawal link, the company details and the VAT line, like MiniFooter.
  * Hidden in print. Port of CORVANE components/layout/Footer.tsx.
  */
 
@@ -41,25 +46,18 @@ export function Footer() {
   const copy = chromeCopy.footer;
 
   return (
-    <footer data-vlak="donker" className="bg-donker text-tekst-op-donker print:hidden">
+    // --pill-ruimte: set by EmailCapture while the Spark pill shows, so the pill never covers the wordmark at the end.
+    <footer data-vlak="donker" className="bg-donker pb-[var(--pill-ruimte,0px)] text-tekst-op-donker print:hidden">
       <Container>
         <div
           data-footer-club
-          className="grid grid-cols-1 gap-8 pt-16 pb-14 md:pt-24 md:pb-20 lg:grid-cols-12 lg:items-start lg:gap-x-8"
+          className="grid grid-cols-1 gap-6 pt-12 pb-12 md:gap-8 md:pt-20 md:pb-16 lg:grid-cols-12 lg:items-start lg:gap-x-8"
         >
           <div className="lg:col-span-5">
             <h2 className="kop-2 text-tekst-op-donker">
               {site.club.title}
             </h2>
             <p className="mt-3 max-w-[30rem] text-tekst-2-op-donker md:mt-4">{copy.clubIntro}</p>
-            <ul className="mt-5 flex flex-col gap-2">
-              {site.club.benefits.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2.5 text-[0.9375rem]">
-                  <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-tekst-2-op-donker" strokeWidth={2} />
-                  {benefit}
-                </li>
-              ))}
-            </ul>
           </div>
           <SubscribeForm source="footer" tone="donker" layout="inline" className="lg:col-span-6 lg:col-start-7 lg:pt-2" />
         </div>
@@ -67,7 +65,7 @@ export function Footer() {
         <nav
           data-footer-nav
           aria-label={copy.navLabel}
-          className="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-rand-op-donker py-12 md:grid-cols-4 md:gap-x-8 md:py-16"
+          className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-rand-op-donker py-10 md:grid-cols-4 md:gap-x-8 md:py-14"
         >
           {footerNav.map((column, index) => (
             <div key={column.title}>
@@ -90,7 +88,23 @@ export function Footer() {
           ))}
         </nav>
 
-        <div className="flex flex-col gap-8 border-t border-rand-op-donker pt-10 md:flex-row md:items-center md:justify-between">
+        {/* Shown instead of the link columns, the Club and the wordmark on task pages (data-compacte-footer). */}
+        <nav data-footer-compact aria-label={copy.compactNavLabel} className="hidden pt-8">
+          <ul className="flex flex-wrap gap-x-6">
+            {legalNav.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className={linkClasses}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div
+          data-footer-social
+          className="flex flex-col gap-8 border-t border-rand-op-donker pt-10 md:flex-row md:items-center md:justify-between"
+        >
           <PaymentBadges tone="donker" />
           <ul aria-label={copy.socialsLabel} className="flex flex-wrap items-center gap-x-7">
             {site.socials.map((social) => (
@@ -138,9 +152,17 @@ export function Footer() {
         </div>
 
         {/* The logo carries its own free space (decision 161), so the padding around it stays small. */}
-        <div aria-hidden="true" className="pt-8 pb-2 md:pt-12 md:pb-4">
-          <Logo variant="op-donker" width={600} className="h-auto w-full" />
+        {/* The lead tagline (site.taglines[0], brief §3) beside the wordmark: from md it fills the row's right side. */}
+        <div
+          data-footer-wordmark
+          className="flex flex-col gap-1 pt-6 pb-6 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-8 md:pb-4"
+        >
+          <div aria-hidden="true" className="w-full max-w-[36rem]">
+            <Logo variant="op-donker" width={600} className="h-auto w-full" />
+          </div>
+          <p className="label-caps text-tekst-2-op-donker">{site.taglines[0]}</p>
         </div>
+        <div data-footer-compact className="hidden h-8" />
       </Container>
     </footer>
   );

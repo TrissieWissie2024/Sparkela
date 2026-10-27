@@ -100,7 +100,9 @@ export function PhotoSlot({
 
 /**
  * The shared placeholder of PhotoSlot and VideoSlot: a flat surface with one centred line of 12 px text. `name` is
- * what a screen reader hears (role="img"); an empty name hides the placeholder from assistive technology.
+ * what a screen reader hears (role="img"); an empty name hides the placeholder from assistive technology. The line
+ * is at most 13.5rem wide (about 28 digits of Inter 500 at 12 px): rem, not `ch`, so the width does not change when
+ * Inter swaps in for its fallback (plan §4.3, decision 212).
  */
 export function SlotPlaceholder({
   text,
@@ -116,7 +118,7 @@ export function SlotPlaceholder({
   const a11y = name ? { role: "img" as const, "aria-label": name } : { "aria-hidden": true as const };
   return (
     <div className={cn("flex items-center justify-center overflow-hidden", SLOT_TONES[tone], className)} {...a11y}>
-      <span className="max-w-[28ch] px-4 text-center font-sans text-xs leading-snug font-medium text-balance">{text}</span>
+      <span className="max-w-[13.5rem] px-4 text-center font-sans text-xs leading-snug font-medium text-balance">{text}</span>
     </div>
   );
 }

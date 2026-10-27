@@ -1,14 +1,16 @@
 "use client";
 
 import { Info } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 
 import type { Cart, CheckoutState } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { pagesCopy } from "@/content/copy/pages";
 import { Spark } from "@/components/brand/Spark";
 import { useCart } from "@/components/cart/useCart";
+import { PageHeader } from "@/components/pages/PageHeader";
 import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Container";
 
 import { CheckoutForm } from "./CheckoutForm";
 import { CheckoutPlaced } from "./CheckoutPlaced";
@@ -43,6 +45,8 @@ import { OrderSummary } from "./OrderSummary";
  *   left and the overview right (sticky under the header).
  *
  * `initial` sets the start state (CheckoutView.test.tsx renders `placed` with an empty cart); the page passes nothing.
+ * It renders the page header too (QA round 1): once the order is placed the intro "Controleer je bestelling en vul je
+ * gegevens in." no longer applies, so it goes.
  */
 
 export interface CheckoutViewProps {
@@ -76,12 +80,12 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
 
   if (state.status === "placed" && order) {
     return (
-      <div>
+      <CheckoutFrame placed>
         <DemoNotice />
         <div className="mt-8 md:mt-10">
           <CheckoutPlaced order={order} headingRef={headingRef} />
         </div>
-      </div>
+      </CheckoutFrame>
     );
   }
 
@@ -91,26 +95,26 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
   // footer does not jump up when the cart turns out empty (CLS; integrator 7-9). A filled cart is always taller.
   if (!hydrated && !shown) {
     return (
-      <div>
+      <CheckoutFrame>
         <DemoNotice />
         <CheckoutLoading />
-      </div>
+      </CheckoutFrame>
     );
   }
 
   if (!shown || shown.lines.length === 0) {
     return (
-      <div>
+      <CheckoutFrame>
         <DemoNotice />
         <div className={STATE_MIN_HEIGHT}>
           <CheckoutEmpty />
         </div>
-      </div>
+      </CheckoutFrame>
     );
   }
 
   return (
-    <div>
+    <CheckoutFrame>
       <DemoNotice />
       <div className="mt-8 grid gap-10 md:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 xl:gap-x-12">
         <OrderSummary
@@ -127,7 +131,18 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
           className="lg:col-span-7 lg:row-start-1"
         />
       </div>
-    </div>
+    </CheckoutFrame>
+  );
+}
+
+/** The page header and the container around every state; the intro only while there is something to check. */
+function CheckoutFrame({ placed = false, children }: { placed?: boolean; children: ReactNode }) {
+  const copy = pagesCopy.checkout;
+  return (
+    <>
+      <PageHeader title={copy.title} intro={placed ? undefined : copy.intro} />
+      <Container className="pb-16 md:pb-24">{children}</Container>
+    </>
   );
 }
 

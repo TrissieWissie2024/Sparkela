@@ -26,8 +26,11 @@ import { Container } from "@/components/ui/Container";
 
 const copy = collectionCopy.giftCards;
 
-/** FAQ items on this page (content/faq.ts ids). */
-const FAQ_IDS = ["cadeaukaart"];
+/**
+ * FAQ items on this page (content/faq.ts ids): three existing answers that matter next to a gift card (QA round 1: a
+ * single "Kan ik een cadeaukaart kopen?" repeated what the page says).
+ */
+const FAQ_IDS = ["welkomstcode", "betalen", "cadeauverpakking"];
 
 const HOW_ICONS = [Gift, Mail, ReceiptEuro];
 

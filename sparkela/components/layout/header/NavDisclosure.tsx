@@ -36,7 +36,22 @@ const HOVER_DELAY_MS = 150;
 
 type OpenReason = "click" | "hover";
 
-function PanelLink({ link, image, onNavigate }: { link: NavLink; image?: AssetKey; onNavigate: () => void }) {
+/**
+ * A link in a panel. In a group with photo tiles (`tiled`), a link without its own photo ("Bekijk alles") gets a tile
+ * of the same size with an arrow, so its text lines up with the others instead of looking like a missing photo
+ * (QA round 1).
+ */
+function PanelLink({
+  link,
+  image,
+  tiled,
+  onNavigate,
+}: {
+  link: NavLink;
+  image?: AssetKey;
+  tiled: boolean;
+  onNavigate: () => void;
+}) {
   return (
     <Link
       href={link.href}
@@ -46,6 +61,13 @@ function PanelLink({ link, image, onNavigate }: { link: NavLink; image?: AssetKe
       {image ? (
         <div className="w-24 shrink-0 overflow-hidden rounded-[10px]">
           <PhotoSlot assetKey={image} label={link.label} alt="" aspect="4:5" sizes="96px" tone="kaart" />
+        </div>
+      ) : tiled ? (
+        <div
+          aria-hidden="true"
+          className="flex aspect-[4/5] w-24 shrink-0 items-center justify-center rounded-[10px] border border-rand bg-kaart text-tekst"
+        >
+          <ArrowRight className="size-6 motion-safe:transition-transform group-hover/link:translate-x-0.5" strokeWidth={1.5} />
         </div>
       ) : null}
       <span className="min-w-0 pt-0.5">
@@ -57,6 +79,7 @@ function PanelLink({ link, image, onNavigate }: { link: NavLink; image?: AssetKe
 }
 
 export function NavDisclosure({ group, images, closeSignal, className }: NavDisclosureProps) {
+  const tiled = images !== undefined && Object.keys(images).length > 0;
   const id = useId();
   const panelId = `${id}-panel`;
   const [reason, setReason] = useState<OpenReason | null>(null);
@@ -164,7 +187,7 @@ export function NavDisclosure({ group, images, closeSignal, className }: NavDisc
           <ul className="grid grid-cols-3 gap-x-8 gap-y-6">
             {group.links.map((link) => (
               <li key={link.href}>
-                <PanelLink link={link} image={images?.[link.href]} onNavigate={close} />
+                <PanelLink link={link} image={images?.[link.href]} tiled={tiled} onNavigate={close} />
               </li>
             ))}
           </ul>

@@ -17,9 +17,10 @@ import { Button } from "./Button";
  * - It takes keyboard focus (tabIndex 0) only while it really overflows, so keyboard users can scroll it with the
  *   arrow keys where it scrolls and it is not an empty Tab stop where it does not (CORVANE D43.7). A ResizeObserver
  *   re-checks on every size change. Before hydration the list is focusable, which is right for the phone layout.
- * - "Vorige" and "Volgende" buttons scroll by most of a view. They float over the row's edges (no reserved space,
- *   so showing them never shifts the layout), from md by default or always (`controls="always"`, Carousel), and only
- *   once the row is measured to overflow. At an end the button stays focusable with aria-disabled.
+ * - "Vorige" and "Volgende" buttons scroll by most of a view. From md they float over the row's edges (no reserved
+ *   space, so showing them never shifts the layout), and only once the row is measured to overflow. At an end the
+ *   button stays focusable with aria-disabled. With `controls="always"` (Carousel) phones get them too, in a reserved
+ *   row under the list, right-aligned (QA round 1, decision 216c): over a phone-width card they covered the photo.
  * - A small vertical padding keeps the focus rings of the items inside the scroll box, which would clip them.
  * Port of CORVANE components/ui/ScrollRow.tsx, plus the buttons.
  */
@@ -96,9 +97,33 @@ export function ScrollRow({ label, controls = "md", wrapperClassName, className,
   };
 
   const showControls = controls !== "none" && state.overflows === true;
-  const visibility = controls === "always" ? "flex" : "hidden md:flex";
-  /** The buttons are transparent outline buttons; this wrapper gives them a white face and a floating shadow. */
-  const face = "pointer-events-auto rounded-full bg-kaart shadow-zwevend";
+  /** The buttons are transparent outline buttons; this wrapper gives them a white face (and a floating shadow). */
+  const face = "pointer-events-auto rounded-full bg-kaart";
+
+  const previous = (
+    <Button
+      variant="outline"
+      size="sm"
+      iconOnly
+      aria-label={sharedCopy.ui.previous}
+      aria-disabled={state.atStart || undefined}
+      onClick={() => (state.atStart ? undefined : scrollByView(-1))}
+    >
+      <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={1.5} />
+    </Button>
+  );
+  const next = (
+    <Button
+      variant="outline"
+      size="sm"
+      iconOnly
+      aria-label={sharedCopy.ui.next}
+      aria-disabled={state.atEnd || undefined}
+      onClick={() => (state.atEnd ? undefined : scrollByView(1))}
+    >
+      <ChevronRight aria-hidden="true" className="size-5" strokeWidth={1.5} />
+    </Button>
+  );
 
   return (
     <div className={cn("relative", wrapperClassName)}>
@@ -115,35 +140,24 @@ export function ScrollRow({ label, controls = "md", wrapperClassName, className,
       >
         {children}
       </ul>
+      {controls === "always" ? (
+        // Phones: a row under the list, reserved from the first paint so the buttons never shift the layout.
+        <div className="mt-4 flex min-h-11 items-center justify-end gap-2 md:hidden">
+          {showControls ? (
+            <>
+              <span className={face}>{previous}</span>
+              <span className={face}>{next}</span>
+            </>
+          ) : null}
+        </div>
+      ) : null}
       {showControls ? (
         <>
-          <span className={cn(visibility, "pointer-events-none absolute inset-y-0 left-2 z-10 items-center")}>
-            <span className={face}>
-              <Button
-                variant="outline"
-                size="sm"
-                iconOnly
-                aria-label={sharedCopy.ui.previous}
-                aria-disabled={state.atStart || undefined}
-                onClick={() => (state.atStart ? undefined : scrollByView(-1))}
-              >
-                <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={1.5} />
-              </Button>
-            </span>
+          <span className="pointer-events-none absolute inset-y-0 left-2 z-10 hidden items-center md:flex">
+            <span className={cn(face, "shadow-zwevend")}>{previous}</span>
           </span>
-          <span className={cn(visibility, "pointer-events-none absolute inset-y-0 right-2 z-10 items-center")}>
-            <span className={face}>
-              <Button
-                variant="outline"
-                size="sm"
-                iconOnly
-                aria-label={sharedCopy.ui.next}
-                aria-disabled={state.atEnd || undefined}
-                onClick={() => (state.atEnd ? undefined : scrollByView(1))}
-              >
-                <ChevronRight aria-hidden="true" className="size-5" strokeWidth={1.5} />
-              </Button>
-            </span>
+          <span className="pointer-events-none absolute inset-y-0 right-2 z-10 hidden items-center md:flex">
+            <span className={cn(face, "shadow-zwevend")}>{next}</span>
           </span>
         </>
       ) : null}

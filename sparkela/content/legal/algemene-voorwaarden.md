@@ -12,7 +12,7 @@ Dit zijn de algemene voorwaarden van {{handelsnaam}}. Ze gelden als je iets koop
 - KvK-nummer: {{kvk}}
 - Btw-identificatienummer: {{btwId}}
 
-Je kunt ons op werkdagen bereiken per e-mail. We reageren binnen 1 werkdag.
+Je kunt ons op werkdagen bereiken per e-mail. We reageren binnen {{reactietijd}}.
 
 ## 2. Begrippen
 

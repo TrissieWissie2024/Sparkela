@@ -32,6 +32,9 @@ import { useCart } from "./useCart";
  * CheckoutButton. Empty: CartEmpty. Notices of the cart (a code that did not combine, a line that is no longer for
  * sale) and the last error sit above the lines.
  *
+ * A cart of gift cards only (digital, nothing is packed) gets no gift message field and no launch-gift line: both
+ * promise something in a parcel (QA round 1). A note left from removed jewellery is cleared then.
+ *
  * It closes on navigation (also a link inside it, and the back button). After a removal focus stays in the list: on
  * the line that took its place, the one before it, or the heading of the empty state (WCAG 2.4.3).
  * Mounted lazily by CartDrawerLoader. Port of CORVANE components/cart/CartDrawer.tsx.
@@ -53,7 +56,7 @@ export function noticeText(notice: CartNotice): string {
 }
 
 export function CartDrawer() {
-  const { cart, hydrated, isOpen, setOpen, closeCart, removeLine, lastError } = useCart();
+  const { cart, hydrated, isOpen, setOpen, closeCart, removeLine, lastError, setNote } = useCart();
   const listRef = useRef<HTMLUListElement>(null);
   const emptyHeadingId = `${useId()}-empty`;
 
@@ -68,7 +71,15 @@ export function CartDrawer() {
 
   const lines = cart?.lines ?? [];
   const empty = hydrated && lines.length === 0;
-  const notices = cart?.notices ?? [];
+  // The totals already say why a code does not count (CartTotals), so that notice is not repeated at the top.
+  const notices = (cart?.notices ?? []).filter((notice) => notice.kind !== "code-not-combined");
+  // Something to pack: a gift message and the launch gift only make sense then (same rule as gift wrap).
+  const physical = cart?.giftWrap.available ?? false;
+  const strayNote = hydrated && cart !== null && !physical && lines.length > 0 && cart.note !== "";
+
+  useEffect(() => {
+    if (strayNote) void setNote("");
+  }, [strayNote, setNote]);
 
   const handleRemove = async (lineId: string) => {
     const index = lines.findIndex((line) => line.id === lineId);
@@ -148,11 +159,13 @@ export function CartDrawer() {
               ))}
             </ul>
 
-            <div className="flex flex-col gap-1 border-t border-rand py-4">
-              <GiftWrapToggle />
-              <GiftMessageField />
-              <CampaignCartNote className="mt-2" />
-            </div>
+            {physical ? (
+              <div className="flex flex-col gap-1 border-t border-rand py-4">
+                <GiftWrapToggle />
+                <GiftMessageField />
+                <CampaignCartNote className="mt-2" />
+              </div>
+            ) : null}
 
             <CartUpsell />
 

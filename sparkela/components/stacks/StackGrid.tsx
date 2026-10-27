@@ -5,11 +5,11 @@ import { StackCard } from "./StackCard";
 
 /**
  * Linde's stacks in a grid (docs/PLAN.md §14.7: 1 column on phones, 2 from md, 3 from xl), without ragged rows: xl
- * uses 3 columns when the number of stacks is a multiple of 3, else 2 (four stacks while Holiday Sparkle runs: two
- * rows of two, so each card is wide enough for StackCard's horizontal layout and no name runs into its price; four
- * columns of 276 px were too narrow, fix 7-9); with an odd number the last card spans the row where two columns would
- * leave a gap, so it turns into StackCard's wide layout. One stack (the drop page) spans the whole width. Server
- * component.
+ * uses 3 columns when the number of stacks is a multiple of 3, else one stack per row (QA round 1, decision 216d):
+ * two columns of 572 px put StackCard in a 2 : 3 split whose photo column was a 228 × 700 sliver, while a full-width
+ * card gets the 6 : 5 split of the drop page (a photo of about 640 px wide). With an odd number the last card spans
+ * the row where two columns would leave a gap, so it turns into StackCard's wide layout. One stack (the drop page)
+ * spans the whole width. Server component.
  */
 
 export interface StackGridProps {
@@ -27,9 +27,9 @@ export function stackGridClasses(count: number): { list: string; last: string } 
   return {
     list: cn(
       "grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8",
-      xlColumns === 3 && "xl:grid-cols-3",
+      xlColumns === 3 ? "xl:grid-cols-3" : "xl:grid-cols-1",
     ),
-    last: cn(odd && "md:col-span-2", odd && xlColumns !== 2 && "xl:col-span-1"),
+    last: cn(odd && "md:col-span-2", odd && "xl:col-span-1"),
   };
 }
 

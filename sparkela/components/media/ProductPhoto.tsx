@@ -8,8 +8,8 @@ import { PhotoSlot } from "./PhotoSlot";
 
 /**
  * A product photo (plan §13.4, §17.1): always 4:5, object-cover, through next/image and the Shopify loader
- * (lib/image-loader.ts sets ?width= on the CDN URL). Pass `sizes` (card: "(min-width: 1280px) 25vw,
- * (min-width: 768px) 33vw, 50vw"; gallery: "(min-width: 1024px) 55vw, 100vw") and `preload` only for the LCP image.
+ * (lib/image-loader.ts sets ?width= on the CDN URL). Pass `sizes` (card: PRODUCT_CARD_SIZES; gallery: GALLERY_SIZES)
+ * and `preload` only for the LCP image.
  * The width of the photo comes from the parent or `className` (w-14 in a cart line).
  *
  * Without an image (the test products have none) it renders a PhotoSlot placeholder: "FOTO: {title}, {kind}".

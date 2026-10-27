@@ -28,9 +28,8 @@ export function StatementMeter({
 
   return (
     <div className={className}>
-      <Heading className="flex items-center gap-2.5">
+      <Heading aria-label={copy.headingName} className="flex items-center gap-2.5">
         <span className="label-caps text-tekst-2">{copy.title}</span>
-        <span className="sr-only">, </span>
         <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium text-tekst-2 ring-1 ring-rand-invoer ring-inset">
           {copy.indicative}
         </span>

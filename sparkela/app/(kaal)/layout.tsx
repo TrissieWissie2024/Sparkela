@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { getServerNow } from "@/lib/server-clock";
+import { FirstPaintMarker } from "@/components/layout/FirstPaintMarker";
 import { ClockProvider } from "@/components/time/ClockProvider";
 import { MiniFooter } from "@/components/prelaunch/MiniFooter";
 
@@ -14,6 +15,7 @@ export default async function KaalLayout({ children }: { children: ReactNode }) 
   return (
     <ClockProvider serverNow={await getServerNow()}>
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col bg-donker focus:outline-none">
+        <FirstPaintMarker />
         {children}
       </main>
       <MiniFooter />

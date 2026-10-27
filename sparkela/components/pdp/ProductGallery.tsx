@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   Camera,
   ChevronLeft,
@@ -17,13 +17,16 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Reac
 
 import type { ImageKind, ProductImage } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { useLatch } from "@/lib/hooks/useLatch";
 import { DESKTOP_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { pdpCopy } from "@/content/copy/pdp";
 import { sharedCopy } from "@/content/copy/shared";
 import { ProductPhoto } from "@/components/media/ProductPhoto";
-import { Modal } from "@/components/ui/Modal";
 
 import { gallerySlides, type GallerySlideData } from "./gallery";
+
+/** The zoom dialog in the shared lazy dialog chunk (components/layout/islands.ts, QA round 1). */
+const GalleryZoom = dynamic(() => import("@/components/layout/islands").then((module) => module.GalleryZoom), { ssr: false });
 
 /**
  * The product gallery (docs/PLAN.md §13.9, §14.2; brief §6: swipe on phones, thumbnails on desktop, zoom; packshot,
@@ -55,10 +58,11 @@ export interface ProductGalleryProps {
 }
 
 /** next/image sizes of a slide (plan §17.1). */
-export const GALLERY_SIZES = "(min-width: 1024px) 55vw, 100vw";
+// The slide is about 46vw from md (the buy column sits next to it) and 504 px from 1280 (QA round 1: "55vw" made the
+// preloaded LCP photo up to 3 times too large on tablets and laptops).
+export const GALLERY_SIZES = "(min-width: 1280px) 504px, (min-width: 768px) 46vw, 100vw";
 
 /** The zoomed photo is twice the dialog width (44rem). */
-const ZOOM_SIZES = "(min-width: 768px) 88rem, 200vw";
 
 /** Time without scroll events after which a swipe counts as settled. */
 const SETTLE_MS = 70;
@@ -78,6 +82,7 @@ export function ProductGallery({ images, title, placeholderKinds, className }: P
   const [active, setActive] = useState(0);
   const [status, setStatus] = useState("");
   const [zoomOpen, setZoomOpen] = useState(false);
+  const zoomUsed = useLatch(zoomOpen);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -264,48 +269,17 @@ export function ProductGallery({ images, title, placeholderKinds, className }: P
         {status}
       </p>
 
-      {current?.image ? (
-        <Modal
+      {/* The zoom dialog's code (Radix Dialog) loads with the shared dialog chunk, only once zoom is first opened. */}
+      {current?.image && zoomUsed ? (
+        <GalleryZoom
           open={zoomOpen}
           onOpenChange={setZoomOpen}
-          size="lg"
           title={pdpCopy.gallery.zoomTitle(title)}
-          hideTitle
-          padded={false}
-        >
-          <ZoomView image={current.image} label={current.label} />
-        </Modal>
+          image={current.image}
+          label={current.label}
+        />
       ) : null}
     </section>
-  );
-}
-
-/** The zoomed photo: twice the dialog width in a box that scrolls both ways, opened at the centre. */
-function ZoomView({ image, label }: { image: ProductImage; label: string }) {
-  const center = useCallback((node: HTMLDivElement | null) => {
-    if (!node) return;
-    // After layout: start in the middle of the photo, the part people zoom in for.
-    requestAnimationFrame(() => {
-      node.scrollLeft = (node.scrollWidth - node.clientWidth) / 2;
-      node.scrollTop = (node.scrollHeight - node.clientHeight) / 2;
-    });
-  }, []);
-
-  return (
-    <div>
-      <div
-        ref={center}
-        tabIndex={0}
-        role="group"
-        aria-label={label}
-        className="max-h-[min(78dvh,52rem)] overflow-auto overscroll-contain bg-kaart focus-visible:outline-offset-[-4px]"
-      >
-        <div className="relative aspect-[4/5] w-[200%]">
-          <Image src={image.url} alt={label} fill sizes={ZOOM_SIZES} className="object-cover" />
-        </div>
-      </div>
-      <p className="tekst-klein px-5 py-3 text-tekst-2 md:px-7">{pdpCopy.gallery.zoomHint}</p>
-    </div>
   );
 }
 

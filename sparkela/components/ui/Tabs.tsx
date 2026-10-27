@@ -11,6 +11,10 @@ import { cn } from "@/lib/cn";
  * browser scrolls the focused tab into view, and the focus ring sits inside the tab so the scroll box cannot clip
  * it. The selected tab is never colour alone: it gets a 2 px underline in --tekst. Only the active panel is rendered
  * (Radix default), so a product is never in the DOM twice. Used for the type tabs on the home (HomeProductTabs).
+ *
+ * Radix focuses a tab on pointer down, and Chrome then matches :focus-visible on it, so a tap left the heavy focus
+ * ring around the tab (QA round 1). The list marks pointer use (data-pointer, set on pointer down and cleared on any
+ * key), and while it is set the ring is hidden; keyboard focus keeps the 2 px --focus ring (AGENTS.md).
  */
 
 export interface TabItem {
@@ -39,7 +43,13 @@ export function Tabs({ tabs, label, defaultTab, onChange, className, panelClassN
       <RadixTabs.List
         aria-label={label}
         loop
-        className="no-scrollbar -mx-5 flex justify-between overflow-x-auto overscroll-x-contain px-5 shadow-[inset_0_-1px_0_var(--rand)] sm:justify-start sm:gap-1 md:mx-0 md:px-0"
+        onPointerDown={(event) => {
+          event.currentTarget.dataset.pointer = "";
+        }}
+        onKeyDown={(event) => {
+          delete event.currentTarget.dataset.pointer;
+        }}
+        className="group/tabs no-scrollbar -mx-5 flex justify-between overflow-x-auto overscroll-x-contain px-5 shadow-[inset_0_-1px_0_var(--rand)] sm:justify-start sm:gap-1 md:mx-0 md:px-0"
       >
         {tabs.map((tab) => (
           <RadixTabs.Trigger
@@ -48,8 +58,9 @@ export function Tabs({ tabs, label, defaultTab, onChange, className, panelClassN
             className={cn(
               // Five tabs fit a 390 px phone (14 px, 4 px padding and the space spread between them below sm), so none hides
               // behind the edge; narrower phones scroll the row.
-              "relative inline-flex min-h-11 shrink-0 items-center rounded-md px-1 text-sm font-semibold whitespace-nowrap text-tekst-2 sm:px-3 sm:text-[0.9375rem]",
+              "relative inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1 text-sm font-semibold whitespace-nowrap text-tekst-2 sm:px-3 sm:text-[0.9375rem]",
               "transition-colors duration-200 hover:text-tekst focus-visible:-outline-offset-2",
+              "group-data-[pointer]/tabs:focus-visible:outline-none",
               // The active line is drawn inside the tab, so the rounded focus ring never hides it (fix 7-9).
               "after:absolute after:inset-x-1 after:bottom-0 after:h-0.5 after:rounded-full after:bg-transparent sm:after:inset-x-3",
               "data-[state=active]:text-tekst data-[state=active]:after:bg-tekst",

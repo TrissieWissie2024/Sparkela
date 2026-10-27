@@ -39,8 +39,10 @@ import { QuickAdd } from "./QuickAdd";
  *   and the cheapest variant; a struck-through previous price always comes with the lowest-30-days line (Price).
  * - The card is a size container. Narrower than 14.5rem (two columns on a phone, three on a tablet) the price sits
  *   above a full-width QuickAdd, so every card in a row ends the same way; wider cards put them side by side. The
- *   card has no fixed height and clips nothing: QuickAdd's choice list opens in the flow below its button (on a wide
- *   card it takes the full row width). It needs a width from its parent (grid cell or carousel slide).
+ *   card has no fixed height and clips nothing. QuickAdd's choice list opens as an overlay inside the card (QA round
+ *   1, decision 216a): anchored to the bottom of the card's text area, as wide as it (100cqw of the card minus its
+ *   padding), growing upward over the photo. So the card never changes height, its row neighbours never stretch,
+ *   and a scroll row (overflow-x) never clips it. It needs a width from its parent (grid cell or carousel slide).
  */
 
 export interface ProductCardProps {
@@ -55,7 +57,7 @@ export interface ProductCardProps {
 }
 
 /** next/image sizes of a card in the product grid (plan §17.1). */
-export const PRODUCT_CARD_SIZES = "(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw";
+export const PRODUCT_CARD_SIZES = "(min-width: 1280px) 290px, (min-width: 768px) 30vw, 50vw";
 
 /**
  * The variant whose price a card shows: defaultVariant() (the first one for sale), or with several prices the
@@ -83,14 +85,16 @@ const SIDE_PADDING = "px-3 @min-[15rem]:px-4";
 
 /**
  * QuickAdd in the price row. Narrow card: full width (the button itself, or the wrapper and its button with several
- * variants). Wide card: to the right of the price; while its choice list is open (the wrapper holds a role="dialog"
- * panel) the wrapper takes the full row, the button stays right and the panel spans the card's width.
+ * variants). Wide card: to the right of the price.
  */
-const QUICK_ADD_CLASSES = cn(
-  "ml-auto @max-[14.5rem]:ml-0 @max-[14.5rem]:w-full @max-[14.5rem]:[&>button]:w-full",
-  "has-[[role=dialog]]:flex has-[[role=dialog]]:basis-full has-[[role=dialog]]:flex-col has-[[role=dialog]]:items-end",
-  "[&>[role=dialog]]:self-stretch",
-);
+const QUICK_ADD_CLASSES = "ml-auto @max-[14.5rem]:ml-0 @max-[14.5rem]:w-full @max-[14.5rem]:[&>button]:w-full";
+
+/**
+ * The choice list as an overlay (decision 216a): QuickAdd's wrapper ends at the right and bottom edge of the card's
+ * text area, so the panel is anchored there and is as wide as the text area (the card's width minus the side padding
+ * of SIDE_PADDING), growing upward over the price, the name and the photo. z-20 keeps it above the vibe chip.
+ */
+const QUICK_ADD_PANEL = "absolute right-0 bottom-0 z-20 w-[calc(100cqw-1.5rem)] @min-[15rem]:w-[calc(100cqw-2rem)]";
 
 export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SIZES, preload = false, className }: ProductCardProps) {
   const Heading = `h${headingLevel}` as const;
@@ -125,7 +129,7 @@ export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SI
       <CardMedia product={product} sizes={sizes} preload={preload} />
 
       <div className={cn("order-3 flex flex-1 flex-col pb-3 @min-[15rem]:pb-4", SIDE_PADDING)}>
-        {product.specRegel ? <p className="tekst-klein mt-1 text-tekst-2">{product.specRegel}</p> : null}
+        {product.specRegel ? <SpecLine text={product.specRegel} /> : null}
         <Stars rating={rating} size="sm" className="mt-2" />
         <div
           className={cn(
@@ -134,10 +138,36 @@ export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SI
           )}
         >
           <Price display={display} from={from} size="md" />
-          <QuickAdd product={product} size="sm" className={QUICK_ADD_CLASSES} />
+          <QuickAdd product={product} size="sm" className={QUICK_ADD_CLASSES} panelClassName={QUICK_ADD_PANEL} />
         </div>
       </div>
     </article>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Spec line                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The spec line ("Verguld staal · 45 mm") as parts with a separator that never dangles (QA round 1): every part but
+ * the first has a "·" before it in the gap, and the list is shifted left by one gap inside a clipping box, so the
+ * separator of whichever part starts a line falls outside the box. No line ends or starts with a dot. Screen readers
+ * get the text as written (the visual parts are aria-hidden).
+ */
+function SpecLine({ text }: { text: string }) {
+  const parts = text.split(/\s*·\s*/u).filter(Boolean);
+  return (
+    <p className="tekst-klein mt-1 overflow-hidden text-tekst-2">
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true" className="-ml-[1.1em] flex flex-wrap">
+        {parts.map((part, index) => (
+          <span key={index} className="min-w-0 before:inline-block before:w-[1.1em] before:text-center before:content-['·']">
+            {part}
+          </span>
+        ))}
+      </span>
+    </p>
   );
 }
 

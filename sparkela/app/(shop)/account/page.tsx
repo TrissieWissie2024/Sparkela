@@ -5,6 +5,7 @@ import { ArrowRight, Mail } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { pageMetadata } from "@/lib/seo";
 import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
 import { PageHeader } from "@/components/pages/PageHeader";
 import { buttonClasses } from "@/components/ui/Button";
@@ -29,7 +30,14 @@ export const metadata: Metadata = pageMetadata({
 export default function AccountPage() {
   return (
     <>
-      <PageHeader title={copy.title} intro={copy.text} />
+      {/* A task page: the compact footer (app/globals.css, QA round 1). */}
+      <div data-compacte-footer="" hidden />
+      <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.service}
+        title={copy.title}
+        intro={copy.text}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-x-8">
           <section aria-labelledby="account-hulp" className="rounded-kaart bg-vlak p-6 md:p-8 lg:col-span-5 lg:self-start">

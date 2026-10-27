@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { useRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { useRef, type ComponentPropsWithoutRef, type MouseEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { sharedCopy } from "@/content/copy/shared";
@@ -90,8 +90,21 @@ function corners(side: SheetSide, size: SheetSize): string {
 export const overlayClasses = "fixed inset-0 z-60 bg-inkt/45 motion-safe:anim-overlay";
 
 /**
+ * Escape inside an element marked data-escape-local (QuickAdd's choice list in the cart upsell) closes that element
+ * only: Radix listens for Escape on the document before the element's own handler runs, so without this the whole
+ * drawer closed (QA round 1). Shared by Sheet and Modal.
+ */
+export const keepLocalEscape: ContentProps["onEscapeKeyDown"] = (event) => {
+  if (event.target instanceof Element && event.target.closest("[data-escape-local]")) event.preventDefault();
+};
+
+/**
  * Remembers what had focus when a dialog opened and returns focus there when it closes, for dialogs opened without
  * a Radix trigger (the cart after "In winkelwagen"). Shared by Sheet and Modal.
+ *
+ * A dialog closed by following a link inside it to another page (a search result, a menu link, a product in the
+ * cart) sends focus to <main id="main"> instead of back to its trigger in the header, the same place RouteFocus puts
+ * it after any other navigation (QA round 1). `handleClickCapture` goes on the dialog content to notice such a link.
  */
 export function useReturnFocus(
   hasTrigger: boolean,
@@ -99,13 +112,34 @@ export function useReturnFocus(
   onCloseAutoFocus?: ContentProps["onCloseAutoFocus"],
 ) {
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const navigatedRef = useRef(false);
+  const openPathRef = useRef<string | null>(null);
   const handleOpenAutoFocus: ContentProps["onOpenAutoFocus"] = (event) => {
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    navigatedRef.current = false;
+    openPathRef.current = window.location.pathname;
     onOpenAutoFocus?.(event);
+  };
+  const handleClickCapture = (event: MouseEvent<HTMLElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+    if (!(link instanceof HTMLAnchorElement) || (link.target && link.target !== "_self")) return;
+    const url = new URL(link.href, window.location.href);
+    if (url.origin === window.location.origin && url.pathname !== window.location.pathname) navigatedRef.current = true;
   };
   const handleCloseAutoFocus: ContentProps["onCloseAutoFocus"] = (event) => {
     onCloseAutoFocus?.(event);
-    if (event.defaultPrevented || hasTrigger) return;
+    if (event.defaultPrevented) return;
+    const moved = openPathRef.current !== null && openPathRef.current !== window.location.pathname;
+    openPathRef.current = null;
+    if (navigatedRef.current || moved) {
+      navigatedRef.current = false;
+      returnFocusRef.current = null;
+      event.preventDefault();
+      document.getElementById("main")?.focus({ preventScroll: true });
+      return;
+    }
+    if (hasTrigger) return;
     const target = returnFocusRef.current;
     returnFocusRef.current = null;
     if (target?.isConnected) {
@@ -113,7 +147,7 @@ export function useReturnFocus(
       target.focus({ preventScroll: true });
     }
   };
-  return { handleOpenAutoFocus, handleCloseAutoFocus };
+  return { handleOpenAutoFocus, handleCloseAutoFocus, handleClickCapture };
 }
 
 export function Sheet({
@@ -138,7 +172,11 @@ export function Sheet({
   onCloseAutoFocus,
   children,
 }: SheetProps) {
-  const { handleOpenAutoFocus, handleCloseAutoFocus } = useReturnFocus(Boolean(trigger), onOpenAutoFocus, onCloseAutoFocus);
+  const { handleOpenAutoFocus, handleCloseAutoFocus, handleClickCapture } = useReturnFocus(
+    Boolean(trigger),
+    onOpenAutoFocus,
+    onCloseAutoFocus,
+  );
   const background = surface === "vlak" ? "bg-vlak" : "bg-pagina";
   const isTop = side === "top";
 
@@ -151,6 +189,8 @@ export function Sheet({
           {...(description ? {} : { "aria-describedby": undefined })}
           onOpenAutoFocus={handleOpenAutoFocus}
           onCloseAutoFocus={handleCloseAutoFocus}
+          onClickCapture={handleClickCapture}
+          onEscapeKeyDown={keepLocalEscape}
           className={cn(
             "fixed z-60 flex flex-col overflow-hidden text-tekst shadow-zwevend outline-none",
             "[@media(max-height:30rem)]:scroll-pt-16 [@media(max-height:30rem)]:overflow-y-auto [@media(max-height:30rem)]:overscroll-contain",

@@ -56,6 +56,7 @@ export default async function SparkelaClubPage() {
       <PageHeader
         eyebrow={copy.eyebrow}
         title={site.club.title}
+        sentenceLines
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.eyebrow }]}
       />

@@ -139,8 +139,8 @@ Gedefinieerd in `content/collections.ts`. Lidmaatschap volgt uit de tags (§7.2)
 | `/manifest.webmanifest` | `app/manifest.ts` | GET | `○` | Naam, kleuren, iconen |
 | `/icon.svg`, `/apple-icon.png`, `/favicon.ico` | `app/icon.svg`, `app/apple-icon.png`, `app/favicon.ico` | GET | `○` | Uit `scripts/build-logo.mjs` |
 | `/opengraph-image` | `app/opengraph-image.tsx` | GET | `○` | Merkbeeld 1200×630 |
-| `/products/[handle]/opengraph-image` | `app/(shop)/products/[handle]/opengraph-image.tsx` | GET | `●` | Product-OG met eigen `generateStaticParams` |
-| `/drops/[slug]/opengraph-image` | `app/(shop)/drops/[slug]/opengraph-image.tsx` | GET | `●` | Drop-OG op roest |
+| `/products/[handle]/opengraph-image` | `app/products/[handle]/opengraph-image.tsx` (buiten de groep `(shop)`, beslissing 213) | GET | `●` | Product-OG met eigen `generateStaticParams` |
+| `/drops/[slug]/opengraph-image` | `app/drops/[slug]/opengraph-image.tsx` (idem) | GET | `●` | Drop-OG op roest |
 
 Er is geen `/api/search`, geen `/api/checkout` en geen cron-route. Zoeken gebeurt in de browser over de zichtbare catalogus (§7.3). Afrekenen gaat met `shopify` via `cart.checkoutUrl` en met `local` naar `/checkout`.
 
@@ -222,6 +222,8 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `app/apple-icon.png` | 180×180, bot-wit S en vonk op roest | 3b/B1 |
 | `app/manifest.ts` | Naam, `start_url: "/"`, kleuren via `lib/brand-colors.ts`, iconen | 10-11/E1 |
 | `app/opengraph-image.tsx` | Merk-OG 1200×630 | 10-11/E1 |
+| `app/products/[handle]/opengraph-image.tsx` | Product-OG; buiten `(shop)`, want in een routegroep zet Next een hash achter de URL (beslissing 213) | 10-11/E1 |
+| `app/drops/[slug]/opengraph-image.tsx` | Drop-OG; idem | 10-11/E1 |
 | `app/sitemap.ts` | Statische routes, collecties, zichtbare producten, gestarte drops | 10-11/E1 |
 | `app/robots.ts` (+ `tests/unit/robots.test.ts`) | Alles toegestaan behalve `/api/`; sitemap-URL | 10-11/E1 |
 | `app/not-found.tsx` | Globale 404 met `ShopChrome` eromheen en `NotFoundView` | fixer 4-6 (naar voren gehaald uit 7-9/D4, beslissing 201) |
@@ -233,11 +235,9 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `app/(shop)/page.tsx` | Homepage, secties 1 tot 16 (§14.1) | 7-9/D1 |
 | `app/(shop)/collections/[handle]/page.tsx` | Collectie (§14.3) | 7-9/D3 |
 | `app/(shop)/products/[handle]/page.tsx` | Productpagina (§14.2) | 7-9/D2 |
-| `app/(shop)/products/[handle]/opengraph-image.tsx` | Product-OG | 10-11/E1 |
 | `app/(shop)/products/layout.tsx` | `PdpStateProvider` (keuzes blijven bij wisselen van product) | 7-9/D2 |
 | `app/(shop)/drops/[slug]/page.tsx` | Droppagina (§14.6) | 7-9/D3 |
 | `app/(shop)/drops/[slug]/binnenkort/page.tsx` | Teaser vóór toegang | 7-9/D3 |
-| `app/(shop)/drops/[slug]/opengraph-image.tsx` | Drop-OG | 10-11/E1 |
 | `app/(shop)/stacks/page.tsx` | Stacks (§14.7) | 7-9/D3 |
 | `app/(shop)/cadeaukaarten/page.tsx` | Cadeaukaarten (§14.8) | 7-9/D3 |
 | `app/(shop)/zoeken/page.tsx` | Zoeken (§14.10) | 7-9/D3 |
@@ -418,6 +418,8 @@ const nextConfig: NextConfig = {
   // All metadata is static; bots get the static shell too (CORVANE D54.2). Remove if a route ever streams metadata.
   htmlLimitedBots: /[^\s\S]/,
   images: { loader: "custom", loaderFile: "./lib/image-loader.ts" },
+  // Fewer, larger client chunks (wave 10-11, E1; CORVANE phase 8): Lighthouse mobile 2 to 3 points higher (decision 215).
+  experimental: { turbopackChunking: { minChunkSize: 200_000, maxChunkCountPerGroup: 6 } },
   turbopack: { rules: { "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" } } },
 };
 
@@ -574,21 +576,35 @@ Componenten gebruiken alleen deze rollen, via Tailwind-klassen of `var(--…)`. 
 
 ### 4.3 Typografie
 
-`next/font/google` in `app/layout.tsx`:
+`next/font/local` in `app/layout.tsx` (sinds integrator 10, beslissing 212; tot golf 10-11 `next/font/google` met dezelfde fonts):
 
 ```ts
-const unbounded = Unbounded({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-unbounded", display: "swap" });
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const unbounded = localFont({
+  src: [
+    { path: "../assets/fonts/Unbounded-latin-700.woff2", weight: "700", style: "normal" },   // @fontsource/unbounded, 21 KB
+    { path: "../assets/fonts/Unbounded-latin-800.woff2", weight: "800", style: "normal" },   // 22 KB
+  ],
+  variable: "--font-unbounded", display: "swap", adjustFontFallback: false,
+  fallback: ["Unbounded Fallback Arial", "Unbounded Fallback Roboto"],
+});
+const inter = localFont({
+  src: "../assets/fonts/Inter-latin-wght400-700.woff2", weight: "400 700", style: "normal",       // Google's latin subset, as 400-700, 34 KB
+  variable: "--font-inter", display: "swap", adjustFontFallback: false,
+  fallback: ["Inter Fallback Arial", "Inter Fallback Roboto"],
+});
 // <html lang="nl" className={`${inter.variable} ${unbounded.variable} antialiased`}>
 ```
+
+- De fallback-faces ("Unbounded Fallback Arial/Roboto", "Inter Fallback Arial/Roboto") staan in `app/globals.css`, afgestemd op de gemiddelde letterbreedte per gewicht (E1, beslissing 213), en komen ook in `--font-sans` en `--font-display` terug. `adjustFontFallback: false` plus `fallback` houdt next/font's eigen fallback (één gewone Arial-face) eruit.
+- Maten die met een font meeschalen in `em` of `rem`, nooit in `ch`: `ch` volgt het font dat op dat moment tekent, en de 0 van de fallback is 14% smaller dan die van Inter (beslissing 212). Zo blijven de doos van de countdown, het aantal in "Tas (n)" en de regel van de fotoplaceholder even breed als Inter binnenkomt.
 
 Utilities in `globals.css` (via `@utility`), zodat maten op één plek staan:
 
 | Utility | Font | Mobiel | Vanaf `md` | Vanaf `lg` | Regelhoogte | Tracking | Gebruik |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `kop-1` | Unbounded 800 | 32 px | 40 px | 48 px | 1.1 | -0.01em | H1 (één per pagina) |
+| `kop-1` | Unbounded 800 | 32 px (`min(2rem, 8.5vw)`: 27 px op 320 px) | 40 px | 48 px | 1.1 | -0.01em | H1 (één per pagina) |
 | `kop-2` | Unbounded 800 | 24 px | 28 px | 32 px | 1.15 | -0.01em | H2 sectiekoppen |
-| `kop-3` | Unbounded 700 | 18 px | 20 px | 22 px | 1.25 | 0 | H3, kaarttitels in secties |
+| `kop-3` | Unbounded 700 (eigen familie `--font-unbounded-700`, niet vooraf geladen; beslissing 216) | 18 px | 20 px | 22 px | 1.25 | 0 | H3, kaarttitels in secties |
 | `kop-4` | Inter 600 | 16 px | 16 px | 17 px | 1.35 | 0 | Productnaam op kaart, accordiontriggers |
 | `tekst-groot` | Inter 400 | 18 px | 18 px | 20 px | 1.5 | 0 | Subregels, intro's |
 | (body) | Inter 400 | 16 px | 16 px | 16 px | 1.5 | 0 | Standaard |
@@ -882,7 +898,7 @@ Verzonnen namen, prijzen op ,95, geen echte merken. Handles zijn vast: tests geb
 
 - Vetgedrukte prijzen en voorraad worden door E2E-tests gebruikt (§19.2). Niet wijzigen zonder de tests aan te passen.
 - `featuredRank` = volgorde in de tabel (1 tot 24). `publishedAt`: `2026-11-20T12:00:00+01:00` voor alle stukken, behalve de nieuw-getagde (`2026-11-25T12:00:00+01:00`) zodat "nieuwste" iets betekent.
-- Elk product heeft een `spec_regel` (type-afhankelijke maat). Producten met alleen Goud: "Verguld staal · 20 mm"; een stuk met een deel dat geen gewoon metaal is noemt dat deel ("Verguld staal met kleuraccent · 35 mm", "Verguld staal met schelpje · 25 mm", "Kralen met verguld staal · 18 cm"; beslissing 185). Producten met Goud en Zilver (1, 5, 17, 19) krijgen een specregel zonder laagwoord: "Staal, goud of zilver · 20 mm" (beslissing 115). Een content-test bewaakt dat een product met een Zilver-variant nooit "Verguld", "verguld" of "goudlaag" in `specRegel` heeft. Verder heeft elk product `afmetingen`, `gewicht` (per stuk, in de vorm "8 g"), `sluiting` ("Klapsluiting", "Oorsteker met stopper", "Karabijnsluiting"; ringen in maat 16 tot 19 "Gesloten ring", de bangle "Open model, zonder sluiting", de kralenarmband "Elastiek, zonder sluiting"; beslissing 165), `verzorging` (algemene tekst uit `pdpCopy.care.default`), `statement_meter` (1 tot 5: chunky-stukken 4 of 5, subtiel 1 of 2), en een korte stylingtekst (`description`, 1 tot 2 zinnen, eigen woorden).
+- Elk product heeft een `spec_regel` (type-afhankelijke maat). Producten met alleen Goud: "Verguld staal · 20 mm"; een stuk met een deel dat geen gewoon metaal is noemt dat deel ("Verguld staal met kleuraccent · 35 mm", "Verguld staal met schelpje · 25 mm", "Kralen met verguld staal · 18 cm"; beslissing 185). Producten met Goud en Zilver (1, 5, 17, 19) krijgen een specregel zonder laagwoord: "Staal, goud- of zilverkleurig · 20 mm" (beslissing 115; "kleurig" sinds QA-ronde 1, beslissing 216: geen edelmetaalwoord voor een laag). Beschrijvingen en alt-teksten zeggen "goudkleurig", nooit "gouden". Een content-test bewaakt dat een product met een Zilver-variant nooit "Verguld", "verguld" of "goudlaag" in `specRegel` heeft. Verder heeft elk product `afmetingen`, `gewicht` (per stuk, in de vorm "8 g"), `sluiting` ("Klapsluiting", "Oorsteker met stopper", "Karabijnsluiting"; ringen in maat 16 tot 19 "Gesloten ring", de bangle "Open model, zonder sluiting", de kralenarmband "Elastiek, zonder sluiting"; beslissing 165), `verzorging` (algemene tekst uit `pdpCopy.care.default`), `statement_meter` (1 tot 5: chunky-stukken 4 of 5, subtiel 1 of 2), en een korte stylingtekst (`description`, 1 tot 2 zinnen, eigen woorden).
 - `data/shopify-products.csv` bevat precies dezelfde producten (behalve `cadeaukaart`, die maakt Tristan als cadeaukaart in Shopify aan) in het huidige importformaat van Shopify (beslissing 164; Shopify accepteert de oudere namen `Handle`, `Body (HTML)`, `Variant SKU` enzovoort nog steeds): `Title, URL handle, Description, Vendor (Sparkela), Product category, Type, Tags, Published on online store (FALSE), Status, SKU, Option1 name, Option1 value, Price, Compare-at price, Charge tax, Inventory tracker (shopify), Inventory quantity, Continue selling when out of stock (deny), Weight value (grams), Weight unit for display, Requires shipping, Fulfillment service (manual), Product image URL, Image position, Image alt text, Gift card, SEO title, SEO description`, één rij per variant, plus metafield-kolommen in de vorm `spec_regel (product.metafields.custom.spec_regel)` enzovoort, voor alle velden van §6.4. `Status` is `draft` voor alle rijen: Tristan zet ze na controle op actief en publiceert ze in het Headless-kanaal (TODO-LAUNCH). De wachtlijst heeft ze niet nodig (§11.9).
 
 ### 5.5 `content/stacks.ts`
@@ -2243,7 +2259,7 @@ Elke response krijgt `x-sparkela-gate: open | wachtlijst | preview | early-acces
 
 ### 11.3 Allowlist tijdens prelaunch
 
-`/wachtlijst`, `/nieuwsbrief/bevestigen`, `/algemene-voorwaarden`, `/privacy`, `/cookies`, `/herroepen`, `/contact`, `/verzenden-en-retourneren`, de early-access-paden uit stap 5, `/api/*` (al buiten de matcher), alle statische bestanden en metadata-routes. De wachtlijst en de bevestigingspagina gebruiken de `(kaal)`-layout. De toegestane juridische pagina's en de drop-teaser tonen de gewone shop-chrome: ze zijn statisch en hetzelfde voor en na de lancering. Een klik op een shoplink geeft tijdens de prelaunch de wachtlijst, en de cart weigert gewone producten (§7.4, cart-gate). Dat is bewust (beslissing 16).
+`/wachtlijst`, `/nieuwsbrief/bevestigen`, `/algemene-voorwaarden`, `/privacy`, `/cookies`, `/herroepen`, `/contact`, `/verzenden-en-retourneren`, de early-access-paden uit stap 5, `/checkout` voor wie een geldige early-access-cookie heeft van een drop in zijn early-access-fase (de demo-checkout van de lokale provider; QA-ronde 1, beslissing 216), `/api/*` (al buiten de matcher), alle statische bestanden en metadata-routes. De wachtlijst en de bevestigingspagina gebruiken de `(kaal)`-layout. De toegestane juridische pagina's en de drop-teaser tonen de gewone shop-chrome: ze zijn statisch en hetzelfde voor en na de lancering. Een klik op een shoplink geeft tijdens de prelaunch de wachtlijst, en de cart weigert gewone producten (§7.4, cart-gate). Dat is bewust (beslissing 16).
 
 ### 11.4 Preview-link
 
@@ -2450,8 +2466,8 @@ Extra exports (3b/B1, beslissing 162): `logo-paths.ts` ook `CAP_HEIGHT`, `LOGO_B
 | `Select` | C | `{ id?: string; label: string; hideLabel?: boolean; value: string; options: Array<{ value: string; label: string }>; onChange(v: string): void }` | Native `<select>` in pill van 44 px, `border-rand-invoer` | `SortSelect.tsx` |
 | `Stars` | S | `{ rating: RatingSummary \| null; size?: "sm" \| "md"; showCount?: boolean; tone? }` | Niets bij `null` (altijd zolang er geen reviews zijn) | `Stars.tsx` |
 | `Flag` | S | `{ label?: string; decorative?: boolean }` | NL-vlag als inline SVG met `fill-vlag-rood`, `fill-vlag-wit`, `fill-vlag-blauw` (tokens uit §4.1), dunne rand `stroke-rand` | `Flag.tsx` |
-| `ScrollRow` | C | `ComponentPropsWithoutRef<"ul"> & { label: string; controls?: "md" \| "always" \| "none"; wrapperClassName?: string }` | Scroll-snap-lijst, `role="list"`, alleen focusbaar (`tabIndex=0`) als hij overloopt (ResizeObserver). Vorige/volgende-knoppen zweven over de randen (geen gereserveerde ruimte) en verschijnen pas als de rij gemeten overloopt; `controls` standaard `"md"` (beslissing 169) | `ScrollRow.tsx` |
-| `Carousel` | C | `{ label: string; items: ReactNode[]; itemClassName?: string; className?: string }` | `role="region"` met `aria-roledescription="carrousel"` en `aria-label` › `ScrollRow` (lijst, naam `sharedCopy.ui.slides` "Dia's", zodat de naam van de carrousel niet twee keer klinkt; beslissing 188) › `listitem` › `role="group" aria-roledescription="dia" aria-label="{n} van {total}"`; knoppen "Vorige" en "Volgende" altijd (`controls="always"`). `itemClassName` zet de breedte van de dia's (beslissing 169) | nieuw (op `ScrollRow`) |
+| `ScrollRow` | C | `ComponentPropsWithoutRef<"ul"> & { label: string; controls?: "md" \| "always" \| "none"; wrapperClassName?: string }` | Scroll-snap-lijst, `role="list"`, alleen focusbaar (`tabIndex=0`) als hij overloopt (ResizeObserver). Vorige/volgende-knoppen zweven vanaf `md` over de randen (geen gereserveerde ruimte) en verschijnen pas als de rij gemeten overloopt; `controls` standaard `"md"` (beslissing 169). Met `"always"` krijgen telefoons de knoppen in een gereserveerde rij onder de lijst, rechts uitgelijnd (QA-ronde 1, beslissing 216c) | `ScrollRow.tsx` |
+| `Carousel` | C | `{ label: string; items: ReactNode[]; itemClassName?: string; listClassName?: string; className?: string }` (`listClassName`: een rij tot de schermrand, beslissing 216c) | `role="region"` met `aria-roledescription="carrousel"` en `aria-label` › `ScrollRow` (lijst, naam `sharedCopy.ui.slides` "Dia's", zodat de naam van de carrousel niet twee keer klinkt; beslissing 188) › `listitem` › `role="group" aria-roledescription="dia" aria-label="{n} van {total}"`; knoppen "Vorige" en "Volgende" altijd (`controls="always"`). `itemClassName` zet de breedte van de dia's (beslissing 169) | nieuw (op `ScrollRow`) |
 | `VisuallyHidden` | S | `{ as?; children }` | sr-only | `VisuallyHidden.tsx` |
 | `InlineScript` | C | `{ html: string }` | Zie §10.5 | `InlineScript.tsx` |
 | `MotionStyles` | S | geen | `<style href="sparkela-motion" precedence="default">` met alle keyframes. Eén keer, in `app/layout.tsx`; `Sheet`, `Modal` en `Accordion` renderen hem niet zelf (beslissing 171). De hulpklassen `anim-overlay`, `anim-sheet-right/left/top`, `anim-modal`, `anim-accordion` en `anim-paneel` in `globals.css` kiezen per Radix-`data-state` een keyframe en staan altijd achter `motion-safe:` | `MotionStyles.tsx` |
@@ -2490,14 +2506,14 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 
 | Component | S/C | Props | Rendert | Bron |
 | --- | --- | --- | --- | --- |
-| `ShopChrome` | S (async) | `{ children: ReactNode }` | Haalt `getCatalogProducts()`, `getServerNow()`, `resolveProviderName()`. Rendert `ClockProvider` › `CatalogProvider` › `CartProvider` › (`ConsentBanner`?) `AnnouncementBar` `Header` `<main id="main" tabIndex={-1} className="flex-1 focus:outline-none">children</main>` `Footer` `CartDrawerLoader` `CartAnnouncer` (`AnalyticsLoader`?). C3 bouwt hem in golf 4-6 **zonder** `EmailCaptureLoader` en zonder reviewblok. De integrator van golf 7-9 voegt `<ReviewsCarousel reviews={reviews} variant="footer" />` direct boven `Footer` en `<EmailCaptureLoader />` na `Footer` toe (twee regels, zijn enige wijziging in dit bestand) | `app/layout.tsx` (CORVANE) |
+| `ShopChrome` | S (async) | `{ children: ReactNode }` | Haalt `getCatalogProducts()`, `getServerNow()`, `resolveProviderName()`. Rendert `ClockProvider` › `CatalogProvider` › `CartProvider` › (`ConsentBanner`?) `AnnouncementBar` `Header` `<main id="main" tabIndex={-1} className="flex-1 focus:outline-none"><FirstPaintMarker />children</main>` (de marker sinds integrator 10, §18.4) `Footer` `CartDrawerLoader` `CartAnnouncer` (`AnalyticsLoader`?). C3 bouwt hem in golf 4-6 **zonder** `EmailCaptureLoader` en zonder reviewblok. De integrator van golf 7-9 voegt `<ReviewsCarousel reviews={reviews} variant="footer" />` direct boven `Footer` en `<EmailCaptureLoader />` na `Footer` toe (twee regels, zijn enige wijziging in dit bestand) | `app/layout.tsx` (CORVANE) |
 | `SkipLink` | S | `{ targetId?: string }` | "Naar de inhoud", z-70, zichtbaar bij focus (3a/A2) | `SkipLink.tsx` |
 | `RouteFocus` | C | `{ targetId?: string }` | Focus naar `<main>` na navigatie als focus op body of onzichtbaar is; `usePathname` binnen eigen `<Suspense fallback={null}>` (3a/A2) | `RouteFocus.tsx` |
 | `AnnouncementBar` | S (async) | geen | `data-vlak="donker"`, `bg-donker text-tekst-op-donker`, `min-h-promo`; `TimeSwitch` over het promoschema (§12.3); `print:hidden` | `PromoBar.tsx`, `promo/*` |
 | `UspBar` | C | `{ usps: string[] }` | Mobiel roterend (4 s, pauzeknop, pauze bij hover/focus), vanaf `lg` drie naast elkaar | `promo/UspBar.tsx` |
 | `CampaignMessage` | S | `{ campaign: Campaign }` | Bericht, `Countdown` naar `endsAt` (eind-labels, §10.6: fallback "t/m 30 november"), link | `promo/CampaignMessage.tsx` |
 | `DropMessage` | S | `{ drop: Drop; state: "upcoming" \| "live" }` | "Nieuwe drop: …" met timer naar `startsAt` (start-labels, §10.6), of "Nu live: …" | nieuw |
-| `Header` | S (async) | geen | Haalt `getFeaturedDrop()` en `getVisibleStacks()` voor de `MobileNavFeature` (§2.5): de drop alleen bij `phase === "live"`, anders de eerste stack. Sticky `top-0 z-30 h-header bg-pagina border-b border-rand`; mobiel grid `1fr auto 1fr`: [`MobileNav` + `SearchButton`] [`Logo variant="header"` 120 px, 104 px onder `xs`] [`AccountLink` (vanaf `xs`) + `CartButton`]; vanaf `xl`: [`Logo` 150 px] [`DesktopNav`] [zoeken, account, `CartButton`]. Compacte staat via `HeaderCompactSentinel` (`data-compact` op de header: logo 120 → 104 px, kleinere padding), buitenhoogte blijft gelijk (beslissing 40) | `Header.tsx` |
+| `Header` | S (async) | geen | Haalt `getFeaturedDrop()` en `getVisibleStacks()` voor de `MobileNavFeature` (§2.5): de drop alleen bij `phase === "live"`, anders de eerste stack. Sticky `top-0 z-30 h-header bg-pagina border-b border-rand`; mobiel grid `1fr auto 1fr`: [`MobileNav` + `SearchButton`] [`Logo variant="header"` 120 px, 104 px onder `xs`] [`AccountLink` (vanaf `xs`) + `CartButton`]; vanaf `xl`: [`Logo` 150 px] [`DesktopNav`] [zoeken, account, `CartButton`], in hetzelfde grid `1fr auto 1fr`, zodat de nav op de pagina gecentreerd staat en niet verschuift als de rechtergroep van breedte verandert (integrator 10, beslissing 212). Compacte staat via `HeaderCompactSentinel` (`data-compact` op de header: logo 120 → 104 px, kleinere padding), buitenhoogte blijft gelijk (beslissing 40) | `Header.tsx` |
 | `header/DesktopNav` | C | `{ items: NavItem[] }` | Links met onderstreeplijn (300 ms, `aria-current`), twee `NavDisclosure`-groepen | `header/DesktopNav.tsx` |
 | `header/NavDisclosure` | C | `{ group: NavGroup; images?: Partial<Record<string, AssetKey>> }` | Knop met `aria-expanded`/`aria-controls`, paneel over containerbreedte, z-30, `shadow-zwevend`; Esc sluit en zet focus terug; sluit bij klik buiten, focus buiten en `onNavigate` | nieuw |
 | `header/CartButton` | C | geen | "Tas" + `(n)` in vaste box (`min-w-[3ch] tabular`, beslissing 194); vóór hydration "Tas" met gereserveerde ruimte; naam "Tas, {n} artikelen"; `aria-haspopup="dialog"`, `aria-expanded` | `header/CartButton.tsx` |
@@ -2507,7 +2523,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `SearchDialog` | C | `{ open: boolean; onOpenChange(v: boolean): void }` | `Sheet side="top"`: zoekveld, live top 6 uit `searchProducts`, "Alle resultaten" → `/zoeken?q=`; Enter gaat naar `/zoeken?q=` | nieuw |
 | `MobileNav` | C | `{ feature: MobileNavFeature \| null }` | Hamburger 44 px; lazy `MobileNavSheet` via `next/dynamic` na `useAfterLoad`; `useLatch` (`lib/hooks/useLatch.ts`) | `MobileNav.tsx` |
 | `MobileNavSheet` | C | `{ open: boolean; onOpenChange(v: boolean): void; onNavigate(): void; feature: MobileNavFeature \| null }` (`MobileNavFeature` uit §6.12; `MobileNav` krijgt hem als prop van `Header`, dat hem met `getFeaturedDrop()` en `getVisibleStacks()` bepaalt) | §2.5 mobiel; sluit bij navigatie en bij resize naar `xl` | `MobileNavSheet.tsx` |
-| `Footer` | S | geen | Bestand `components/layout/Footer.tsx` (subcomponenten in hetzelfde bestand of in `components/layout/footer/`, C3). `data-vlak="donker"`; bovenaan Club-aanmelding (`SubscribeForm source="footer"` met `site.club.title`); een pagina met een eigen Club-aanmelding markeert die met `data-eigen-club`, dan verbergt `app/globals.css` dit blok (fix 7-9, beslissing 209), kolommen (§2.5), `PaymentBadges tone="donker"`, socials (↗, `rel="noopener"`), bedrijfsgegevens, `VatNotice`, de link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` ("Hier de overeenkomst herroepen", exact dit label en dit doel), © met jaar als literal in content | `Footer.tsx` |
+| `Footer` | S | geen | Bestand `components/layout/Footer.tsx` (subcomponenten in hetzelfde bestand of in `components/layout/footer/`, C3). `data-vlak="donker"`; bovenaan Club-aanmelding (`SubscribeForm source="footer"` met `site.club.title` en één regel `chromeCopy.footer.clubIntro`, geen voordelenlijst; QA-ronde 1); een pagina met een eigen Club-aanmelding markeert die met `data-eigen-club`, dan verbergt `app/globals.css` dit blok (fix 7-9, beslissing 209; sinds golf 10-11 met de regel `main:has([data-eigen-club]:not([hidden] *, [data-inline-hidden] *)) ~ footer`, dus `<footer>` blijft een later zusje van `<main>` in `ShopChrome`, en het inline script `INLINE_HIDDEN_SCRIPT` in de root-layout markeert wat Activity met `display: none` verbergt, beslissing 213), kolommen (§2.5), `PaymentBadges tone="donker"`, socials (↗, `rel="noopener"`), bedrijfsgegevens, `VatNotice`, de link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` ("Hier de overeenkomst herroepen", exact dit label en dit doel), © met jaar als literal in content; onderaan het woordmerk (hooguit 36rem breed) met `site.taglines[0]`. Taakpagina's (checkout, zoeken, account, contact) zetten een verborgen `data-compacte-footer`; dan toont `app/globals.css` alleen een rij juridische links (`legalNav`), de herroepingslink, bedrijfsgegevens en `VatNotice` (QA-ronde 1, beslissing 216g). Met de Spark-pill zichtbaar krijgt de footer `padding-bottom: var(--pill-ruimte)` | `Footer.tsx` |
 | `prelaunch/MiniFooter` | S | geen | Voor de `(kaal)`-layout: juridische links (`legalNav`), dezelfde link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` als de footer, bedrijfsgegevens en `VatNotice`. `layout.spec.ts` controleert de link op elke route (§19.2). Bestand `components/prelaunch/MiniFooter.tsx` (4-6/C1); er is geen `components/layout/footer/MiniFooter.tsx` | nieuw |
 | `PaymentBadges` | S | `{ tone?: "licht" \| "donker"; size?: "sm" \| "md" }` | Neutrale tekstbadges uit `site.paymentMethods`, geen merklogo's (beslissing 93) | `PaymentIcons.tsx` |
 | `ShipLabel` | C | `{ schedule: ShipLabelEntry[]; field: "barText" \| "estimateText" \| "dispatchLabel"; className?: string }` | `TimeSwitch` over het schema; na de laatste entry de fallback uit `sharedCopy` | nieuw |
@@ -2539,7 +2555,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `GiftWrapPrice` | C | `{ className?: string }` | `TimeSwitch` over `giftWrap.freeWindows`: "+€1,95" / "Gratis in december" | nieuw | 4-6/C3 |
 | `GiftMessageField` | C | geen | Uitklapbaar tekstveld "Cadeauboodschap" (max 200, teller), debounce 600 ms naar `setNote` | nieuw | 4-6/C3 |
 | `CampaignCartNote` | C | geen | `TimeSwitch` over het campagnevenster | nieuw | 4-6/C3 |
-| `CartUpsell` | C | `{ max?: number }` | "Maak de look af": tot 3 producten uit `useCatalog().products` (zelfde vibe, ander type, niet in de cart; bij 2 stackstukken eerst een stackstuk) in `ScrollRow`, elk met `QuickAdd size="sm"`. Rendert niets vóór `site.launchAt` (`TimeGate`): tijdens de prelaunch (ook early access op 26 november) weigert de cart-gate gewone producten (§7.4, beslissing 107) | `CartUpsell.tsx` | 4-6/C3 |
+| `CartUpsell` | C | `{ max?: number }` | "Maak de look af": tot 3 producten uit `useCatalog().products` (zelfde vibe, ander type, niet in de cart; bij 2 stackstukken eerst een stackstuk) als verticale lijst van compacte rijen (foto, naam als gestrekte link, prijs, `QuickAdd size="sm"`; QA-ronde 1, beslissing 216b: geen zijwaartse rij die een muiswiel niet bereikt); na een toevoeging gaat de focus naar de volgende rij of de kop. Rendert niets vóór `site.launchAt` (`TimeGate`): tijdens de prelaunch (ook early access op 26 november) weigert de cart-gate gewone producten (§7.4, beslissing 107) | `CartUpsell.tsx` | 4-6/C3 |
 | `QuickAdd` | C | `{ product: CatalogProduct; size?: "sm" \| "md"; fullWidth?: boolean }` | Zie §13.8 (bestand `components/product/QuickAdd.tsx`, eigenaar C3 omdat cart-upsell en kaart hem allebei gebruiken) | `QuickAdd.tsx` | 4-6/C3 |
 | `CartTotals` | C | `{ cart: Cart }` | `dl`: Subtotaal, per korting een rij (`−€X`), Verzending ("Gratis", bedrag, of "Berekend bij afrekenen"), Totaal, "Je bespaart €X", `VatNotice` | `CartSummary.tsx` | 4-6/C3 |
 | `CheckoutButton` | C | `{ fullWidth?: boolean }` | "Afrekenen" (`primair`, 48 px), `loading` tijdens doorsturen, vuurt `begin_checkout` | `CartSummary.tsx` | 4-6/C3 |
@@ -2550,7 +2566,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | Component | S/C | Props | Rendert | Bron | Golf |
 | --- | --- | --- | --- | --- | --- |
 | `ProductCard` | gedeeld (S en C) | `{ product: CatalogProduct; headingLevel?: 2 \| 3; sizes?: string; preload?: boolean }` | `article` met container query; `bg-kaart border-rand rounded-kaart`; media 4:5 met `StatusLabel` (`cardBadge`) linksboven en vibe-chip rechtsonder (label uit `sharedCopy.vocab.vibe`); op `hover:hover` vanaf `lg` crossfade naar beeld 2; naam (`kop-4`, uitgerekte link), specregel (`tekst-klein text-tekst-2`), `Price` met `priceDisplay(defaultVariant(product), product.laagstePrijs30d)` (`from` bij meerdere prijzen; bij korting dus ook de laagste prijs van 30 dagen), `QuickAdd` (van C3). Naam staat eerst in de DOM. Sterren alleen met reviews | `ProductCard.tsx` | 4-6/C4 |
-| `QuickAdd` | C | `{ product: CatalogProduct; size?: "sm" \| "md"; fullWidth?: boolean }` (eigenaar 4-6/C3) | Eén variant: knop "In tas" (`primair` sm, 36 px, tikvlak 44) die direct toevoegt, daarna 1,8 s "Toegevoegd". Meerdere varianten: knop "Kies" opent een kleine keuzelijst (`Popover`-achtig paneel binnen de kaart, `role="dialog"` niet-modaal, radio's per variant, uitverkochte disabled met "uitverkocht", knop "In tas"); Esc sluit. Cadeaukaart: link "Kies bedrag" naar de PDP. Uitverkocht: knop "Uitverkocht" `aria-disabled` | `QuickAdd.tsx` | 4-6/C3 |
+| `QuickAdd` | C | `{ product: CatalogProduct; size?: "sm" \| "md"; fullWidth?: boolean; source?: AddToCartSource; panelClassName?: string; onAdded?: () => void }` (eigenaar 4-6/C3) | Eén variant: knop "In tas" (`primair` sm, 36 px, tikvlak 44) die direct toevoegt, daarna 1,8 s "Toegevoegd". Meerdere varianten: knop "Kies" opent een kleine keuzelijst (`role="dialog"` niet-modaal, `data-escape-local`, radio's per variant, uitverkochte disabled met "uitverkocht", knop "In tas"); Esc sluit alleen de lijst, ook in de drawer. In de productkaart ligt de lijst als overlay in de kaart (`panelClassName`, verankerd onderaan het tekstvak, groeit omhoog), zodat kaart en rij niet van hoogte veranderen; elders in de flow. "In tas" sluit de lijst en zet de focus eerst op "Kies", zodat de drawer daarheen terugkeert. Bij ringen is geen maat voorgekozen: "In tas" vraagt eerst "Kies eerst je maat." en er staat een link "Welke maat heb ik?" (QA-ronde 1, beslissing 216a). Cadeaukaart: link "Kies bedrag" naar de PDP. Uitverkocht: knop "Uitverkocht" `aria-disabled` | `QuickAdd.tsx` | 4-6/C3 |
 | `ProductGrid` | gedeeld (S en C) | `{ products: CatalogProduct[]; label: string; headingLevel?: 2 \| 3; priorityCount?: number }` | `<ul role="list">` 2 / 3 / 4 kolommen (§4.4) | `ProductGrid.tsx` | 4-6/C4 |
 | `SortSelect` | C | `{ value: SortKey; onChange(v: SortKey): void; id?: string }` | `Select` met de labels uit `sharedCopy.vocab.sort` ("Uitgelicht", "Prijs laag naar hoog", "Prijs hoog naar laag", "Nieuwste") | `SortSelect.tsx` | 4-6/C4 |
 | `ProductCardSkeleton` | S | geen | Zelfde maten, voor fallbacks | nieuw | 4-6/C4 |
@@ -2575,7 +2591,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `RingSizeGuide` | C | `{ open; onOpenChange }` | `Modal`: tabel maat → binnendiameter en omtrek, uitleg meten met een touwtje, tip "Twijfel je? Kies de grotere maat." | nieuw |
 | `StackPicker` | C | `{ product: Product; candidates: CatalogProduct[]; defaultPicks: [string, string] \| null; value: StackChoice; onChange(v: StackChoice): void }` met `StackChoice = { mode: "los" } \| { mode: "stack"; picks: [string, string] /* variant ids */ }` | Twee radiotegels: "Los" (prijs) en "Stack van 3 (−15%)" (totaal, "Je bespaart €X" via `stackQuote`). Bij stack: twee `Select`s "Stuk 2" en "Stuk 3" met **één optie per beschikbare variant** van de kandidaten, label `pdpCopy.stack.option(title, variantLabel \| null, price)` ("Lola chunky hoops, Zilver · €19,95"; bij één variant "Jade stipjes · €12,95"). Standaard `defaultPicks` (Lindes stack, anders de terugval uit §7.2), nooit leeg. Het eerste stuk is de variant uit `VariantPicker`. "Voeg de stack toe" voegt precies die drie variant-id's toe. Bij `defaultPicks === null` alleen "Los". Echte stukprijzen zichtbaar | `BundlePicker.tsx`, `MixAndMatch.tsx` |
 | `GiftWrapCheckbox` | C | `{ value: boolean; onChange(v: boolean): void }` | "Cadeauverpakking" + `GiftWrapPrice`; voegt bij toevoegen `setGiftWrap(true)` toe | nieuw |
-| `AddToCart` | C | `{ disabled: boolean; label: string; onAdd(): Promise<void>; buttonRef: RefObject<HTMLButtonElement \| null> }` (React 19: `useRef<HTMLButtonElement>(null)` geeft `RefObject<HTMLButtonElement \| null>`) | "In winkelwagen · €X" (`primair` lg, vol breed), stack: "Voeg de stack toe · €X" | `ProductConfigurator.tsx` |
+| `AddToCart` | C | `{ disabled: boolean; label: string; onAdd(): Promise<void>; buttonRef: RefObject<HTMLButtonElement \| null> }` (React 19: `useRef<HTMLButtonElement>(null)` geeft `RefObject<HTMLButtonElement \| null>`) | "In je tas · €X" (`primair` lg, vol breed; QA-ronde 1, beslissing 216e: overal "tas"), stack: "Voeg de stack toe · €X" | `ProductConfigurator.tsx` |
 | `StickyAddToCart` | C | `{ targetRef: RefObject<HTMLButtonElement \| null>; title: string; summary: string; price: string; onAdd(): void }` | Onder `lg`, z-40, verschijnt als de hoofdknop uit beeld is (D46), `inert` als verborgen, body-padding, `--onderbalk` en `sparkela:sticky-atc` event; na mount via een portal in `<body>`, optionele `label` ("In tas · €X") (beslissing 206a-b) | `StickyAddToCart.tsx` |
 | `DeliveryEstimate` | C | `{ schedule: ShipLabelEntry[] }` | Kaart met `ShipLabel field="estimateText"`, vlag, "Bezorging met PostNL in je brievenbus" | `DeliveryEstimate.tsx` |
 | `TrustRow` | S | `{ variant?: "product" \| "giftcard" }` | Vier rijen: "Veilig betalen met iDEAL \| Wero", "Gratis verzending vanaf €35", "6 maanden garantie op verkleuring", "14 dagen bedenktijd". Cadeaukaart: alleen veilig betalen en "Direct in je mail" | `TrustRow.tsx` |
@@ -2597,7 +2613,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | 5 | `LaunchCollection` | S | `{ products: CatalogProduct[] }` → `HomeProductTabs` | `ProductGridSection.tsx` |
 | 5 | `HomeProductTabs` | C | `{ tabs: Array<{ id: string; label: string; handles: string[] }>; products: CatalogProduct[]; cards: Record<string, ReactNode> }` (sorteert met `sortProducts` over `products`, rendert de kaarten uit `cards` per handle) | `SortableProductGrid.tsx` |
 | 8 | `HowToStack` | S | Van D3: `components/sections/HowToStack.tsx`, `{ content: HomeContent["howToStack"]; headingLevel?: 2 \| 3 }` | `HowItWorks.tsx` |
-| 9 | `FavoritesCarousel` | S | `{ products: CatalogProduct[]; useSalesTitle: boolean }` (uit `homeFavorites()`, §14.1) | `ScrollRow` |
+| 9 | `FavoritesCarousel` | S | `{ products: CatalogProduct[]; useSalesTitle: boolean }` (uit `homeFavorites()`, §14.1); `Carousel` tot de schermrand, knoppen op telefoons onder de rij (beslissing 216c) | `ScrollRow` |
 | 10 | `StatementVsSubtle` | S | `{ content: HomeContent["statementVsSubtle"] }` | `SolidVsSpray.tsx` |
 | 11 | `MomentTiles` | S | `{ content: HomeContent["moments"] }` | nieuw |
 | 13 | `ReviewsCarousel` | S | `{ reviews: Review[]; variant?: "home" \| "footer" }` → `null` zonder reviews of als `site.flags.showReviews` uit staat; `footer` is het blok boven de footer (§2.5) | `ReviewsSection.tsx` |
@@ -2664,7 +2680,7 @@ Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-l
 | `LegalPage` | S | `{ slug: LegalSlug; children?: ReactNode }` | `PageHeader`, `LegalNotice`, Markdown-inhoud (tokens uit `legalVariables`, `children` op de plek van `<!-- slot -->`), "Laatst bijgewerkt: {updatedAt}". Het bestand exporteert ook `legalSource`, `fillLegalTemplate`, `legalPage`, `formatLegalDate` en `LEGAL_SLOT` | 4-6/C1 |
 | `LegalNotice` | S | geen | Banner `bg-info-vlak`: "TODO: laten controleren" | 4-6/C1 |
 | `Markdown` | S | `{ source: string; className?: string }` | `marked` (server-side) naar HTML met vaste opmaak (`prose`-achtige eigen klassen); links intern via `next/link` niet nodig (gewone `<a>`) | 4-6/C1 |
-| `UpcomingHolidays` | S | geen | Lijst van de komende feestdagen uit `shipping.holidays` (op verzenden-en-retourneren); toont alle feestdagen van 2026 en 2027 (geen klok nodig) | 4-6/C1 |
+| `UpcomingHolidays` | S | geen | Lijst van de komende feestdagen uit `shipping.holidays` (op verzenden-en-retourneren); toont de feestdagen vanaf de lanceringsdag (`site.launchAt`) tot en met 2027 (geen klok nodig; QA-ronde 1, beslissing 216) | 4-6/C1 |
 | `WaitlistHero` | S | geen | §14.20 | 4-6/C1 |
 | `CheckoutView` | C | geen | Demo-checkout: besteloverzicht (regels, totalen), kortingscodeveld (`applyDiscountCode`), contact- en adresvelden (alleen vorm), `notice` "Demo-checkout: er wordt niet betaald", knop "Bestelling plaatsen (demo)" → `CheckoutState placed` met `DEMO-XXXXXX`, cart leeg | 7-9/D4 |
 | `NotFoundView` | S (async) | geen | Dunne wrapper: `<NotFoundContent favorites={homeFavorites(await getShopProducts(), false).products.slice(0, 4)} />`. De enige 404-weergave: globale 404, `(shop)`-404 en de fallback van het 404-patroon op PDP, collectie en drop (beslissing 124) | 4-6/C4 |
@@ -2774,11 +2790,11 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.7 Stacks (`/stacks`)
 
-`PageHeader` (H1 "Stacks van Linde", intro over 3 stuks en 15% stack-korting) · uitleg in drie stappen (`HowToStack headingLevel={2}`) · grid van `StackCard` (1 kolom mobiel, 2 vanaf `md`, 3 vanaf `xl` bij een veelvoud van 3, anders 2 met de liggende kaart; fix 7-9) uit `getVisibleStacks()` · link naar de Spark Finder · `FaqList` met de vraag `stack-korting`.
+`PageHeader` (H1 "Stacks van Linde", intro over 3 stuks en 15% stack-korting) · uitleg in drie stappen (`HowToStack headingLevel={2}`) · grid van `StackCard` (1 kolom mobiel, 2 vanaf `md`, 3 vanaf `xl` bij een veelvoud van 3, anders één brede stack per rij met de liggende kaart 6 : 5; fix 7-9, QA-ronde 1 beslissing 216d) uit `getVisibleStacks()` · link naar de Spark Finder · `FaqList` met de vragen `stack-korting`, `welkomstcode` en `retourneren`.
 
 ### 14.8 Cadeaukaarten (`/cadeaukaarten`)
 
-`PageHeader` (H1 "Cadeaukaarten") · `GiftCardTiles` (€15, €25, €50, elk met "In tas") · uitleg "Digitaal, direct in je mail, geen verzendkosten" · link naar `/products/cadeaukaart` · `FaqList` met de vraag `cadeaukaart` · cross-link "Onder €25" en "Stacks".
+`PageHeader` (H1 "Cadeaukaarten") · `GiftCardTiles` (€15, €25, €50, elk met "In tas") · uitleg "Digitaal, direct in je mail, geen verzendkosten" · link naar `/products/cadeaukaart` · `FaqList` met de vragen `welkomstcode`, `betalen` en `cadeauverpakking` (QA-ronde 1: de vraag `cadeaukaart` herhaalde de pagina) · cross-link "Onder €25" en "Stacks".
 
 ### 14.9 Sparkela Club (`/sparkela-club`)
 
@@ -2786,7 +2802,7 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.10 Zoeken (`/zoeken`)
 
-`PageHeader` (H1 "Zoeken") · `<Suspense fallback={<SearchFallback />}><SearchView /></Suspense>`. Fallback: zoekveld (formulier `GET /zoeken`) en de collectielinks. `robots: noindex`.
+`PageHeader` (kruimelpad, eyebrow, H1 "Zoeken") · `<Suspense fallback={<SearchFallback />}><SearchView /></Suspense>`. Fallback: zoekveld (formulier `GET /zoeken`) en de collectielinks plus Cadeaukaarten, Stacks en Spark Finder. De resultaten sluiten af met een tegel "Niet gevonden wat je zocht?" die de lege cellen van de laatste rij vult (`stylingTilePlacement`, geen rafelige rij). Zoeken kijkt ook naar de kleurvarianten, de specregel, de dropnaam en `sharedCopy.searchSynonyms` (QA-ronde 1, beslissing 216). Compacte footer. `robots: noindex`.
 
 ### 14.11 Over Sparkela (`/over-sparkela`)
 
@@ -2806,7 +2822,7 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.15 Contact (`/contact`)
 
-`PageHeader` · e-mailadres en reactietijd ("Binnen 1 werkdag antwoord") · `ContactForm` · bedrijfsgegevens · link naar FAQ en herroepen.
+`PageHeader` · e-mailadres en reactietijd ("Binnen 1 werkdag antwoord", uit `site.responseTime`: een aanname die Linde en Tristan bevestigen, beslissing 216) · `ContactForm` · bedrijfsgegevens · link naar FAQ en herroepen.
 
 ### 14.16 Juridische pagina's
 
@@ -2818,7 +2834,7 @@ Normaal stuurt de proxy door naar Shopify. Terugval: `PageHeader` (H1 "Account")
 
 ### 14.18 Checkout (`/checkout`)
 
-`local`: `CheckoutView` (§13.13). `shopify`: één regel en een knop die de drawer opent. Altijd `robots: noindex`.
+`local`: `CheckoutView` (§13.13), dat zelf de `PageHeader` rendert: na het plaatsen valt de intro "Controleer je bestelling…" weg (QA-ronde 1). `shopify`: één regel en een knop die de drawer opent. Compacte footer. Altijd `robots: noindex`. Tijdens de prelaunch laat de proxy `/checkout` door bij een geldige early-access-cookie (§11.3).
 
 ### 14.19 404
 
@@ -2839,7 +2855,7 @@ Vanaf `lg`: twee kolommen (tekst en formulier links, foto rechts; zonder foto é
 
 ### 14.21 Aanmelding bevestigen (`app/(kaal)/nieuwsbrief/bevestigen/page.tsx`)
 
-Statisch, `robots: noindex`, open tijdens prelaunch. `Logo variant="op-donker"`, H1 "Bevestig je aanmelding" (`formsCopy.confirm.title`), korte uitleg, en `<Suspense fallback={<ConfirmFallback />}><ConfirmSubscription /></Suspense>`. De fallback toont dezelfde knop (zonder JavaScript werkt bevestigen niet; dat staat in de fallbacktekst met het e-mailadres).
+Statisch, `robots: noindex`, open tijdens prelaunch. `Logo variant="op-donker"` (links bijgesneden zoals op de wachtlijst), en daaronder per staat een eigen H1 en uitleg uit `ConfirmSubscription`: "Bevestig je aanmelding" (`formsCopy.confirm.title`) bij de knop, "Deze link werkt niet meer" (`invalidTitle`) bij een nieuwe aanmelding, "Je bent erbij." na bevestigen (QA-ronde 1, beslissing 216), in `<Suspense fallback={<ConfirmFallback />}><ConfirmSubscription /></Suspense>`. De fallback toont dezelfde knop (zonder JavaScript werkt bevestigen niet; dat staat in de fallbacktekst met het e-mailadres) en heeft ook de staat "ongeldige link" met de nieuwe aanmelding verborgen in zich; een inline script (`CONFIRM_FALLBACK_SCRIPT`) kiest vóór de eerste paint de staat zonder token, zodat de pagina niet verspringt als `ConfirmSubscription` het overneemt (integrator 10, beslissing 212). Alle formulieren met persoonsgegevens hebben `method="post"`: een verzending vóór de hydratatie zet het e-mailadres zo nooit in de URL.
 
 ---
 
@@ -3184,7 +3200,7 @@ export default function shopifyLoader({ src, width, quality }: { src: string; wi
 ```
 
 - Ingesteld via `images.loaderFile` (§3.8), dus elke `<Image>` (ook in server components) gaat erdoorheen. Vercel doet geen beeldtransformaties.
-- Altijd `sizes` meegeven. Productkaart: `(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw`. PDP-galerij: `(min-width: 1024px) 55vw, 100vw`. Hero: `(min-width: 1024px) 58vw, 100vw`.
+- Altijd `sizes` meegeven. Productkaart: `(min-width: 1280px) 290px, (min-width: 768px) 30vw, 50vw`. PDP-galerij: `(min-width: 1280px) 504px, (min-width: 768px) 46vw, 100vw` (gemeten slidebreedtes, QA-ronde 1, beslissing 216). Hero: `(min-width: 1024px) 58vw, 100vw`.
 - LCP-beeld met `preload` (niet `priority`): hero op de home, eerste galerijbeeld op de PDP, de eerste 2 (mobiel) of 4 kaarten in een collectie (`priorityCount`).
 - Productfoto's komen alleen uit Shopify. Nooit foto's of teksten van de leverancier of andere shops (brief §2.2).
 
@@ -3211,7 +3227,7 @@ Elke plek heeft een vaste sleutel, bestandsnaam, verhouding en pixelmaat. Zolang
 
 ### 17.3 OG-afbeeldingen
 
-- `app/opengraph-image.tsx`, `app/(shop)/products/[handle]/opengraph-image.tsx` (met eigen `generateStaticParams`), `app/(shop)/drops/[slug]/opengraph-image.tsx`.
+- `app/opengraph-image.tsx`, `app/products/[handle]/opengraph-image.tsx` (met eigen `generateStaticParams`), `app/drops/[slug]/opengraph-image.tsx`. De twee laatste staan buiten de groep `(shop)`: binnen een routegroep zet Next een hash achter de URL (`/opengraph-image-<hash>`), terwijl `lib/seo.ts` en de droppagina naar `/…/opengraph-image` verwijzen (beslissing 213). De product-OG toont geen prijs: platforms bewaren een preview wekenlang (brief §2.5).
 - Exports `alt`, `size = { width: 1200, height: 630 }`, `contentType = "image/png"`. Renderen in een `'use cache'` + `cacheLife("max")`-functie die een `Uint8Array` teruggeeft (CORVANE D53.2); de product-OG gebruikt `cacheTag("products", "product:<handle>")`.
 - **Alleen JPEG of PNG in een OG-afbeelding** (beslissing 113). `next/og` (Satori/resvg) decodeert geen WebP: een WebP-foto wordt zonder foutmelding volledig transparant (gemeten in fase 2 met Next 16.4.3: JPEG-pixel `[200,50,51,255]`, dezelfde foto als WebP `[0,0,0,0]`). Daarom: de product-OG gebruikt `ogPhotoUrl(url): string | null` uit `components/seo/OgImage.tsx`. Dat geeft alleen een URL als het pad van het origineel eindigt op `.jpg`, `.jpeg` of `.png` (hoofdletters genegeerd, query niet meegeteld), en zet dan `width=1200&format=jpg`. Shopify zet alleen PNG en JPEG om naar JPEG; een WebP-origineel blijft WebP (beslissing 131). Anders `null`: de product-OG rendert dan zonder foto, net als de drop-OG en de merk-OG (merkkleur, logo, naam). Sitebeeld (`.webp`) komt nooit in een OG. `tests/unit/og.test.ts` rendert een OG met `tests/fixtures/og-photo.jpg` en controleert dat het fotovlak niet transparant is, dat `ogPhotoUrl` bij een `.jpg`- en `.png`-URL `format=jpg` zet, en dat een `.webp`-URL van Shopify `null` geeft (OG zonder foto).
 - Satori leest geen WOFF2: fonts als WOFF uit `assets/fonts/` (gekopieerd uit `@fontsource/unbounded` en `@fontsource/inter`, met de OFL-licentie erbij), gelezen met `readFile(join(process.cwd(), "assets/fonts/…"))` op moduleniveau.
@@ -3251,7 +3267,7 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>): 
 - `lib/analytics.ts` (§13.6). Events: `view_item` (PDP, in `BuyBox`, met `setTimeout(0)` en cleanup tegen dubbel vuren), `add_to_cart` (in `CartProvider.addToCart` na succes), `begin_checkout` (in `checkout()`), `sign_up` (in `SubscribeForm` na elke geslaagde aanmelding, `method` = source; nergens anders). `lib/analytics.ts` bestaat al vanaf golf 3b (B1), zodat C1 en C2a hem in 4-6 paar 1 kunnen aanroepen (beslissing 123).
 - Bedragen in GA4-vorm als euro's (`cents / 100`), alleen in `lib/analytics.ts`.
 - Geen persoonsgegevens in URL's of events: het bevestigingstoken bevat een klant-id, geen e-mailadres, en `ConfirmSubscription` haalt `t` uit de URL vóór er iets geladen wordt (§15.2).
-- Niets van derden vóór toestemming. Zonder `site.analytics.enabled` worden `ConsentBanner` en `AnalyticsLoader` niet eens gerenderd (geen code in de bundel).
+- Niets van derden vóór toestemming. Zonder `site.analytics.enabled` worden `ConsentBanner` en `AnalyticsLoader` niet eens gerenderd, en ze komen via `components/consent/ConsentSlots.tsx` (`next/dynamic`) ook niet in de gedeelde chunk (geen code in de bundel; QA-ronde 1, beslissing 216).
 - Shopify-analytics via `@shopify/hydrogen-react`: niet nu (DECISIONS 5).
 - Functionele opslag zonder toestemming: cart-cookie, preview- en early-access-cookie, `sparkela:*`-sleutels in localStorage (cart, popup-status, consent). Dit staat op `/cookies`.
 
@@ -3278,8 +3294,8 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>): 
 
 - Doel: Lighthouse mobiel 90+ voor home, collectie en PDP (gemeten op `npm run start:test` met `npx lighthouse@13 --only-categories=performance,accessibility,best-practices,seo`, resultaten in COMPLIANCE).
 - CLS 0: chromehoogtes vast (`--promo-hoogte`, `--header-hoogte`), badgebox altijd gerenderd, media in vaste verhoudingen, timers in vaste boxen met `tabular`, `TimeSwitch`-boxen met `min-h`, quiz met minimale hoogtes, popup en consent als `fixed`, prelaunch via de server.
-- Lazy eilanden: `CartDrawer`, `MobileNavSheet`, `EmailCapture`, `SearchDialog` via `next/dynamic` met `ssr: false` na `useAfterLoad()` (CORVANE D53.7).
-- Fonts via `next/font/google` (preload, zelf gehost). Geen andere fontbestanden in de pagina.
+- Lazy eilanden: `CartDrawer`, `MobileNavSheet`, `EmailCapture`, `SearchDialog` via `next/dynamic` met `ssr: false` na `useAfterLoad()` (CORVANE D53.7), allemaal uit één module `components/layout/islands.ts`, zodat Radix Dialog één keer in de pagina komt in plaats van per eiland; daar komen ook de zoom van de galerij (`GalleryZoom`), de ringmaatgids en de filtersheet vandaan, pas bij de eerste keer openen (QA-ronde 1, beslissing 216b).
+- Fonts via `next/font/local` uit `assets/fonts/` (zelf gehost; §4.3, beslissing 212). Vooraf geladen worden alleen Inter en Unbounded 800 (de LCP-tekst); Unbounded 700 is een eigen familie zonder preload (beslissing 216). Geen andere fontbestanden in de pagina. Een `<link rel="expect" href="#sparkela-paint" blocking="render">` in de root-layout houdt de eerste paint tegen tot de header geparsed is (`FirstPaintMarker`, eerste kind van `<main>` in beide layouts), zodat een trage CPU nooit een half opgebouwde header tekent.
 - Productkaarten: standaard `<Link>`-prefetch (geen `prefetch={true}` in grids).
 
 ### 18.5 CORVANE-gotcha's die gelden (digest §3)
@@ -3381,7 +3397,7 @@ Tegen de productiebuild met `COMMERCE_PROVIDER=local`. Selectors op rol en label
 | Spec | Brief §7-geval | Stappen en verwachting |
 | --- | --- | --- |
 | `home.spec.ts` | Home laadt | `/`: status 200, één H1 "Eén paar oorbellen. Hele outfit af.", promobalk zichtbaar, geen consolefouten of hydration-meldingen |
-| `add-to-cart.spec.ts` | Product toevoegen | PDP `lola-chunky-hoops`, kies Goud, "In winkelwagen" → drawer open met de regel, header "Tas (1)"; quick add op kaart `jade-stipjes` (één variant) direct; `noor-dikke-ringetjes` via keuzelijst |
+| `add-to-cart.spec.ts` | Product toevoegen | PDP `lola-chunky-hoops`, kies Goud, "In je tas" → drawer open met de regel, header "Tas (1)"; quick add op kaart `jade-stipjes` (één variant) direct; `noor-dikke-ringetjes` via keuzelijst |
 | `shipping-progress.spec.ts` | Gratis-verzendbalk bij €34,90 en €35,00 | Noor (Goud) + Nina (17) → "Nog €0,10 tot gratis verzending"; Sam + Nina (€35,90) → "Je verzending is gratis" (beslissing 33) |
 | `stack-discount.spec.ts` | Stack-korting bij 2 en 3 | Noor + Tess → "Nog 1 armband of oorbel voor 15% stack-korting", geen kortingsregel; + Jet → regel "Stack-korting" "−€8,97", totaal "€50,88" |
 | `gift-wrap.spec.ts` | Cadeauverpakking aan en uit | Aan → regel €1,95 en totaal +€1,95; uit → weg; met `page.clock.setFixedTime("2026-12-02T12:00:00+01:00")` → "Gratis in december" en korting −€1,95 |

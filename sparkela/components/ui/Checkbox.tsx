@@ -63,7 +63,7 @@ export function Checkbox({ id, name, checked, onChange, label, description, requ
         <span className="pt-px text-[0.9375rem] leading-snug text-tekst">{label}</span>
       </label>
       {description ? (
-        <div id={descriptionId ?? undefined} className="tekst-klein pl-9 text-tekst-2">
+        <div id={descriptionId ?? undefined} className="tekst-klein pl-9 text-pretty text-tekst-2">
           {description}
         </div>
       ) : null}

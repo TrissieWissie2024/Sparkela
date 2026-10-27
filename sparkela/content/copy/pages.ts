@@ -21,6 +21,8 @@ export interface PageLink {
 }
 
 export interface PagesCopy {
+  /** Eyebrows above the H1 of the service and legal pages, as in the footer columns (QA round 1: one header pattern). */
+  pageEyebrows: { service: string; legal: string; shop: string };
   about: {
     title: string;
     metaDescription: string;
@@ -159,6 +161,8 @@ export interface PagesCopy {
       empty: string;
       invalid: (code: string) => string;
       added: (code: string) => string;
+      /** The code is stored but does not count now; the totals below say why. */
+      addedNotCounted: (code: string) => string;
       error: string;
     };
     formLabel: string;
@@ -192,6 +196,7 @@ export interface PagesCopy {
 }
 
 export const pagesCopy: PagesCopy = {
+  pageEyebrows: { service: "Klantenservice", legal: "Juridisch", shop: "Shop" },
   about: {
     title: "Over Sparkela",
     metaDescription: "Sparkela maakt chunky sieraden met een spark, gekozen en gestyled door Linde. Lees waar we voor staan.",
@@ -227,7 +232,7 @@ export const pagesCopy: PagesCopy = {
         },
         {
           title: "Cadeautjes in plaats van grote kortingen",
-          text: "Bij een actie krijg je liever een cadeautje van ons dan een flinke korting. Zo blijven de prijzen eerlijk, elke dag.",
+          text: "Bij een actie geven we je liever een cadeautje dan een flinke korting. Zo blijven de prijzen eerlijk, elke dag.",
         },
       ],
     },
@@ -347,11 +352,11 @@ export const pagesCopy: PagesCopy = {
       copied: "Gekopieerd",
       copiedMessage: (code) => `${code} staat op je klembord.`,
       copyFailed: "Kopiëren lukte niet. De code is geselecteerd, kopieer hem zelf.",
-      apply: "Zet op mijn tas",
-      applied: "Staat op je tas",
-      appliedMessage: (code) => `${code} staat op je tas. Je ziet de korting in je tas.`,
-      appliedEmpty: (code) => `${code} staat op je tas. De korting zie je zodra er iets in zit.`,
-      notCombined: (code) => `${code} staat op je tas, maar je stack-korting is nu hoger. Die krijg je dan.`,
+      apply: "Gebruik in mijn tas",
+      applied: "Staat klaar in je tas",
+      appliedMessage: (code) => `${code} staat klaar. Je ziet de korting in je tas.`,
+      appliedEmpty: (code) => `${code} staat klaar. De korting zie je zodra er iets in je tas zit.`,
+      notCombined: (code) => `${code} staat klaar, maar je stack-korting is nu hoger. Die houd je.`,
       continueShopping: "Verder shoppen",
     },
   },
@@ -406,6 +411,7 @@ export const pagesCopy: PagesCopy = {
       empty: "Vul eerst een code in.",
       invalid: (code) => `De code ${code} kennen we niet.`,
       added: (code) => `Code ${code} toegevoegd.`,
+      addedNotCounted: (code) => `Code ${code} staat erin, maar telt nu niet mee.`,
       error: "Dat lukte niet. Probeer het opnieuw.",
     },
     formLabel: "Je gegevens",
@@ -425,7 +431,7 @@ export const pagesCopy: PagesCopy = {
       giftCardsOnly: "Je bestelling bestaat alleen uit cadeaukaarten. Die komen per mail, dus een adres is niet nodig.",
     },
     errors: {
-      required: (label) => `Vul dit veld in: ${label.toLowerCase()}.`,
+      required: (label) => `Vul je ${label.toLowerCase()} in.`,
       email: "Vul een geldig e-mailadres in, zoals naam@voorbeeld.nl.",
       summary: "Controleer de velden met een melding.",
     },

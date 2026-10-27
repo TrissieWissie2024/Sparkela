@@ -427,6 +427,19 @@ describe("searchProducts", () => {
     expect(handles("lola armband")).toEqual([]);
   });
 
+  it("finds colours, the spec line, the drop name and synonyms (QA round 1)", () => {
+    const more = [
+      makeCatalogProduct({ handle: "duo", title: "Duo hoops", type: "oorbellen", variants: [{ title: "Goud", price: 1495 }, { title: "Zilver", price: 1495 }], metafields: { specRegel: "Staal, goud- of zilverkleurig · 30 mm" }, featuredRank: 1 }),
+      makeCatalogProduct({ handle: "ster", title: "Ster oorbellen", type: "oorbellen", moments: ["feestdagen"], drops: ["holiday-sparkle"], metafields: { specRegel: "Verguld staal · 35 mm" }, featuredRank: 2 }),
+    ];
+    const found = (query: string) => searchProducts(more, query).map((item) => item.handle);
+    expect(found("zilver")).toEqual(["duo"]);
+    expect(found("goud")).toEqual(["duo", "ster"]);
+    expect(found("staal")).toEqual(["duo", "ster"]);
+    expect(found("holiday")).toEqual(["ster"]);
+    expect(found("kerst")).toEqual(["ster"]);
+  });
+
   it("finds nothing for an empty query", () => {
     expect(handles("")).toEqual([]);
     expect(handles("   ")).toEqual([]);

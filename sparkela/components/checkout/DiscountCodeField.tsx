@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/Button";
  * The discount code field of the demo checkout (docs/PLAN.md §13.13, decision 69; brief §7: "kortingscodeveld"). The
  * drawer has none; here the visitor types a code and applies it with useCart().applyDiscountCode(). An empty field, an
  * unknown code or a failure shows its message under the field (aria-describedby, focus back to the field); an applied
- * code shows in the totals below (CartTotals) with "Verwijderen", and a polite line confirms it.
+ * code shows in the totals below (CartTotals) with "Verwijderen", and a polite line confirms it: in succes green only
+ * when the code really counts; a code that does not count now (the stack discount is higher, only gift cards) gets a
+ * neutral line, and the totals say why (QA round 1: no green "toegevoegd" above "telt niet mee").
  */
 export function DiscountCodeField({ className }: { className?: string }) {
   const copy = pagesCopy.checkout.discount;
@@ -24,7 +26,7 @@ export function DiscountCodeField({ className }: { className?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [added, setAdded] = useState<string | null>(null);
+  const [added, setAdded] = useState<{ text: string; counts: boolean } | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +46,9 @@ export function DiscountCodeField({ className }: { className?: string }) {
     }
     setError(null);
     setCode("");
-    setAdded(copy.added(wanted));
+    const state = result.cart?.discountCodes.find((entry) => entry.code === wanted);
+    const counts = state?.applicable ?? true;
+    setAdded({ text: counts ? copy.added(wanted) : copy.addedNotCounted(wanted), counts });
   }
 
   return (
@@ -83,10 +87,13 @@ export function DiscountCodeField({ className }: { className?: string }) {
       <p
         id={errorId}
         aria-live="polite"
-        className={cn("flex items-start gap-1.5 tekst-klein font-medium", error ? "mt-2 text-fout" : added ? "mt-2 text-succes" : "")}
+        className={cn(
+          "flex items-start gap-1.5 tekst-klein font-medium",
+          error ? "mt-2 text-fout" : added ? (added.counts ? "mt-2 text-succes" : "mt-2 text-tekst-2") : "",
+        )}
       >
         {error ? <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" strokeWidth={2} /> : null}
-        {error ?? added}
+        {error ?? added?.text}
       </p>
     </form>
   );

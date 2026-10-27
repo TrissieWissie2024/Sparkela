@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { pageMetadata } from "@/lib/seo";
 import { formsCopy } from "@/content/copy/forms";
+import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
 import { WithdrawalForm } from "@/components/forms/WithdrawalForm";
 import { LegalNotice } from "@/components/legal/LegalNotice";
@@ -24,7 +26,12 @@ export const metadata: Metadata = pageMetadata({ title: copy.title, description:
 export default function WithdrawalPage() {
   return (
     <>
-      <PageHeader title={copy.title} intro={copy.intro(String(site.returnDays))} />
+      <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.service}
+        title={copy.title}
+        intro={copy.intro(String(site.returnDays))}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         <div className="max-w-[48rem]">
           <section aria-labelledby="herroepen-hygiene" className="rounded-kaart bg-vlak px-5 py-4">

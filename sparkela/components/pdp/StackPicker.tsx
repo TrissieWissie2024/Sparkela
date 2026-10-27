@@ -119,7 +119,9 @@ export function StackPicker({
                   {formatMoney(quote.total)}
                 </span>
               </span>
-              <span className="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-3 tekst-klein">
+              {/* The saving always on its own line: same layout for every product and font (QA round 1: it wrapped
+                  only in Inter, a late-font layout shift on the drop PDPs). */}
+              <span className="mt-0.5 flex flex-col items-start gap-0.5 tekst-klein">
                 <span className="text-tekst-2">{copy.stackText}</span>
                 {quote.discount > 0 ? (
                   <span className="tabular font-semibold text-succes">{sharedCopy.price.savings(formatMoney(quote.discount))}</span>

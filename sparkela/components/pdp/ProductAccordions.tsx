@@ -39,7 +39,7 @@ export interface ProductAccordionsProps {
 export function ProductAccordions({ product, className }: ProductAccordionsProps) {
   return (
     <section className={className}>
-      <h2 className="sr-only">{pdpCopy.sections.details}</h2>
+      <h2 className="sr-only">{product.isGiftCard ? pdpCopy.sections.detailsGiftCard : pdpCopy.sections.details}</h2>
       <Accordion type="multiple" headingLevel={3} items={productAccordionItems(product)} />
     </section>
   );
@@ -72,8 +72,13 @@ export function productAccordionItems(product: Product): AccordionItem[] {
 const textLink =
   "inline-flex min-h-11 items-center font-medium text-link underline decoration-1 underline-offset-4 hover:text-link-hover hover:decoration-2";
 
-/** One row of a definition list: term column and value column. */
-const detailRow = "grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] gap-4 py-2.5 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)]";
+/**
+ * One row of a definition list (QA round 1): on phones the term sits above its value as a small semibold label, so a
+ * long word such as "Productidentificatie" never runs into the value; from sm a term column of 9.5rem in which a long
+ * term may break (hyphens, overflow-wrap) instead of overflowing.
+ */
+const detailRow =
+  "grid grid-cols-1 gap-0.5 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)] sm:gap-4";
 
 interface Row {
   id: string;
@@ -84,10 +89,12 @@ interface Row {
 function DetailList({ rows }: { rows: Row[] }) {
   if (rows.length === 0) return null;
   return (
-    <dl className="flex flex-col divide-y divide-rand">
+    <dl className="-mr-10 flex flex-col divide-y divide-rand">
       {rows.map((row) => (
         <div key={row.id} className={detailRow}>
-          <dt className="font-medium text-tekst">{row.term}</dt>
+          <dt className="tekst-klein font-semibold text-tekst hyphens-auto [overflow-wrap:anywhere] sm:text-base sm:leading-normal sm:font-medium">
+            {row.term}
+          </dt>
           <dd>{row.value}</dd>
         </div>
       ))}
@@ -135,7 +142,7 @@ function detailRows(product: Product): Row[] {
     }
   }
   const codes = productCodes(product);
-  if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: <span className="tabular">{codes.join(", ")}</span> });
+  if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: codes.join(", ") });
   return rows;
 }
 
@@ -195,7 +202,7 @@ function Safety({ product }: { product: Product }) {
   rows.push({
     id: "identificatie",
     term: copy.identification,
-    value: <span className="tabular">{copy.identificationValue(codes.length > 0 ? codes.join(", ") : product.title, product.handle)}</span>,
+    value: copy.identificationValue(codes.length > 0 ? codes.join(", ") : product.title, product.handle),
   });
   if (warnings) rows.push({ id: "waarschuwingen", term: copy.warnings, value: <MultiLine text={warnings} /> });
   const incomplete = !manufacturer || !responsible || !warnings;

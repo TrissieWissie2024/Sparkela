@@ -76,6 +76,38 @@
 @media (min-width: 64rem) { :root { --promo-hoogte: 40px; } }
 @media (min-width: 80rem) { :root { --header-hoogte: 72px; } }
 
+/*
+ * Fallback faces for the font swap (wave 10-11, E1; brief §7 "geen layout shift"). Both web fonts load with
+ * display: swap, so text first paints in a local font and then swaps. These faces make the local font take up the
+ * same width as the web font, so lines break in the same places and nothing below moves (no CLS): size-adjust
+ * scales the local glyphs to the web font's average advance width, ascent and descent override the vertical metrics
+ * (the line height itself comes from the CSS).
+ *
+ * Measured over the headings and body copy in content/ (advance widths with kerning, letter-spacing equal):
+ * - Unbounded 800 against Arial Bold: 134.95%, mean error per heading 2.0%; Unbounded 700: 132.61%.
+ *   next/font's own fallback used regular Arial at 134.59% (sized for regular Unbounded) and so ran about 7% narrow
+ *   for the bold headings: the 404 H1 wrapped in 2 instead of 3 lines on a phone until Unbounded arrived.
+ * - Inter 400 against Arial: 106.55% (error 0.4%); 500: 107.58%; 600 against Arial Bold: 101.44%; 700: 102.38%.
+ * - Roboto (Android, which has no Arial) has its own family with its own sizes.
+ * Unbounded: ascent 0.995, descent 0.245 em; Inter: 0.969 and 0.241 em (overrides = metric / size-adjust).
+ *
+ * local() lists Arial and its metric-compatible twins (Liberation Sans on Linux, Arimo on ChromeOS), so one set of
+ * numbers serves Windows, macOS, iOS, Linux and ChromeOS. Bold faces for bold text: no synthetic bold, which is
+ * narrower than real bold. Weight ranges pick the face per weight in use (kop-1/kop-2 800, kop-3 700, Inter 400 to 700).
+ */
+@font-face { font-family: "Unbounded Fallback Arial"; font-weight: 750 1000; src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold"), local("Arimo-Bold"); size-adjust: 134.95%; ascent-override: 73.73%; descent-override: 18.16%; line-gap-override: 0%; }
+@font-face { font-family: "Unbounded Fallback Arial"; font-weight: 1 749; src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold"), local("Arimo-Bold"); size-adjust: 132.61%; ascent-override: 75.03%; descent-override: 18.47%; line-gap-override: 0%; }
+@font-face { font-family: "Unbounded Fallback Roboto"; font-weight: 750 1000; src: local("Roboto Bold"), local("Roboto-Bold"), local("Roboto"); size-adjust: 143.4%; ascent-override: 69.39%; descent-override: 17.09%; line-gap-override: 0%; }
+@font-face { font-family: "Unbounded Fallback Roboto"; font-weight: 1 749; src: local("Roboto Bold"), local("Roboto-Bold"), local("Roboto"); size-adjust: 140.92%; ascent-override: 70.61%; descent-override: 17.39%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Arial"; font-weight: 1 449; src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans"), local("Arimo"), local("Arimo-Regular"); size-adjust: 106.55%; ascent-override: 90.92%; descent-override: 22.64%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Arial"; font-weight: 450 549; src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans"), local("Arimo"), local("Arimo-Regular"); size-adjust: 107.58%; ascent-override: 90.05%; descent-override: 22.42%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Arial"; font-weight: 550 649; src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold"), local("Arimo-Bold"); size-adjust: 101.44%; ascent-override: 95.5%; descent-override: 23.78%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Arial"; font-weight: 650 1000; src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold"), local("Arimo-Bold"); size-adjust: 102.38%; ascent-override: 94.62%; descent-override: 23.56%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Roboto"; font-weight: 1 449; src: local("Roboto"), local("Roboto-Regular"); size-adjust: 107.64%; ascent-override: 90%; descent-override: 22.41%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Roboto"; font-weight: 450 549; src: local("Roboto Medium"), local("Roboto-Medium"), local("Roboto"); size-adjust: 107.59%; ascent-override: 90.04%; descent-override: 22.42%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Roboto"; font-weight: 550 649; src: local("Roboto Bold"), local("Roboto-Bold"), local("Roboto"); size-adjust: 107.69%; ascent-override: 89.95%; descent-override: 22.4%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback Roboto"; font-weight: 650 1000; src: local("Roboto Bold"), local("Roboto-Bold"), local("Roboto"); size-adjust: 108.69%; ascent-override: 89.13%; descent-override: 22.19%; line-gap-override: 0%; }
+
 @theme inline {
   --color-*: initial;               /* no default Tailwind palette: only Sparkela colours exist */
   --color-transparent: transparent;
@@ -122,9 +154,15 @@
   --color-leisteen-600: var(--leisteen-600); --color-leisteen-700: var(--leisteen-700); --color-leisteen-800: var(--leisteen-800);
   --color-leisteen-900: var(--leisteen-900);
 
-  /* next/font sets --font-inter and --font-unbounded on <html> (app/layout.tsx) */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-unbounded), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /*
+   * next/font sets --font-inter and --font-unbounded on <html> (app/layout.tsx; their fallback list is already the
+   * tuned faces above). The faces are repeated here so the stacks hold even if next/font changes its output: text
+   * keeps its line breaks when the web font swaps in.
+   */
+  --font-sans: var(--font-inter), "Inter Fallback Arial", "Inter Fallback Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-unbounded), "Unbounded Fallback Arial", "Unbounded Fallback Roboto", var(--font-inter), "Inter Fallback Arial", "Inter Fallback Roboto", ui-sans-serif, system-ui, sans-serif;
+  /* Unbounded 700 (kop-3 and font-display-bold): its own family without preload (app/layout.tsx, decision 216). */
+  --font-display-bold: var(--font-unbounded-700), "Unbounded Fallback Arial", "Unbounded Fallback Roboto", var(--font-inter), "Inter Fallback Arial", "Inter Fallback Roboto", ui-sans-serif, system-ui, sans-serif;
 
   --radius-kaart: var(--hoek-kaart);
   --shadow-hover: var(--schaduw-hover);
@@ -199,15 +237,41 @@
  * A page with its own Club sign-up (data-eigen-club: /sparkela-club, the drop teaser, an ended drop) hides the
  * footer's Club block, so the same form never shows twice in a row (fix 7-9). Pure CSS, so it is right in the static
  * HTML and on the rewritten teaser. Unlayered on purpose, so the block's own `grid` utility does not win. A marker
- * inside a hidden TimeSwitch variant ([hidden]) or inside a route that Activity keeps hidden in the DOM (style
- * display: none) does not count.
+ * inside a hidden TimeSwitch variant ([hidden]) or inside a route that Activity keeps hidden in the DOM does not count:
+ * Activity hides with an inline display:none, which the script in app/layout.tsx mirrors as [data-inline-hidden].
+ *
+ * Performance (wave 10-11, E1): no attribute-substring selector on style inside :has(). The previous
+ * [style*="display: none"] made every inline style change anywhere re-check the whole document: about 150 ms extra
+ * style recalculation per page load on a fast desktop CPU (home, FAQ, product page: the Radix accordions write CSS
+ * variables while they measure), several times that on a phone. Anchored on <main> rather than <body> for the same
+ * reason; ShopChrome renders <footer> as a later sibling of <main> (plan §13.5).
  */
-body:has(main [data-eigen-club]:not([hidden] *, [style*="display: none"] *, [style*="display:none"] *)) {
+main:has([data-eigen-club]:not([hidden] *, [data-inline-hidden] *)) ~ footer {
   [data-footer-club] {
     display: none;
   }
   [data-footer-nav] {
     border-top-width: 0;
+  }
+}
+
+/*
+ * Task pages (checkout, search, account, contact) mark themselves with data-compacte-footer (QA round 1, brief §5 70/20/10):
+ * the footer keeps only a row of legal links, the withdrawal link, the company details and the VAT line, like the
+ * MiniFooter, instead of the Club sign-up, four link columns and the wordmark on a short page. The marker itself is
+ * a hidden element, so only a marker inside a hidden TimeSwitch variant or an Activity-hidden route is ignored.
+ */
+main:has([data-compacte-footer]:not([hidden] *, [data-inline-hidden] *)) ~ footer {
+  [data-footer-club],
+  [data-footer-nav],
+  [data-footer-wordmark] {
+    display: none;
+  }
+  [data-footer-compact] {
+    display: block;
+  }
+  [data-footer-social] {
+    display: none;
   }
 }
 
@@ -219,9 +283,16 @@ body:has(main [data-eigen-club]:not([hidden] *, [style*="display: none"] *, [sty
 @utility kop-1 {
   font-family: --theme(--font-display);
   font-weight: 800;
-  font-size: 2rem;
+  /*
+   * 32 px from 377 px wide; narrower phones scale down to 27 px at 320 px (integrator 10, decision 212). Unbounded 800
+   * is wide: "Cadeaukaarten" is 9.97 em, so at 32 px it did not fit the 280 px column at 320 px and the page scrolled
+   * sideways (WCAG 1.4.10). The PDP H1 has its own container-based size (decision 209a).
+   */
+  font-size: min(2rem, 8.5vw);
   line-height: 1.1;
   letter-spacing: -0.01em;
+  /* A single long word ("Cadeaukaarten") may break rather than overflow with user text spacing (WCAG 1.4.12). */
+  overflow-wrap: break-word;
 
   @media (min-width: 48rem) {
     font-size: 2.5rem;
@@ -237,6 +308,7 @@ body:has(main [data-eigen-club]:not([hidden] *, [style*="display: none"] *, [sty
   font-size: 1.5rem;
   line-height: 1.15;
   letter-spacing: -0.01em;
+  overflow-wrap: break-word;
 
   @media (min-width: 48rem) {
     font-size: 1.75rem;
@@ -247,7 +319,7 @@ body:has(main [data-eigen-club]:not([hidden] *, [style*="display: none"] *, [sty
 }
 
 @utility kop-3 {
-  font-family: --theme(--font-display);
+  font-family: --theme(--font-display-bold);
   font-weight: 700;
   font-size: 1.125rem;
   line-height: 1.25;

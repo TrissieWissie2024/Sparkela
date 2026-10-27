@@ -1,0 +1,66 @@
+{
+  "data": {
+    "cart": {
+      "id": "gid://shopify/Cart/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "checkoutUrl": "https://sparkela.myshopify.com/cart/c/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "totalQuantity": 1,
+      "note": null,
+      "buyerIdentity": {
+        "countryCode": "NL"
+      },
+      "cost": {
+        "subtotalAmount": {
+          "amount": "50.00",
+          "currencyCode": "EUR"
+        },
+        "totalAmount": {
+          "amount": "50.00",
+          "currencyCode": "EUR"
+        }
+      },
+      "discountCodes": [],
+      "lines": {
+        "nodes": [
+          {
+            "id": "gid://shopify/CartLine/0f3c2a6e-1b5d-4c8a-9e2f-7a1b3c5d7e91?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw",
+            "quantity": 1,
+            "attributes": [],
+            "cost": {
+              "amountPerQuantity": {
+                "amount": "50.00",
+                "currencyCode": "EUR"
+              },
+              "subtotalAmount": {
+                "amount": "50.00",
+                "currencyCode": "EUR"
+              },
+              "totalAmount": {
+                "amount": "50.00",
+                "currencyCode": "EUR"
+              }
+            },
+            "discountAllocations": [],
+            "merchandise": {
+              "id": "gid://shopify/ProductVariant/49012345600263",
+              "title": "€50",
+              "quantityAvailable": null,
+              "image": {
+                "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/cadeaukaart.jpg?v=1764000000",
+                "altText": "De Sparkela cadeaukaart",
+                "width": 1600,
+                "height": 1000
+              },
+              "product": {
+                "id": "gid://shopify/Product/9012345600026",
+                "handle": "cadeaukaart",
+                "title": "Cadeaukaart",
+                "tags": [],
+                "isGiftCard": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

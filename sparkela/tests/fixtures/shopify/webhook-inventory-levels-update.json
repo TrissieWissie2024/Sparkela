@@ -1,0 +1,7 @@
+{
+  "inventory_item_id": 51012345600011,
+  "location_id": 81012345600001,
+  "available": 24,
+  "updated_at": "2026-11-27T09:41:07+01:00",
+  "admin_graphql_api_id": "gid://shopify/InventoryLevel/81012345600001?inventory_item_id=51012345600011"
+}

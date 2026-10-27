@@ -1,0 +1,32 @@
+{
+  "data": {
+    "nodes": [
+      {
+        "id": "gid://shopify/ProductVariant/49012345600031",
+        "product": {
+          "handle": "noor-dikke-ringetjes",
+          "tags": [
+            "moment:kantoor-maar-niet-saai",
+            "nieuw",
+            "type:oorbellen",
+            "vibe:chunky-en-bold"
+          ],
+          "isGiftCard": false
+        }
+      },
+      {
+        "id": "gid://shopify/ProductVariant/49012345600211",
+        "product": {
+          "handle": "holiday-ster-oorbellen",
+          "tags": [
+            "drop:holiday-sparkle",
+            "moment:feestdagen",
+            "type:oorbellen",
+            "vibe:chunky-en-bold"
+          ],
+          "isGiftCard": false
+        }
+      }
+    ]
+  }
+}

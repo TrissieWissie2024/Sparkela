@@ -1,0 +1,512 @@
+{
+  "data": {
+    "collection": {
+      "products": {
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJsYXN0X2lkIjo5MDEyMzQ1NjAwMDAzLCJsYXN0X3ZhbHVlIjoyfQ=="
+        },
+        "nodes": [
+          {
+            "id": "gid://shopify/Product/9012345600001",
+            "handle": "lola-chunky-hoops",
+            "title": "Lola chunky hoops",
+            "description": "Dikke hoops die je outfit meteen afmaken. Licht genoeg voor een hele dag.",
+            "tags": [
+              "moment:date-night",
+              "moment:festival",
+              "nieuw",
+              "type:oorbellen",
+              "vibe:chunky-en-bold",
+              "vibe:retro"
+            ],
+            "isGiftCard": false,
+            "availableForSale": true,
+            "publishedAt": "2026-11-25T11:00:00Z",
+            "seo": {
+              "title": "Lola chunky hoops in goud of zilver",
+              "description": "Dikke hoops van roestvrij staal, 30 mm."
+            },
+            "options": [
+              {
+                "name": "Kleur",
+                "optionValues": [
+                  {
+                    "name": "Goud"
+                  },
+                  {
+                    "name": "Zilver"
+                  }
+                ]
+              }
+            ],
+            "priceRange": {
+              "minVariantPrice": {
+                "amount": "19.95",
+                "currencyCode": "EUR"
+              },
+              "maxVariantPrice": {
+                "amount": "19.95",
+                "currencyCode": "EUR"
+              }
+            },
+            "images": {
+              "nodes": [
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/lola-chunky-hoops-goud-packshot.jpg?v=1764000000",
+                  "altText": "Lola chunky hoops in goud op een witte achtergrond",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/lola-chunky-hoops-draagfoto.jpg?v=1764000000",
+                  "altText": "Lola chunky hoops gedragen bij een zwarte coltrui",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/lola-chunky-hoops-zilver-packshot.jpg?v=1764000000",
+                  "altText": "",
+                  "width": 1600,
+                  "height": 2000
+                }
+              ]
+            },
+            "variants": {
+              "nodes": [
+                {
+                  "id": "gid://shopify/ProductVariant/49012345600011",
+                  "title": "Goud",
+                  "sku": "SPK-001-GOUD",
+                  "availableForSale": true,
+                  "quantityAvailable": 25,
+                  "price": {
+                    "amount": "19.95",
+                    "currencyCode": "EUR"
+                  },
+                  "compareAtPrice": null,
+                  "selectedOptions": [
+                    {
+                      "name": "Kleur",
+                      "value": "Goud"
+                    }
+                  ],
+                  "image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/lola-chunky-hoops-goud-packshot.jpg?v=1764000000",
+                    "altText": "Lola chunky hoops in goud op een witte achtergrond",
+                    "width": 1600,
+                    "height": 2000
+                  }
+                },
+                {
+                  "id": "gid://shopify/ProductVariant/49012345600012",
+                  "title": "Zilver",
+                  "sku": "SPK-001-ZILVER",
+                  "availableForSale": true,
+                  "quantityAvailable": 12,
+                  "price": {
+                    "amount": "19.95",
+                    "currencyCode": "EUR"
+                  },
+                  "compareAtPrice": null,
+                  "selectedOptions": [
+                    {
+                      "name": "Kleur",
+                      "value": "Zilver"
+                    }
+                  ],
+                  "image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/lola-chunky-hoops-zilver-packshot.jpg?v=1764000000",
+                    "altText": "",
+                    "width": 1600,
+                    "height": 2000
+                  }
+                }
+              ]
+            },
+            "metafields": [
+              {
+                "namespace": "custom",
+                "key": "spec_regel",
+                "type": "single_line_text_field",
+                "value": "Staal, goud of zilver · 30 mm"
+              },
+              {
+                "namespace": "custom",
+                "key": "materiaal",
+                "type": "single_line_text_field",
+                "value": "Roestvrij staal"
+              },
+              {
+                "namespace": "custom",
+                "key": "afmetingen",
+                "type": "single_line_text_field",
+                "value": "Doorsnede 30 mm, dikte 6 mm"
+              },
+              {
+                "namespace": "custom",
+                "key": "gewicht",
+                "type": "single_line_text_field",
+                "value": "8 g"
+              },
+              {
+                "namespace": "custom",
+                "key": "sluiting",
+                "type": "single_line_text_field",
+                "value": "Klapsluiting"
+              },
+              {
+                "namespace": "custom",
+                "key": "verzorging",
+                "type": "multi_line_text_field",
+                "value": "Doe je sieraden af bij zwemmen, sporten en douchen, en smeer bodylotion of make-up op voordat je ze omdoet. Bewaar ze droog in het zakje, los van elkaar, en veeg ze af met een zachte doek."
+              },
+              {
+                "namespace": "custom",
+                "key": "statement_meter",
+                "type": "number_integer",
+                "value": "5"
+              },
+              {
+                "namespace": "custom",
+                "key": "nikkelvrij",
+                "type": "boolean",
+                "value": "false"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_fabrikant",
+                "type": "multi_line_text_field",
+                "value": "[Fabrikant, adres]"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_verantwoordelijke_eu",
+                "type": "multi_line_text_field",
+                "value": "[Verantwoordelijke in de EU]"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_waarschuwingen",
+                "type": "multi_line_text_field",
+                "value": "[Waarschuwingen van de leverancier invullen]"
+              },
+              {
+                "namespace": "custom",
+                "key": "laagste_prijs_30d",
+                "type": "money",
+                "value": "{\"amount\":\"19.95\",\"currency_code\":\"EUR\"}"
+              },
+              {
+                "namespace": "custom",
+                "key": "bestseller",
+                "type": "boolean",
+                "value": "false"
+              },
+              {
+                "namespace": "custom",
+                "key": "lindes_favoriet",
+                "type": "boolean",
+                "value": "true"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/Product/9012345600002",
+            "handle": "bo-statement-druppels",
+            "title": "Bo statement druppels",
+            "description": "Grote druppels voor een avond waarop je gezien wilt worden.",
+            "tags": [
+              "moment:date-night",
+              "moment:feestdagen",
+              "nieuw",
+              "type:oorbellen",
+              "vibe:chunky-en-bold"
+            ],
+            "isGiftCard": false,
+            "availableForSale": true,
+            "publishedAt": "2026-11-25T11:00:00Z",
+            "seo": {
+              "title": null,
+              "description": null
+            },
+            "options": [
+              {
+                "name": "Kleur",
+                "optionValues": [
+                  {
+                    "name": "Goud"
+                  }
+                ]
+              }
+            ],
+            "priceRange": {
+              "minVariantPrice": {
+                "amount": "22.95",
+                "currencyCode": "EUR"
+              },
+              "maxVariantPrice": {
+                "amount": "22.95",
+                "currencyCode": "EUR"
+              }
+            },
+            "images": {
+              "nodes": [
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/bo-statement-druppels-packshot.jpg?v=1764000000",
+                  "altText": "Bo statement druppels in goud",
+                  "width": 1600,
+                  "height": 2000
+                }
+              ]
+            },
+            "variants": {
+              "nodes": [
+                {
+                  "id": "gid://shopify/ProductVariant/49012345600021",
+                  "title": "Goud",
+                  "sku": "SPK-002-GOUD",
+                  "availableForSale": true,
+                  "quantityAvailable": 3,
+                  "price": {
+                    "amount": "22.95",
+                    "currencyCode": "EUR"
+                  },
+                  "compareAtPrice": null,
+                  "selectedOptions": [
+                    {
+                      "name": "Kleur",
+                      "value": "Goud"
+                    }
+                  ],
+                  "image": null
+                }
+              ]
+            },
+            "metafields": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "id": "gid://shopify/Product/9012345600003",
+            "handle": "noor-dikke-ringetjes",
+            "title": "Noor dikke ringetjes",
+            "description": "Kleine, dikke ringetjes voor elke dag.",
+            "tags": [
+              "moment:kantoor-maar-niet-saai",
+              "nieuw",
+              "type:oorbellen",
+              "vibe:chunky-en-bold"
+            ],
+            "isGiftCard": false,
+            "availableForSale": true,
+            "publishedAt": "2026-11-25T11:00:00Z",
+            "seo": {
+              "title": null,
+              "description": null
+            },
+            "options": [
+              {
+                "name": "Kleur",
+                "optionValues": [
+                  {
+                    "name": "Goud"
+                  },
+                  {
+                    "name": "Zilver"
+                  }
+                ]
+              }
+            ],
+            "priceRange": {
+              "minVariantPrice": {
+                "amount": "14.95",
+                "currencyCode": "EUR"
+              },
+              "maxVariantPrice": {
+                "amount": "14.95",
+                "currencyCode": "EUR"
+              }
+            },
+            "images": {
+              "nodes": [
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-packshot.jpg?v=1764000000",
+                  "altText": "Noor dikke ringetjes in goud en zilver",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-draagfoto.jpg?v=1764000000",
+                  "altText": "Noor dikke ringetjes gedragen",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-detail.jpg?v=1764000000",
+                  "altText": "Close-up van de klapsluiting",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-schaal.jpg?v=1764000000",
+                  "altText": "Noor dikke ringetjes naast een liniaal",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-stack.jpg?v=1764000000",
+                  "altText": "Noor in een stack met Tess en Jet",
+                  "width": 1600,
+                  "height": 2000
+                },
+                {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/noor-dikke-ringetjes-extra.jpg?v=1764000000",
+                  "altText": "Noor dikke ringetjes op een schaaltje",
+                  "width": 1600,
+                  "height": 2000
+                }
+              ]
+            },
+            "variants": {
+              "nodes": [
+                {
+                  "id": "gid://shopify/ProductVariant/49012345600031",
+                  "title": "Goud",
+                  "sku": "SPK-005-GOUD",
+                  "availableForSale": true,
+                  "quantityAvailable": 30,
+                  "price": {
+                    "amount": "14.95",
+                    "currencyCode": "EUR"
+                  },
+                  "compareAtPrice": null,
+                  "selectedOptions": [
+                    {
+                      "name": "Kleur",
+                      "value": "Goud"
+                    }
+                  ],
+                  "image": null
+                },
+                {
+                  "id": "gid://shopify/ProductVariant/49012345600032",
+                  "title": "Zilver",
+                  "sku": "SPK-005-ZILVER",
+                  "availableForSale": true,
+                  "quantityAvailable": null,
+                  "price": {
+                    "amount": "14.95",
+                    "currencyCode": "EUR"
+                  },
+                  "compareAtPrice": null,
+                  "selectedOptions": [
+                    {
+                      "name": "Kleur",
+                      "value": "Zilver"
+                    }
+                  ],
+                  "image": null
+                }
+              ]
+            },
+            "metafields": [
+              {
+                "namespace": "custom",
+                "key": "spec_regel",
+                "type": "single_line_text_field",
+                "value": "Staal, goud of zilver · 15 mm"
+              },
+              {
+                "namespace": "custom",
+                "key": "materiaal",
+                "type": "single_line_text_field",
+                "value": "Roestvrij staal"
+              },
+              {
+                "namespace": "custom",
+                "key": "afmetingen",
+                "type": "single_line_text_field",
+                "value": "Doorsnede 15 mm, dikte 5 mm"
+              },
+              {
+                "namespace": "custom",
+                "key": "gewicht",
+                "type": "single_line_text_field",
+                "value": "4 g"
+              },
+              {
+                "namespace": "custom",
+                "key": "sluiting",
+                "type": "single_line_text_field",
+                "value": "Klapsluiting"
+              },
+              {
+                "namespace": "custom",
+                "key": "verzorging",
+                "type": "multi_line_text_field",
+                "value": "Doe je sieraden af bij zwemmen, sporten en douchen, en smeer bodylotion of make-up op voordat je ze omdoet. Bewaar ze droog in het zakje, los van elkaar, en veeg ze af met een zachte doek."
+              },
+              {
+                "namespace": "custom",
+                "key": "statement_meter",
+                "type": "number_integer",
+                "value": "7"
+              },
+              {
+                "namespace": "custom",
+                "key": "nikkelvrij",
+                "type": "boolean",
+                "value": "true"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_fabrikant",
+                "type": "multi_line_text_field",
+                "value": "[Fabrikant, adres]"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_verantwoordelijke_eu",
+                "type": "multi_line_text_field",
+                "value": "[Verantwoordelijke in de EU]"
+              },
+              {
+                "namespace": "custom",
+                "key": "gpsr_waarschuwingen",
+                "type": "multi_line_text_field",
+                "value": "[Waarschuwingen van de leverancier invullen]"
+              },
+              null,
+              {
+                "namespace": "custom",
+                "key": "bestseller",
+                "type": "boolean",
+                "value": "false"
+              },
+              {
+                "namespace": "custom",
+                "key": "lindes_favoriet",
+                "type": "boolean",
+                "value": "false"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

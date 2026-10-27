@@ -84,6 +84,11 @@ function toQuantity(value: unknown): number | null {
   return quantity >= 1 ? Math.min(MAX_LINE_QUANTITY, quantity) : null;
 }
 
+/** A whole number of units of at least 1 from a caller (not capped: a cap is reported as quantity-capped). */
+function isWholeQuantity(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 1;
+}
+
 function isVariantId(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= MAX_ID_LENGTH;
 }
@@ -164,7 +169,7 @@ export function createLocalCartAdapter(deps: LocalCartDeps): LocalCartAdapter {
     });
     // An unknown code (an old code from storage) is reported once and then forgotten; a valid code that does not
     // apply now stays stored (plan §8.2 rule 5).
-    const unknownCode = cart.discountCodes.some((state) => state.reason === "unknown");
+    const unknownCode = cart.discountCodes.some((code) => code.reason === "unknown");
     const canonical: StoredLocalCart = {
       v: 1,
       lines: cart.lines.map((line) => ({ variantId: line.merchandise.variantId, quantity: line.quantity })),
@@ -220,13 +225,14 @@ export function createLocalCartAdapter(deps: LocalCartDeps): LocalCartAdapter {
 
       const wanted = new Map<string, number>();
       for (const line of lines) {
-        const quantity = isRecord(line) && isVariantId(line.variantId) ? toQuantity(line.quantity) : null;
-        if (quantity === null || quantity !== line.quantity) return fail("invalid", current());
+        if (!isRecord(line) || !isVariantId(line.variantId) || !isWholeQuantity(line.quantity)) {
+          return fail("invalid", current());
+        }
         const resolved = deps.resolve(line.variantId);
         // The gift wrap only comes in through setGiftWrap (plan §7.4).
         if (!resolved || resolved.product.isGiftWrap) return fail("invalid", current());
         if (!resolved.variant.availableForSale) return fail("unavailable", current());
-        wanted.set(line.variantId, (wanted.get(line.variantId) ?? 0) + quantity);
+        wanted.set(line.variantId, (wanted.get(line.variantId) ?? 0) + line.quantity);
       }
 
       const merged = new Map(base.lines.map((line) => [line.variantId, line.quantity]));
@@ -252,11 +258,12 @@ export function createLocalCartAdapter(deps: LocalCartDeps): LocalCartAdapter {
       for (const update of updates) {
         const line = isRecord(update) ? base.lines.find((candidate) => localLineId(candidate.variantId) === update.lineId) : undefined;
         if (!line || typeof update.quantity !== "number" || !Number.isFinite(update.quantity)) return fail("invalid", current());
-        const quantity = Math.min(MAX_LINE_QUANTITY, Math.floor(update.quantity));
+        const quantity = Math.floor(update.quantity);
         if (quantity < 1) {
           quantities.delete(line.variantId);
         } else {
-          quantities.set(line.variantId, quantity);
+          // Above 99 or above the stock the cart holds less than asked for: reported as quantity-capped.
+          quantities.set(line.variantId, Math.min(MAX_LINE_QUANTITY, quantity));
           requested.set(line.variantId, quantity);
         }
       }
@@ -313,7 +320,8 @@ export function createLocalCartAdapter(deps: LocalCartDeps): LocalCartAdapter {
     },
 
     async getCheckoutUrl() {
-      if (load().lines.length === 0) throw new CartError("empty");
+      // The priced cart, not the raw state: lines that are no longer for sale do not count.
+      if (current().lines.length === 0) throw new CartError("empty");
       return "/checkout";
     },
 

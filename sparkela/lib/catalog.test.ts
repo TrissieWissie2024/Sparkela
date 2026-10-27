@@ -12,6 +12,7 @@ import {
   homeFavorites,
   isListable,
   isStackEligible,
+  keepUnitsTogether,
   materialForVariant,
   MAX_CART_LINES,
   MAX_LINE_QUANTITY,
@@ -23,6 +24,7 @@ import {
   searchProducts,
   sortProducts,
   toCatalogProduct,
+  withDropMembership,
 } from "@/lib/catalog";
 import { toMs } from "@/lib/dates";
 import { money } from "@/lib/money";
@@ -209,6 +211,31 @@ describe("isListable", () => {
   });
 });
 
+describe("withDropMembership (decision 200)", () => {
+  it("adds the drops whose productHandles list the product, also without its drop: tag (fail closed)", () => {
+    const untagged = makeProduct({ handle: "holiday-ster-oorbellen" });
+    expect(untagged.tags.drops).toEqual([]);
+    const complete = withDropMembership(untagged, drops);
+    expect(complete.tags.drops).toEqual(["holiday-sparkle"]);
+    expect(isListable(complete, BEFORE_EARLY_ACCESS, drops)).toBe(false);
+    expect(isListable(complete, at("2026-11-27T00:00:00+01:00"), drops)).toBe(true);
+  });
+
+  it("leaves other products and complete ones as they are (same object)", () => {
+    const regular = makeProduct({ handle: "y" });
+    expect(withDropMembership(regular, drops)).toBe(regular);
+    expect(withDropMembership(holidayPiece, drops)).toBe(holidayPiece);
+  });
+});
+
+describe("keepUnitsTogether (decision 201)", () => {
+  it("puts a no-break space between a value and its unit, and nowhere else", () => {
+    expect(keepUnitsTogether("Verguld staal met schelpje · 25 mm")).toBe("Verguld staal met schelpje · 25\u00a0mm");
+    expect(keepUnitsTogether("Ketting 45 cm, hanger 2,5 cm")).toBe("Ketting 45\u00a0cm, hanger 2,5\u00a0cm");
+    expect(keepUnitsTogether("Set van 3 maten")).toBe("Set van 3 maten");
+  });
+});
+
 describe("preStartDropOf", () => {
   it("names the drop before its public start, and nothing from the start on", () => {
     expect(preStartDropOf(holidayPiece, BEFORE_EARLY_ACCESS)).toBe("holiday-sparkle");
@@ -232,7 +259,8 @@ describe("toCatalogProduct", () => {
       },
     });
     const item = toCatalogProduct(product, ctxAt(TEST_NOW));
-    expect(item.specRegel).toBe("Staal, goud of zilver · 30 mm");
+    // Value and unit never break apart (decision 201).
+    expect(item.specRegel).toBe("Staal, goud of zilver · 30\u00a0mm");
     expect(item.lindesFavoriet).toBe(true);
     expect(item.badges).toEqual(["nieuw", "op-voorraad"]);
     expect(item.listable).toBe(true);
@@ -285,7 +313,12 @@ describe("sortProducts", () => {
   const items = [
     makeCatalogProduct({ handle: "c", price: 1995, featuredRank: 3, publishedAt: "2026-11-20T12:00:00+01:00" }),
     makeCatalogProduct({ handle: "a", price: 1495, featuredRank: 1, publishedAt: "2026-11-25T12:00:00+01:00" }),
-    makeCatalogProduct({ handle: "uitverkocht", featuredRank: 0, variants: [{ title: "Goud", price: 1295, quantityAvailable: 0 }] }),
+    makeCatalogProduct({
+      handle: "uitverkocht",
+      featuredRank: 0,
+      publishedAt: "2026-11-10T12:00:00+01:00",
+      variants: [{ title: "Goud", price: 1295, quantityAvailable: 0 }],
+    }),
     makeCatalogProduct({ handle: "b", price: 1995, featuredRank: 2, publishedAt: "2026-11-25T12:00:00+01:00" }),
   ];
   const order = (key: Parameters<typeof sortProducts>[1]) => sortProducts(items, key).map((item) => item.handle);
@@ -301,6 +334,16 @@ describe("sortProducts", () => {
 
   it("nieuwste: publishedAt descending, then featuredRank", () => {
     expect(order("nieuwste")).toEqual(["a", "b", "c", "uitverkocht"]);
+  });
+
+  it("puts sold-out products last only for uitgelicht (decision 42)", () => {
+    const sameDay = [
+      makeCatalogProduct({ handle: "later", featuredRank: 2 }),
+      makeCatalogProduct({ handle: "op", featuredRank: 1, variants: [{ title: "Goud", price: 1495, quantityAvailable: 0 }] }),
+    ];
+    expect(sortProducts(sameDay, "uitgelicht").map((item) => item.handle)).toEqual(["later", "op"]);
+    expect(sortProducts(sameDay, "nieuwste").map((item) => item.handle)).toEqual(["op", "later"]);
+    expect(sortProducts(sameDay, "prijs-oplopend").map((item) => item.handle)).toEqual(["op", "later"]);
   });
 
   it("never mutates the input", () => {
@@ -451,6 +494,8 @@ describe("materialForVariant (decisions 81 and 185)", () => {
     expect(materialForVariant("Roestvrij staal", goud)).toBe("Roestvrij staal met goudlaag");
     expect(materialForVariant("Roestvrij staal met goudlaag", goud)).toBe("Roestvrij staal met goudlaag");
     expect(materialForVariant(materials[2], goud)).toBe(materials[2]);
+    expect(materialForVariant("Roestvrij staal met een dikke goudlaag", goud)).toBe("Roestvrij staal met een dikke goudlaag");
+    expect(materialForVariant("Verguld staal", goud)).toBe("Verguld staal");
     for (const materiaal of materials) {
       const text = materialForVariant(materiaal, goud) ?? "";
       expect(text.match(/goudlaag/g)?.length, materiaal).toBe(1);

@@ -199,12 +199,14 @@ export function needsHygieneSeal(p: Pick<Product, "type" | "tags">): boolean {
 const GOLD_LAYER = " met goudlaag";
 /** "met goudlaag", "met een goudlaag", "met een dikke goudlaag": everything that names the gold layer. */
 const GOLD_LAYER_PATTERN = /\s*\bmet\s+(?:een\s+)?(?:\p{L}+\s+)?goudlaag\b/giu;
-const PLATING_WORDS = /goudlaag|verguld/i;
+/** Words that already say the piece is gold plated. No `g` flag: test() must not keep a lastIndex between calls. */
+const PLATING_WORDS = /goudlaag|verguld/iu;
 
 /**
  * The material text of a variant (plan §5.4, decisions 81 and 185). `materiaal` is the product metafield:
- * - Goud: " met goudlaag" is added unless the text already names it anywhere (includes, not endsWith, so
- *   "Roestvrij staal met goudlaag; kralen: [...]" stays as it is).
+ * - Goud: " met goudlaag" is added unless the text already names the gold layer or plating anywhere (a search over
+ *   the whole text, not endsWith, so "Roestvrij staal met goudlaag; kralen: [...]" and "Roestvrij staal met een
+ *   dikke goudlaag" stay as they are and never name the layer twice).
  * - Zilver: every mention of the gold layer is removed ("Roestvrij staal met goudlaag" → "Roestvrij staal"). If a
  *   plating word is still left after that, the text would be wrong for silver, so there is no material text (null)
  *   rather than a false spec (brief §2.6, fail closed).
@@ -215,7 +217,7 @@ export function materialForVariant(materiaal: string | null, variant: Pick<Varia
   const text = materiaal.trim();
   if (!text) return null;
   const swatch = variant?.swatch ?? null;
-  if (swatch === "goud") return text.toLowerCase().includes(GOLD_LAYER.trim()) ? text : `${text}${GOLD_LAYER}`;
+  if (swatch === "goud") return PLATING_WORDS.test(text) ? text : `${text}${GOLD_LAYER}`;
   if (swatch === "zilver") {
     const silver = text.replace(GOLD_LAYER_PATTERN, "").replace(/\s{2,}/g, " ").trim();
     return silver && !PLATING_WORDS.test(silver) ? silver : null;
@@ -226,6 +228,25 @@ export function materialForVariant(materiaal: string | null, variant: Pick<Varia
 /* -------------------------------------------------------------------------- */
 /* Drops, visibility and badges                                                */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * The product with its drop membership complete: `tags.drops` becomes its drop:<slug> tags plus every drop whose
+ * `productHandles` lists its handle, the same union the proxy and the cart gate use (fail closed, decision 200). So a
+ * Shopify product that is in content/drops.ts but lacks its drop: tag is still hidden in lists, search, the sitemap and
+ * the client catalog until its drop starts. lib/commerce/index.ts applies this to every product it hands out.
+ */
+export function withDropMembership<T extends Pick<Product, "handle" | "tags">>(product: T, drops: readonly Drop[]): T {
+  const missing = drops
+    .filter((drop) => drop.productHandles.includes(product.handle) && !product.tags.drops.includes(drop.slug))
+    .map((drop) => drop.slug);
+  if (missing.length === 0) return product;
+  return { ...product, tags: { ...product.tags, drops: [...product.tags.drops, ...missing] } };
+}
+
+/** Value and unit stay together in a spec line ("25 mm", "3,5 cm"): a no-break space between them (decision 201). */
+export function keepUnitsTogether(text: string): string {
+  return text.replace(/(\d)\s+(mm|cm|m|g|gr|ml|ct|karaat)(?![\p{L}\d])/giu, "$1\u00a0$2");
+}
 
 function dropsOf(product: Pick<Product, "tags">, drops: readonly Drop[]): Drop[] {
   return product.tags.drops.map((slug) => drops.find((drop) => drop.slug === slug)).filter((drop): drop is Drop => !!drop);
@@ -332,7 +353,7 @@ export function toCatalogProduct(p: Product, ctx: BadgeContext): CatalogProduct 
     isGiftWrap: p.isGiftWrap,
     featuredRank: p.featuredRank,
     publishedAt: p.publishedAt,
-    specRegel: p.metafields.specRegel,
+    specRegel: p.metafields.specRegel === null ? null : keepUnitsTogether(p.metafields.specRegel),
     lindesFavoriet: p.metafields.lindesFavoriet,
     bestseller: p.metafields.bestseller,
     laagstePrijs30d: p.metafields.laagstePrijs30d,

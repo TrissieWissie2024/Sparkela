@@ -113,7 +113,8 @@ export interface SharedCopy {
    * Titles of the local discount rows (lib/pricing.ts, DiscountApplication.title). `giftWrap` equals the title of the
    * automatic discount in Shopify (plan §16.5), so the drawer reads the same for both providers.
    */
-  discounts: { stack: (percent: string) => string; giftWrap: string };
+  /** `other`: a Shopify discount without a title that is neither the stack, the gift wrap nor a code. */
+  discounts: { stack: (percent: string) => string; giftWrap: string; other: string };
   /** The words of lib/money.ts ("€15 tot €50"); the same object as moneyCopy in content/copy/money.ts (decision 183). */
   money: MoneyCopy;
 }
@@ -270,6 +271,7 @@ export const sharedCopy: SharedCopy = {
   discounts: {
     stack: (percent) => `Stack-korting ${percent}`,
     giftWrap: "Cadeauverpakking december",
+    other: "Korting",
   },
   money: moneyCopy,
 };

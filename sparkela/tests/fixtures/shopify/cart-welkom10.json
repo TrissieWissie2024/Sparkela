@@ -1,0 +1,139 @@
+{
+  "data": {
+    "cart": {
+      "id": "gid://shopify/Cart/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "checkoutUrl": "https://sparkela.myshopify.com/cart/c/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "totalQuantity": 2,
+      "note": null,
+      "buyerIdentity": {
+        "countryCode": "NL"
+      },
+      "cost": {
+        "subtotalAmount": {
+          "amount": "44.90",
+          "currencyCode": "EUR"
+        },
+        "totalAmount": {
+          "amount": "40.41",
+          "currencyCode": "EUR"
+        }
+      },
+      "discountCodes": [
+        {
+          "code": "WELKOM10",
+          "applicable": true
+        }
+      ],
+      "lines": {
+        "nodes": [
+          {
+            "id": "gid://shopify/CartLine/0f3c2a6e-1b5d-4c8a-9e2f-7a1b3c5d7e91?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw",
+            "quantity": 1,
+            "attributes": [],
+            "cost": {
+              "amountPerQuantity": {
+                "amount": "19.95",
+                "currencyCode": "EUR"
+              },
+              "subtotalAmount": {
+                "amount": "19.95",
+                "currencyCode": "EUR"
+              },
+              "totalAmount": {
+                "amount": "19.95",
+                "currencyCode": "EUR"
+              }
+            },
+            "discountAllocations": [
+              {
+                "discountedAmount": {
+                  "amount": "1.99",
+                  "currencyCode": "EUR"
+                },
+                "targetType": "LINE_ITEM",
+                "code": "WELKOM10"
+              }
+            ],
+            "merchandise": {
+              "id": "gid://shopify/ProductVariant/49012345600052",
+              "title": "17",
+              "quantityAvailable": 8,
+              "image": {
+                "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/nina-chunky-ring-packshot.jpg?v=1764000000",
+                "altText": "Nina chunky ring in goud",
+                "width": 1600,
+                "height": 2000
+              },
+              "product": {
+                "id": "gid://shopify/Product/9012345600005",
+                "handle": "nina-chunky-ring",
+                "title": "Nina chunky ring",
+                "tags": [
+                  "moment:date-night",
+                  "moment:festival",
+                  "nieuw",
+                  "type:ringen",
+                  "vibe:chunky-en-bold"
+                ],
+                "isGiftCard": false
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/5a7d9c1e-3f2b-4d6a-8c0e-2b4d6f8a0c13?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw",
+            "quantity": 1,
+            "attributes": [],
+            "cost": {
+              "amountPerQuantity": {
+                "amount": "24.95",
+                "currencyCode": "EUR"
+              },
+              "subtotalAmount": {
+                "amount": "24.95",
+                "currencyCode": "EUR"
+              },
+              "totalAmount": {
+                "amount": "24.95",
+                "currencyCode": "EUR"
+              }
+            },
+            "discountAllocations": [
+              {
+                "discountedAmount": {
+                  "amount": "2.50",
+                  "currencyCode": "EUR"
+                },
+                "targetType": "LINE_ITEM",
+                "code": "WELKOM10"
+              }
+            ],
+            "merchandise": {
+              "id": "gid://shopify/ProductVariant/49012345600061",
+              "title": "Goud",
+              "quantityAvailable": 15,
+              "image": {
+                "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/jet-vonk-oorbellen-packshot.jpg?v=1764000000",
+                "altText": "Jet vonk oorbellen in goud",
+                "width": 1600,
+                "height": 2000
+              },
+              "product": {
+                "id": "gid://shopify/Product/9012345600006",
+                "handle": "jet-vonk-oorbellen",
+                "title": "Jet vonk oorbellen",
+                "tags": [
+                  "moment:date-night",
+                  "moment:feestdagen",
+                  "nieuw",
+                  "type:oorbellen",
+                  "vibe:chunky-en-bold"
+                ],
+                "isGiftCard": false
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

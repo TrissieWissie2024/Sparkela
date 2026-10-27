@@ -146,6 +146,15 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
         const result = await settle(() => call(adapter), before);
         commit(result);
         report?.(result, before);
+        // A time-out or network failure says nothing about what the server did: it may still have stored the change.
+        // Read the cart again so the drawer shows what is really in it (the error message stays; decision 200).
+        if (!result.ok && result.error === "network") {
+          const reread = await settle(() => adapter.getCart(), cartRef.current);
+          if (reread.ok) {
+            cartRef.current = reread.cart;
+            setCart(reread.cart);
+          }
+        }
         return result;
       };
       const promise = queueRef.current.then(task, task);
@@ -215,7 +224,8 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
 
   const updateQuantity = useCallback(
     (lineId: string, quantity: number) => {
-      if (!Number.isFinite(quantity) || quantity < 1) return removeLine(lineId);
+      // 0 or less removes the line; anything that is not a number goes to the adapter, which refuses it.
+      if (Number.isFinite(quantity) && quantity < 1) return removeLine(lineId);
       return run(
         (cartAdapter) => cartAdapter.updateCart([{ lineId, quantity: Math.floor(quantity) }]),
         (result, before) => {

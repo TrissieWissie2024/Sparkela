@@ -1,0 +1,126 @@
+{
+  "data": {
+    "cartLinesAdd": {
+      "cart": {
+        "id": "gid://shopify/Cart/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+        "checkoutUrl": "https://sparkela.myshopify.com/cart/c/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+        "totalQuantity": 4,
+        "note": null,
+        "buyerIdentity": {
+          "countryCode": "NL"
+        },
+        "cost": {
+          "subtotalAmount": {
+            "amount": "88.80",
+            "currencyCode": "EUR"
+          },
+          "totalAmount": {
+            "amount": "88.80",
+            "currencyCode": "EUR"
+          }
+        },
+        "discountCodes": [],
+        "lines": {
+          "nodes": [
+            {
+              "id": "gid://shopify/CartLine/0f3c2a6e-1b5d-4c8a-9e2f-7a1b3c5d7e91?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw",
+              "quantity": 3,
+              "attributes": [],
+              "cost": {
+                "amountPerQuantity": {
+                  "amount": "22.95",
+                  "currencyCode": "EUR"
+                },
+                "subtotalAmount": {
+                  "amount": "68.85",
+                  "currencyCode": "EUR"
+                },
+                "totalAmount": {
+                  "amount": "68.85",
+                  "currencyCode": "EUR"
+                }
+              },
+              "discountAllocations": [],
+              "merchandise": {
+                "id": "gid://shopify/ProductVariant/49012345600021",
+                "title": "Goud",
+                "quantityAvailable": 3,
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/bo-statement-druppels-packshot.jpg?v=1764000000",
+                  "altText": "Bo statement druppels in goud",
+                  "width": 1600,
+                  "height": 2000
+                },
+                "product": {
+                  "id": "gid://shopify/Product/9012345600002",
+                  "handle": "bo-statement-druppels",
+                  "title": "Bo statement druppels",
+                  "tags": [
+                    "moment:date-night",
+                    "moment:feestdagen",
+                    "nieuw",
+                    "type:oorbellen",
+                    "vibe:chunky-en-bold"
+                  ],
+                  "isGiftCard": false
+                }
+              }
+            },
+            {
+              "id": "gid://shopify/CartLine/5a7d9c1e-3f2b-4d6a-8c0e-2b4d6f8a0c13?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw",
+              "quantity": 1,
+              "attributes": [],
+              "cost": {
+                "amountPerQuantity": {
+                  "amount": "19.95",
+                  "currencyCode": "EUR"
+                },
+                "subtotalAmount": {
+                  "amount": "19.95",
+                  "currencyCode": "EUR"
+                },
+                "totalAmount": {
+                  "amount": "19.95",
+                  "currencyCode": "EUR"
+                }
+              },
+              "discountAllocations": [],
+              "merchandise": {
+                "id": "gid://shopify/ProductVariant/49012345600052",
+                "title": "17",
+                "quantityAvailable": 8,
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/nina-chunky-ring-packshot.jpg?v=1764000000",
+                  "altText": "Nina chunky ring in goud",
+                  "width": 1600,
+                  "height": 2000
+                },
+                "product": {
+                  "id": "gid://shopify/Product/9012345600005",
+                  "handle": "nina-chunky-ring",
+                  "title": "Nina chunky ring",
+                  "tags": [
+                    "moment:date-night",
+                    "moment:festival",
+                    "nieuw",
+                    "type:ringen",
+                    "vibe:chunky-en-bold"
+                  ],
+                  "isGiftCard": false
+                }
+              }
+            }
+          ]
+        }
+      },
+      "userErrors": [],
+      "warnings": [
+        {
+          "code": "MERCHANDISE_NOT_ENOUGH_STOCK",
+          "message": "Only 3 items were added to your cart due to availability.",
+          "target": "gid://shopify/CartLine/0f3c2a6e-1b5d-4c8a-9e2f-7a1b3c5d7e91?cart=Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw"
+        }
+      ]
+    }
+  }
+}

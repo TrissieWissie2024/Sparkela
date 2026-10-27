@@ -66,6 +66,12 @@ function swatchOf(options: readonly SelectedOption[]): SwatchId | null {
   return null;
 }
 
+/** The metafields of a content entry over the empty defaults; an explicit `undefined` keeps the default. */
+function metafieldsOf(input: Partial<ProductMetafields>): ProductMetafields {
+  const given = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
+  return { ...EMPTY_METAFIELDS, ...(given as Partial<ProductMetafields>) };
+}
+
 function toVariant(input: LocalProductInput, index: number): Variant {
   const spec = input.variants[index];
   const quantityAvailable = spec.quantityAvailable;
@@ -99,7 +105,7 @@ export function toLocalProduct(input: LocalProductInput, rank: number): Product 
     description: input.description,
     type: tags.type,
     tags,
-    metafields: { ...EMPTY_METAFIELDS, ...input.metafields },
+    metafields: metafieldsOf(input.metafields),
     images,
     variants,
     options: input.options.map((option) => ({ name: option.name, values: [...option.values] })),

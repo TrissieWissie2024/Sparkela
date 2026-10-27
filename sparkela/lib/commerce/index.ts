@@ -2,7 +2,7 @@ import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
 
-import { isListable } from "@/lib/catalog";
+import { isListable, withDropMembership } from "@/lib/catalog";
 import { buildCollection, findCollectionDefinition } from "@/lib/commerce/collections";
 import { localCatalog } from "@/lib/commerce/local";
 import { shopifyCatalog } from "@/lib/commerce/shopify/catalog";
@@ -17,6 +17,9 @@ import { drops } from "@/content/drops";
  * COMMERCE_PROVIDER chooses the source: "local" (default, content/products.ts) or "shopify" (Storefront API).
  * Production on Vercel always runs "shopify": loading this module throws there with any other provider, so the build
  * fails instead of publishing the test products (§1.3).
+ *
+ * Every product leaves here with its drop membership complete (withDropMembership, decision 200): drop:<slug> tags
+ * plus content/drops.ts productHandles, so lists, search and the client catalog gate exactly like the proxy.
  *
  * getProducts and getProduct are cached ('use cache', cacheLife "hours" as the safety net when a webhook is missed,
  * tags per §7.5). getCollection and search take `now` and are plain async functions: inside 'use cache' `now` would
@@ -60,7 +63,7 @@ export async function getProducts(): Promise<Product[]> {
   "use cache";
   cacheLife("hours");
   cacheTag("catalog", "products");
-  return source.getProducts();
+  return (await source.getProducts()).map((product) => withDropMembership(product, drops));
 }
 
 /** One product by handle (any product, also drop products and the gift wrap), or null for an unknown handle. */
@@ -68,7 +71,8 @@ export async function getProduct(handle: string): Promise<Product | null> {
   "use cache";
   cacheLife("hours");
   cacheTag("catalog", "products", `product:${handle}`);
-  return source.getProduct(handle);
+  const product = await source.getProduct(handle);
+  return product === null ? null : withDropMembership(product, drops);
 }
 
 /**

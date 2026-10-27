@@ -1,0 +1,27 @@
+{
+  "data": {
+    "cart": {
+      "id": "gid://shopify/Cart/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "checkoutUrl": "https://sparkela.myshopify.com/cart/c/Z2NwLWV1cm9wZS13ZXN0NDowMUs4WjZRM0pIOE5UQjJYN0VZMVFIRjVQRw?key=8f2c1d4e6a7b9c0d1e2f3a4b5c6d7e8f",
+      "totalQuantity": 0,
+      "note": null,
+      "buyerIdentity": {
+        "countryCode": "NL"
+      },
+      "cost": {
+        "subtotalAmount": {
+          "amount": "0.00",
+          "currencyCode": "EUR"
+        },
+        "totalAmount": {
+          "amount": "0.00",
+          "currencyCode": "EUR"
+        }
+      },
+      "discountCodes": [],
+      "lines": {
+        "nodes": []
+      }
+    }
+  }
+}

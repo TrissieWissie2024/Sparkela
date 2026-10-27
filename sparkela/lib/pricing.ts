@@ -79,6 +79,7 @@ const MAX_NOTE_LENGTH = 200;
 export const DISCOUNT_TITLES = {
   stack: (percent: number) => sharedCopy.discounts.stack(`${percent}%`),
   giftWrap: sharedCopy.discounts.giftWrap,
+  other: sharedCopy.discounts.other,
 } as const;
 
 /* -------------------------------------------------------------------------- */

@@ -1,0 +1,12 @@
+{
+  "id": 61012345600001,
+  "handle": "alle",
+  "title": "Alle sieraden",
+  "updated_at": "2026-11-26T22:03:51+01:00",
+  "body_html": "",
+  "published_at": "2026-11-20T12:00:00+01:00",
+  "sort_order": "manual",
+  "template_suffix": null,
+  "published_scope": "web",
+  "admin_graphql_api_id": "gid://shopify/Collection/61012345600001"
+}

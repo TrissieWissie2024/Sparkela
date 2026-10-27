@@ -1,0 +1,98 @@
+{
+  "data": {
+    "product": {
+      "id": "gid://shopify/Product/9012345600025",
+      "handle": "cadeauverpakking",
+      "title": "Cadeauverpakking",
+      "description": "Een doosje met lint en een kaartje.",
+      "tags": [
+        "type:cadeauverpakking",
+        "verborgen"
+      ],
+      "isGiftCard": false,
+      "availableForSale": true,
+      "publishedAt": "2026-11-20T11:00:00Z",
+      "seo": {
+        "title": null,
+        "description": null
+      },
+      "options": [
+        {
+          "name": "Title",
+          "optionValues": [
+            {
+              "name": "Default Title"
+            }
+          ]
+        }
+      ],
+      "priceRange": {
+        "minVariantPrice": {
+          "amount": "1.95",
+          "currencyCode": "EUR"
+        },
+        "maxVariantPrice": {
+          "amount": "1.95",
+          "currencyCode": "EUR"
+        }
+      },
+      "images": {
+        "nodes": []
+      },
+      "variants": {
+        "nodes": [
+          {
+            "id": "gid://shopify/ProductVariant/49012345600251",
+            "title": "Default Title",
+            "sku": "SPK-CADEAUVERPAKKING",
+            "availableForSale": true,
+            "quantityAvailable": 999,
+            "price": {
+              "amount": "1.95",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "Title",
+                "value": "Default Title"
+              }
+            ],
+            "image": null
+          }
+        ]
+      },
+      "metafields": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "namespace": "custom",
+          "key": "gpsr_fabrikant",
+          "type": "multi_line_text_field",
+          "value": "[Fabrikant, adres]"
+        },
+        {
+          "namespace": "custom",
+          "key": "gpsr_verantwoordelijke_eu",
+          "type": "multi_line_text_field",
+          "value": "[Verantwoordelijke in de EU]"
+        },
+        {
+          "namespace": "custom",
+          "key": "gpsr_waarschuwingen",
+          "type": "multi_line_text_field",
+          "value": "[Waarschuwingen van de leverancier invullen]"
+        },
+        null,
+        null,
+        null
+      ]
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "data": {
+    "product": {
+      "id": "gid://shopify/Product/9012345600026",
+      "handle": "cadeaukaart",
+      "title": "Cadeaukaart",
+      "description": "Laat haar zelf kiezen. De cadeaukaart komt per mail.",
+      "tags": [],
+      "isGiftCard": true,
+      "availableForSale": true,
+      "publishedAt": "2026-11-20T11:00:00Z",
+      "seo": {
+        "title": null,
+        "description": null
+      },
+      "options": [
+        {
+          "name": "Bedrag",
+          "optionValues": [
+            {
+              "name": "€15"
+            },
+            {
+              "name": "€25"
+            },
+            {
+              "name": "€50"
+            }
+          ]
+        }
+      ],
+      "priceRange": {
+        "minVariantPrice": {
+          "amount": "15.00",
+          "currencyCode": "EUR"
+        },
+        "maxVariantPrice": {
+          "amount": "50.00",
+          "currencyCode": "EUR"
+        }
+      },
+      "images": {
+        "nodes": [
+          {
+            "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/cadeaukaart.jpg?v=1764000000",
+            "altText": "De Sparkela cadeaukaart",
+            "width": 1600,
+            "height": 1000
+          }
+        ]
+      },
+      "variants": {
+        "nodes": [
+          {
+            "id": "gid://shopify/ProductVariant/49012345600261",
+            "title": "€15",
+            "sku": "SPK-CADEAUKAART-1500",
+            "availableForSale": true,
+            "quantityAvailable": null,
+            "price": {
+              "amount": "15.00",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "Bedrag",
+                "value": "€15"
+              }
+            ],
+            "image": null
+          },
+          {
+            "id": "gid://shopify/ProductVariant/49012345600262",
+            "title": "€25",
+            "sku": "SPK-CADEAUKAART-2500",
+            "availableForSale": true,
+            "quantityAvailable": null,
+            "price": {
+              "amount": "25.00",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "Bedrag",
+                "value": "€25"
+              }
+            ],
+            "image": null
+          },
+          {
+            "id": "gid://shopify/ProductVariant/49012345600263",
+            "title": "€50",
+            "sku": "SPK-CADEAUKAART-5000",
+            "availableForSale": true,
+            "quantityAvailable": null,
+            "price": {
+              "amount": "50.00",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "Bedrag",
+                "value": "€50"
+              }
+            ],
+            "image": null
+          }
+        ]
+      },
+      "metafields": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  }
+}

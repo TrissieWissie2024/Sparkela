@@ -1,26 +1,405 @@
 @import "tailwindcss";
+/* The docs mention many class names and variables as examples; they must never decide what CSS ships (decision 156). */
+@source not "../docs";
 
+/*
+ * Sparkela design tokens (docs/PLAN.md §4, brief §5).
+ *
+ * Components use only these roles, through Tailwind classes (bg-pagina, text-tekst-2, bg-primair, border-rand-invoer)
+ * or var(--…). Never a hex code in a component: the only other place with hex values is lib/brand-colors.ts (manifest,
+ * OG images, logo script, themeColor), which mirrors this block one to one.
+ *
+ * This :root block is unlayered on purpose. The @theme inline variables (in @layer theme) refer to it, so it must
+ * never move into @layer base. A token in @theme inline never has the same name as its source
+ * (--radius-kaart: var(--hoek-kaart)), or the variable would be cyclic and rounded-kaart would be 0.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* brand */
+  --inkt: #171717; --bot-wit: #E8E0D4; --steen: #77766F;
+  --olijf: #59634B; --roest: #713B32; --leisteen: #344B65;
+
+  /* surfaces */
+  --pagina: #F2EADE; --vlak: #E8E0D4; --kaart: #FFFFFF; --donker: #171717;
+
+  /* text */
+  --tekst: #171717; --tekst-2: #565550; --tekst-gedempt: #77766F;
+  --tekst-op-donker: #E8E0D4; --tekst-2-op-donker: #ACA79E;
+
+  /* interaction */
+  --primair: #713B32; --primair-hover: #603028; --primair-tekst: #E8E0D4;
+  --link: #344B65; --link-hover: #713B32; --focus: #344B65;
+
+  /* lines */
+  --rand: #CAC3B9; --rand-sterk: #A9A8A2;
+  --rand-invoer: #77766F;          /* derived: 3:1 for inputs, radios and steppers (WCAG 1.4.11) */
+  --rand-op-donker: #413F3D;       /* bot-wit 800: hairline on --donker */
+
+  /* product display and flag: not brand colours, only for swatches and the Dutch flag */
+  --swatch-goud: #C9A45C; --swatch-zilver: #BFC1C2;
+  --vlag-rood: #AE1C28; --vlag-wit: #FFFFFF; --vlag-blauw: #21468B;
+
+  /* status */
+  --succes: #59634B; --succes-vlak: #E9EDE3;
+  --fout: #713B32; --fout-vlak: #FBE6E2;
+  --info: #344B65; --info-vlak: #E4ECF6;
+
+  /* tints (brief §5): 50 to 200 for surfaces and labels, 700 to 900 for text and hover */
+  --inkt-50: #F7F7F7; --inkt-100: #EBEBEB; --inkt-200: #DBDBDB; --inkt-300: #C4C4C4; --inkt-400: #A8A8A8;
+  --inkt-500: #898989; --inkt-600: #6F6F6F; --inkt-700: #555555; --inkt-800: #404040; --inkt-900: #171717;
+  --bot-wit-50: #FDF6EB; --bot-wit-100: #F2EADE; --bot-wit-200: #E8E0D4; --bot-wit-300: #CAC3B9; --bot-wit-400: #ACA79E;
+  --bot-wit-500: #8D8882; --bot-wit-600: #716E69; --bot-wit-700: #575551; --bot-wit-800: #413F3D; --bot-wit-900: #2D2B28;
+  --steen-50: #F7F7F3; --steen-100: #ECEBE7; --steen-200: #DBDBD7; --steen-300: #C5C4BF; --steen-400: #A9A8A2;
+  --steen-500: #8A8983; --steen-600: #77766F; --steen-700: #565550; --steen-800: #41403B; --steen-900: #2C2B28;
+  --olijf-50: #F5F8F0; --olijf-100: #E9EDE3; --olijf-200: #D8DDD1; --olijf-300: #C1C7B9; --olijf-400: #A3AB9A;
+  --olijf-500: #848D79; --olijf-600: #69735C; --olijf-700: #59634B; --olijf-800: #3B4330; --olijf-900: #282E1E;
+  --roest-50: #FFF1ED; --roest-100: #FBE6E2; --roest-200: #ECD5D0; --roest-300: #D9BDB7; --roest-400: #C29E97;
+  --roest-500: #A87D75; --roest-600: #916158; --roest-700: #713B32; --roest-800: #603028; --roest-900: #461D17;
+  --leisteen-50: #EFF8FF; --leisteen-100: #E4ECF6; --leisteen-200: #D3DCE6; --leisteen-300: #BAC5D2; --leisteen-400: #9BA9BA;
+  --leisteen-500: #7A8B9F; --leisteen-600: #5D7187; --leisteen-700: #415770; --leisteen-800: #344B65; --leisteen-900: #1B2D41;
+
+  /* shape (source name differs from the Tailwind name: no self-reference in @theme) */
+  --hoek-kaart: 16px;
+  --schaduw-hover: 0 1px 2px rgb(23 23 23 / 0.04), 0 8px 24px rgb(23 23 23 / 0.08);
+  --schaduw-zwevend: 0 2px 4px rgb(23 23 23 / 0.06), 0 16px 40px rgb(23 23 23 / 0.14);
+
+  /* focus: overridden per surface (data-vlak, §4.8) */
+  --ring: var(--focus);
+
+  /*
+   * Fixed chrome heights, so nothing shifts on hydration (no CLS). The promo bar is 48 px below lg and 40 px from lg;
+   * it only grows when its text cannot fit (min-h, never clipped, WCAG 1.4.12). The header is 64 px, 72 px from xl.
+   */
+  --promo-hoogte: 48px;
+  --header-hoogte: 64px;
 }
+
+@media (min-width: 64rem) { :root { --promo-hoogte: 40px; } }
+@media (min-width: 80rem) { :root { --header-hoogte: 72px; } }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-*: initial;               /* no default Tailwind palette: only Sparkela colours exist */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-inkt: var(--inkt); --color-bot-wit: var(--bot-wit); --color-steen: var(--steen);
+  --color-olijf: var(--olijf); --color-roest: var(--roest); --color-leisteen: var(--leisteen);
+  --color-pagina: var(--pagina); --color-vlak: var(--vlak); --color-kaart: var(--kaart); --color-donker: var(--donker);
+  --color-tekst: var(--tekst); --color-tekst-2: var(--tekst-2); --color-tekst-gedempt: var(--tekst-gedempt);
+  --color-tekst-op-donker: var(--tekst-op-donker); --color-tekst-2-op-donker: var(--tekst-2-op-donker);
+  --color-primair: var(--primair); --color-primair-hover: var(--primair-hover); --color-primair-tekst: var(--primair-tekst);
+  --color-link: var(--link); --color-link-hover: var(--link-hover); --color-focus: var(--focus);
+  --color-rand: var(--rand); --color-rand-sterk: var(--rand-sterk); --color-rand-invoer: var(--rand-invoer);
+  --color-rand-op-donker: var(--rand-op-donker);
+  --color-swatch-goud: var(--swatch-goud); --color-swatch-zilver: var(--swatch-zilver);
+  --color-vlag-rood: var(--vlag-rood); --color-vlag-wit: var(--vlag-wit); --color-vlag-blauw: var(--vlag-blauw);
+  --color-succes: var(--succes); --color-succes-vlak: var(--succes-vlak);
+  --color-fout: var(--fout); --color-fout-vlak: var(--fout-vlak);
+  --color-info: var(--info); --color-info-vlak: var(--info-vlak);
+
+  /* every tint, for all six colours, 50 to 900 */
+  --color-inkt-50: var(--inkt-50); --color-inkt-100: var(--inkt-100); --color-inkt-200: var(--inkt-200);
+  --color-inkt-300: var(--inkt-300); --color-inkt-400: var(--inkt-400); --color-inkt-500: var(--inkt-500);
+  --color-inkt-600: var(--inkt-600); --color-inkt-700: var(--inkt-700); --color-inkt-800: var(--inkt-800);
+  --color-inkt-900: var(--inkt-900);
+  --color-bot-wit-50: var(--bot-wit-50); --color-bot-wit-100: var(--bot-wit-100); --color-bot-wit-200: var(--bot-wit-200);
+  --color-bot-wit-300: var(--bot-wit-300); --color-bot-wit-400: var(--bot-wit-400); --color-bot-wit-500: var(--bot-wit-500);
+  --color-bot-wit-600: var(--bot-wit-600); --color-bot-wit-700: var(--bot-wit-700); --color-bot-wit-800: var(--bot-wit-800);
+  --color-bot-wit-900: var(--bot-wit-900);
+  --color-steen-50: var(--steen-50); --color-steen-100: var(--steen-100); --color-steen-200: var(--steen-200);
+  --color-steen-300: var(--steen-300); --color-steen-400: var(--steen-400); --color-steen-500: var(--steen-500);
+  --color-steen-600: var(--steen-600); --color-steen-700: var(--steen-700); --color-steen-800: var(--steen-800);
+  --color-steen-900: var(--steen-900);
+  --color-olijf-50: var(--olijf-50); --color-olijf-100: var(--olijf-100); --color-olijf-200: var(--olijf-200);
+  --color-olijf-300: var(--olijf-300); --color-olijf-400: var(--olijf-400); --color-olijf-500: var(--olijf-500);
+  --color-olijf-600: var(--olijf-600); --color-olijf-700: var(--olijf-700); --color-olijf-800: var(--olijf-800);
+  --color-olijf-900: var(--olijf-900);
+  --color-roest-50: var(--roest-50); --color-roest-100: var(--roest-100); --color-roest-200: var(--roest-200);
+  --color-roest-300: var(--roest-300); --color-roest-400: var(--roest-400); --color-roest-500: var(--roest-500);
+  --color-roest-600: var(--roest-600); --color-roest-700: var(--roest-700); --color-roest-800: var(--roest-800);
+  --color-roest-900: var(--roest-900);
+  --color-leisteen-50: var(--leisteen-50); --color-leisteen-100: var(--leisteen-100); --color-leisteen-200: var(--leisteen-200);
+  --color-leisteen-300: var(--leisteen-300); --color-leisteen-400: var(--leisteen-400); --color-leisteen-500: var(--leisteen-500);
+  --color-leisteen-600: var(--leisteen-600); --color-leisteen-700: var(--leisteen-700); --color-leisteen-800: var(--leisteen-800);
+  --color-leisteen-900: var(--leisteen-900);
+
+  /* next/font sets --font-inter and --font-unbounded on <html> (app/layout.tsx) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-unbounded), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-kaart: var(--hoek-kaart);
+  --shadow-hover: var(--schaduw-hover);
+  --shadow-zwevend: var(--schaduw-zwevend);
+  --spacing-promo: var(--promo-hoogte);
+  --spacing-header: var(--header-hoogte);
+  --breakpoint-xs: 23.75rem;        /* 380 px: small phones */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    background-color: var(--pagina);
+    color: var(--tekst);
+    -webkit-text-size-adjust: 100%;
+    /* Anchors and focus scrolling land below the sticky header (CORVANE D31). */
+    scroll-padding-top: calc(var(--header-hoogte) + 16px);
+  }
+
+  /* Pages never set overflow on an ancestor of the sticky header (plan §4.6). */
+  body {
+    background-color: var(--pagina);
+    color: var(--tekst);
+    /* @theme inline variables are not emitted as custom properties; --theme() inlines the value. */
+    font-family: --theme(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--roest-200);
+    color: var(--tekst);
+  }
+
+  /* Visible focus on every interactive element: 2 px ring in --focus, 2 px offset (brief §5, plan §4.8). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* On dark or coloured surfaces the ring turns bot-wit (13,70:1 on donker, 6,76:1 on roest). */
+  [data-vlak="donker"],
+  [data-vlak="roest"],
+  [data-vlak="olijf"],
+  [data-vlak="leisteen"] {
+    --ring: var(--bot-wit);
+  }
+
+  /*
+   * On the coloured surfaces only bot-wit passes AA (brief §5, plan §4.2, §4.10): --tekst-2-op-donker #ACA79E is
+   * 3,70:1 on roest, 2,65:1 on olijf and 3,75:1 on leisteen. There the secondary-text role resolves to bot-wit, so
+   * every tone="donker" primitive (SectionHeading, Price, Stars, VatNotice, Accordion) stays AA (decision 186).
+   */
+  [data-vlak="roest"],
+  [data-vlak="olijf"],
+  [data-vlak="leisteen"] {
+    --tekst-2-op-donker: var(--bot-wit);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Typography utilities (plan §4.3), so sizes live in one place. Breakpoints: md 48rem, lg 64rem.
+ * Headings: Unbounded 800 (kop-1, kop-2) and 700 (kop-3); kop-4 is Inter 600 (product names on cards, accordion
+ * triggers). Mobile / md / lg sizes follow the table in §4.3; one kop-1 (the H1) per page.
+ */
+@utility kop-1 {
+  font-family: --theme(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+
+  @media (min-width: 48rem) {
+    font-size: 2.5rem;
+  }
+  @media (min-width: 64rem) {
+    font-size: 3rem;
+  }
+}
+
+@utility kop-2 {
+  font-family: --theme(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+
+  @media (min-width: 48rem) {
+    font-size: 1.75rem;
+  }
+  @media (min-width: 64rem) {
+    font-size: 2rem;
+  }
+}
+
+@utility kop-3 {
+  font-family: --theme(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+
+  @media (min-width: 48rem) {
+    font-size: 1.25rem;
+  }
+  @media (min-width: 64rem) {
+    font-size: 1.375rem;
+  }
+}
+
+@utility kop-4 {
+  font-family: --theme(--font-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0;
+
+  @media (min-width: 64rem) {
+    font-size: 1.0625rem;
+  }
+}
+
+@utility tekst-groot {
+  font-size: 1.125rem;
+  line-height: 1.5;
+
+  @media (min-width: 64rem) {
+    font-size: 1.25rem;
+  }
+}
+
+@utility tekst-klein {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* Upper case: never on text with a unit ("20 mm" would read "20 MM"); use tekst-klein font-semibold there. */
+@utility label-caps {
+  font-family: --theme(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.33;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Prices and timers in fixed boxes (no layout shift while digits change). */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Section rhythm (plan §4.4): 64 / 96 / 112 px of vertical padding; short sections 48 / 64 / 80 px. Two sections on
+ * the same surface in a row get a hairline (border-t border-rand) over the container width.
+ */
+@utility sectie {
+  padding-block: 4rem;
+
+  @media (min-width: 48rem) {
+    padding-block: 6rem;
+  }
+  @media (min-width: 64rem) {
+    padding-block: 7rem;
+  }
+}
+
+@utility sectie-kort {
+  padding-block: 3rem;
+
+  @media (min-width: 48rem) {
+    padding-block: 4rem;
+  }
+  @media (min-width: 64rem) {
+    padding-block: 5rem;
+  }
+}
+
+/*
+ * Motion helpers (plan §4.7). The sparkela-* keyframes live in components/ui/MotionStyles.tsx, which React hoists
+ * into <head> once (app/layout.tsx). These classes only pick a keyframe, duration and easing per state, so the
+ * timings stay in one place. Always use them behind motion-safe: (motion-safe:anim-sheet-right); with reduced
+ * motion nothing animates and Radix opens and closes at once.
+ * Radix sets data-state="open" | "closed" on Dialog, Accordion and Tabs parts; a hand-made panel sets it itself.
+ */
+@utility anim-overlay {
+  &[data-state="open"] {
+    animation: sparkela-fade-in 300ms linear;
+  }
+  &[data-state="closed"] {
+    animation: sparkela-fade-out 200ms linear;
+  }
+}
+
+@utility anim-sheet-right {
+  &[data-state="open"] {
+    animation: sparkela-sheet-in-right 360ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  &[data-state="closed"] {
+    animation: sparkela-sheet-out-right 240ms cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@utility anim-sheet-left {
+  &[data-state="open"] {
+    animation: sparkela-sheet-in-left 360ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  &[data-state="closed"] {
+    animation: sparkela-sheet-out-left 240ms cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@utility anim-sheet-top {
+  &[data-state="open"] {
+    animation: sparkela-sheet-in-top 360ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  &[data-state="closed"] {
+    animation: sparkela-sheet-out-top 240ms cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@utility anim-modal {
+  &[data-state="open"] {
+    animation: sparkela-modal-in 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  &[data-state="closed"] {
+    animation: sparkela-modal-out 200ms cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@utility anim-accordion {
+  &[data-state="open"] {
+    animation: sparkela-accordion-down 280ms ease-out;
+  }
+  &[data-state="closed"] {
+    animation: sparkela-accordion-up 220ms ease-out;
+  }
+}
+
+/* Megamenu panel and other small popovers: 200 ms fade and 4 px down in, 150 ms out. */
+@utility anim-paneel {
+  &[data-state="open"] {
+    animation: sparkela-panel-in 200ms ease-out;
+  }
+  &[data-state="closed"] {
+    animation: sparkela-panel-out 150ms ease-out;
+  }
+}
+
+/* Horizontal scroll rows (ScrollRow) without a visible scrollbar; they keep their buttons and keyboard access. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Reduced motion: every animation and transition is effectively instant; components also use motion-safe:. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

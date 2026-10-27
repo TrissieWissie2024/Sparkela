@@ -312,6 +312,7 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `content/copy/collection.ts` | `collectionCopy`: filters (de facetlabels zelf komen uit `sharedCopy.vocab`), aantal, lege staat; zoekpagina; drop-, stacks- en cadeaukaartpagina | 3a/A2 skelet, 7-9/D3 |
 | `content/copy/pdp.ts` | `pdpCopy`: koopkolom, varianten, ringmaatgids, stack-kiezer, trustrij, specs, claims, accordions, GPSR, verzorging (`care.default`) | 3a/A2 skelet, 3b/B4 (`care.default`), 7-9/D2 |
 | `content/copy/pages.ts` | `pagesCopy`: Over Sparkela, Club-pagina, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout (de 404-copy staat in `sharedCopy.notFound`) | 3a/A2 skelet, 7-9/D4 |
+| `content/copy/money.ts` | `moneyCopy`: de woorden van `lib/money.ts` (`rangeJoiner`); importeert niets, zodat `lib/money.ts` hem zonder importcyclus leest; `sharedCopy.money` is hetzelfde object (beslissing 183) | fase 3/fixer, daarna integrator |
 | `content/legal/algemene-voorwaarden.md`, `privacy.md`, `cookies.md`, `verzenden-en-retourneren.md`, `herroepen.md` | Juridische teksten, bovenaan `TODO: laten controleren` | 4-6/C1 |
 | `content/content-guard.test.ts` | Bewakers voor §2 van de brief (§19.1); scant automatisch elk bestand in `content/` en `content/copy/` | 3b/B4 |
 | `content/offers.test.ts`, `content/drops.test.ts`, `content/shipping.test.ts`, `content/quiz.test.ts` | Datacontroles | 3b/B4 |
@@ -374,9 +375,9 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `scripts/capture-reference.mjs` | Bestaat al, niet aanpassen | n.v.t. |
 | `scripts/early-access-link.mjs` | Print de early-access-link per drop (leest `EARLY_ACCESS_SECRET`) | 4-6/C1 |
 | `tests/unit/shopify-live.test.ts` | Leestest tegen de echte winkel, alleen met `SHOPIFY_LIVE_TEST=1`; logt de query-cost | 4-6/C2b |
-| `public/brand/logo-inkt.svg`, `logo-botwit-op-roest.svg`, `logo-roest.svg`, `logo-botwit.svg`, `logo-op-inkt.svg`, `monogram-inkt.svg`, `monogram-botwit.svg`, `monogram-roest.svg`, `monogram-botwit-op-roest.svg`, `monogram-botwit-op-inkt.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | Merkbestanden | 3b/B1 |
+| `public/brand/logo-inkt.svg`, `logo-botwit-op-roest.svg`, `logo-roest.svg`, `logo-botwit.svg`, `logo-op-inkt.svg`, `monogram-inkt.svg`, `monogram-botwit.svg`, `monogram-roest.svg`, `monogram-botwit-op-roest.svg`, `monogram-botwit-op-inkt.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`; daarnaast (beslissing 162) `logo-botwit-vonk-roest.svg`, `logo-inkt-vonk-botwit.svg`, `logo-roest-op-botwit.svg`, `logo-botwit-op-olijf.svg`, `logo-botwit-op-leisteen.svg`, `logo-inkt-op-steen.svg`, `vonk-roest.svg`, `vonk-botwit.svg`, `vonk-inkt.svg` | Merkbestanden | 3b/B1 |
 | `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Verwijderen | 3a/A2 |
-| `public/images/**` | Lege mappen met `.gitkeep`; vaste bestandsnamen uit `content/assets.ts` | 3b/B4 |
+| `public/images/**`, `public/videos/` | Lege mappen met `.gitkeep`; vaste bestandsnamen uit `content/assets.ts` | 3b/B4 (`public/videos/`: integrator 3b) |
 | `assets/fonts/unbounded-latin-800-normal.woff`, `inter-latin-400-normal.woff`, `inter-latin-600-normal.woff`, `OFL-Unbounded.txt`, `OFL-Inter.txt` | Fonts voor OG (Satori leest geen WOFF2) | 10-11/E1 |
 | `data/shopify-products.csv` | Dezelfde producten in het importformaat van Shopify, met metafields | 3b/B4 |
 | `tests/fixtures/shopify/*.json` | Opgeslagen responses (§16.8) | 4-6/C2b (`admin-*`: C1) |
@@ -555,6 +556,7 @@ Componenten gebruiken alleen deze rollen, via Tailwind-klassen of `var(--…)`. 
 ```
 
 - Het `:root`-blok met tokens staat **buiten** elke `@layer` (unlayered). Zet het nooit in `@layer base`: de `@theme inline`-variabelen in `@layer theme` verwijzen ernaar. Een token in `@theme inline` heeft nooit dezelfde naam als zijn bron (`--radius-kaart: var(--hoek-kaart)`, niet `var(--radius-kaart)`), anders is de variabele cyclisch en is `rounded-kaart` 0.
+- Reken in CSS niet op variabelen uit `@theme inline`: Tailwind geeft ze alleen als CSS-variabele uit als zijn scanner de naam ergens in de bronbestanden ziet (gemeten in 3a, beslissing 156). Schrijf in CSS dus `--theme(--font-display)` en `--theme(--font-sans)` (niet `var(--font-display)`), en voor hoogtes de bronvariabelen `var(--header-hoogte)` en `var(--promo-hoogte)` (niet `var(--spacing-header)`). Tailwind-klassen (`font-display`, `h-header`, `min-h-promo`) werken gewoon. `globals.css` sluit `docs/` uit van de scan (`@source not "../docs"`), zodat klassen die alleen in dit plan staan nooit in de CSS komen.
 
 **Klassen die agents gebruiken** (voorbeelden): `bg-pagina`, `bg-vlak`, `bg-kaart`, `bg-donker`, `text-tekst`, `text-tekst-2`, `text-tekst-gedempt`, `text-tekst-op-donker`, `text-tekst-2-op-donker`, `bg-primair`, `hover:bg-primair-hover`, `text-primair-tekst`, `text-link`, `hover:text-link-hover`, `border-rand`, `border-rand-invoer`, `bg-succes-vlak text-succes`, `bg-fout-vlak text-fout`, `bg-info-vlak text-info`, `bg-roest-100`, `text-leisteen-800`, `rounded-kaart`, `shadow-hover`, `shadow-zwevend`, `font-display`, `h-header`, `min-h-promo`, overlay `bg-inkt/45`.
 
@@ -648,11 +650,12 @@ Geen voorouder van de header zet `overflow` (anders werkt `sticky` niet). `body`
 @layer base {
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   [data-vlak="donker"], [data-vlak="roest"], [data-vlak="olijf"], [data-vlak="leisteen"] { --ring: var(--bot-wit); }
+  [data-vlak="roest"], [data-vlak="olijf"], [data-vlak="leisteen"] { --tekst-2-op-donker: var(--bot-wit); }
 }
 ```
 
 - Elk interactief element krijgt de ring. Nooit `outline: none` zonder vervanging.
-- Secties en componenten op een donker of gekleurd vlak zetten `data-vlak="donker" | "roest" | "olijf" | "leisteen"` op hun wortel. Zo wordt de ring bot-wit (13,70:1 op donker, 6,76:1 op roest).
+- Secties en componenten op een donker of gekleurd vlak zetten `data-vlak="donker" | "roest" | "olijf" | "leisteen"` op hun wortel. Zo wordt de ring bot-wit (13,70:1 op donker, 6,76:1 op roest, 4,85:1 op olijf, 6,86:1 op leisteen). Op roest, olijf en leisteen wordt ook `--tekst-2-op-donker` bot-wit: #ACA79E haalt daar geen AA (3,70 / 2,65 / 3,75), dus een primitive met `tone="donker"` (SectionHeading, Price, Stars, VatNotice, Accordion) blijft op elk donker of gekleurd vlak AA, zolang het vlak `data-vlak` draagt (beslissing 186).
 - De geselecteerde staat (swatch, tegel, chip) is een andere vorm dan de focusring: een rand van 2 px in `--tekst` plus een vinkje. Nooit alleen kleur.
 - Focus verdwijnt nooit achter vaste UI (WCAG 2.4.11): sticky koopbalk, consentbanner en pill zetten `scroll-padding-bottom` (port CORVANE D52.4, D53.5).
 
@@ -708,13 +711,17 @@ Berekend met de WCAG-formule voor relatieve luminantie. `tests/unit/contrast.tes
 | `--tekst` | `--succes-vlak` / `--fout-vlak` / `--info-vlak` | 15,10 / 14,96 / 15,05 | AA | lopende tekst in meldingen |
 | `--focus` | `--pagina` / `--vlak` / `--kaart` | 7,52 / 6,86 / 8,97 | ≥ 3 | focusring (niet-tekst) |
 | `--bot-wit` (ring) | `--donker` / `--roest` | 13,70 / 6,76 | ≥ 3 | focusring op donker en roest |
+| `--bot-wit` (ring) | `--olijf` / `--leisteen` | 4,85 / 6,86 | ≥ 3 | focusring op olijf en leisteen |
 | `--rand-invoer` #77766F | `--kaart` / `--pagina` | 4,56 / 3,82 | ≥ 3 | randen van invoervelden |
 | `--rand-sterk` #A9A8A2 | `--kaart` | 2,38 | **niet** voor bedieningsgrenzen | alleen decoratief |
 | `--rand` #CAC3B9 | `--kaart` | 1,75 | decoratief | kaartranden, haarlijnen |
 | `--roest` | `--donker` | 2,03 | **verboden** als tekst of dunne lijn | geen roest tekst, icoon of haarlijn op donker (de vonk in het logo is decoratief). Een gevulde `primair`-knop op donker mag wel: het label haalt 6,76:1 op de roest vulling, en de knop heeft een label als naam (een rand van de knop is voor 1.4.11 niet nodig) |
 | `--leisteen` (focus) | `--donker` | 2,00 | **verboden** | daarom bot-witte ring op donker |
-| `--tekst-2-op-donker` | `--roest` | 3,70 | **verboden** als tekst | op roest alleen bot-wit |
+| `--tekst-2-op-donker` #ACA79E | `--roest` | 3,70 | **verboden** als tekst | op roest alleen bot-wit (`data-vlak="roest"` maakt de rol bot-wit, §4.8) |
+| `--tekst-2-op-donker` #ACA79E | `--olijf` | 2,65 | **verboden** als tekst | op olijf alleen bot-wit (idem) |
+| `--tekst-2-op-donker` #ACA79E | `--leisteen` | 3,75 | **verboden** als tekst | op leisteen alleen bot-wit (idem) |
 | `--bot-wit` | `--steen` #77766F | 3,48 | alleen groot | steen als vlak vermijden |
+| `--inkt` #171717 | `--steen` | 3,93 | logo (vrijgesteld, WCAG 1.4.3 logotypes) | `Logo variant="op-steen"`: het woordmerk is geen tekst om te lezen; nooit lopende tekst in inkt op steen |
 
 ### 4.11 Forced colors en print
 
@@ -757,6 +764,7 @@ Alle tekst die bezoekers zien staat in `content/`. Componenten importeren copy, 
 | `content/copy/collection.ts` | `collectionCopy` | `CollectionCopy` | Filters, zoeken, drops, stacks, cadeaukaarten |
 | `content/copy/pdp.ts` | `pdpCopy` | `PdpCopy` | Productpagina, ringmaatgids, claims, GPSR, `care.default` |
 | `content/copy/pages.ts` | `pagesCopy` | `PagesCopy` | Over Sparkela, Club, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout |
+| `content/copy/money.ts` | `moneyCopy` | `MoneyCopy` | Het verbindingswoord van `formatMoneyRange` (ook als `sharedCopy.money`) |
 
 Elk copytype staat in zijn eigen bestand (`export interface FormsCopy { … }` naast `export const formsCopy: FormsCopy = { … }`). De eigenaar van het bestand in die golf mag sleutels toevoegen; sleutels uit §5.2 en §5.9 hernoemt niemand.
 
@@ -839,7 +847,7 @@ export const site: SiteConfig = {
 
 ### 5.4 `content/products.ts`: de 24 testproducten
 
-Verzonnen namen, prijzen op ,95, geen echte merken. Handles zijn vast: tests gebruiken ze. **Materiaal** (beslissing 81): producten met alleen Goud krijgen `materiaal: "Roestvrij staal met goudlaag"`; producten met Goud en Zilver (1, 5, 17, 19) krijgen `materiaal: "Roestvrij staal"`. De getoonde tekst komt altijd uit `materialForVariant(materiaal, variant)` (§7.2): bij de swatch `goud` komt er " met goudlaag" achter (als dat er nog niet staat), bij `zilver` gaat " met goudlaag" eraf. `nikkelvrij` is overal `null` (niet bevestigd). **GPSR-velden** zijn herkenbare placeholders tussen haken: `"[Fabrikant, adres]"`, `"[Verantwoordelijke in de EU]"`, `"[Waarschuwingen van de leverancier invullen]"`. Nooit zelfverzonnen veiligheidstekst (beslissing 100). Foto's: geen (`images: []`), zodat kaarten een placeholder "FOTO: …" tonen. Geen testproduct heeft de tag `piercing`; de regel staat klaar voor later (§6.2).
+Verzonnen namen, prijzen op ,95, geen echte merken. Handles zijn vast: tests gebruiken ze. **Materiaal** (beslissing 81): producten met alleen Goud krijgen `materiaal: "Roestvrij staal met goudlaag"`; producten met Goud en Zilver (1, 5, 17, 19) krijgen `materiaal: "Roestvrij staal"`. De getoonde tekst komt altijd uit `materialForVariant(materiaal, variant)` (§7.2): bij de swatch `goud` komt er " met goudlaag" achter (als de tekst dat nog nergens bevat: test met `includes`, niet met `endsWith`), bij `zilver` gaat " met goudlaag" eraf. Een Goud-stuk waarvan de beschrijving een deel noemt dat geen gewoon metaal is (kralen, schelp, kleur) krijgt `"Roestvrij staal met goudlaag; <deel>: [materiaal van de leverancier invullen]"` (nu Mila, Sam, Lieke en Sterre; beslissing 185). Dat deel verzinnen we nooit. `nikkelvrij` is overal `null` (niet bevestigd). **GPSR-velden** zijn herkenbare placeholders tussen haken: `"[Fabrikant, adres]"`, `"[Verantwoordelijke in de EU]"`, `"[Waarschuwingen van de leverancier invullen]"`. Nooit zelfverzonnen veiligheidstekst (beslissing 100). Foto's: geen (`images: []`), zodat kaarten een placeholder "FOTO: …" tonen. Geen testproduct heeft de tag `piercing`; de regel staat klaar voor later (§6.2).
 
 | # | Handle | Titel | Type | Vibe(s) | Moment(en) | Prijs | Varianten | Voorraad | Tags extra | Favoriet |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -872,8 +880,8 @@ Verzonnen namen, prijzen op ,95, geen echte merken. Handles zijn vast: tests geb
 
 - Vetgedrukte prijzen en voorraad worden door E2E-tests gebruikt (§19.2). Niet wijzigen zonder de tests aan te passen.
 - `featuredRank` = volgorde in de tabel (1 tot 24). `publishedAt`: `2026-11-20T12:00:00+01:00` voor alle stukken, behalve de nieuw-getagde (`2026-11-25T12:00:00+01:00`) zodat "nieuwste" iets betekent.
-- Elk product heeft een `spec_regel` (type-afhankelijke maat). Producten met alleen Goud: "Verguld staal · 20 mm". Producten met Goud en Zilver (1, 5, 17, 19) krijgen een specregel zonder laagwoord: "Staal, goud of zilver · 20 mm" (beslissing 115). Een content-test bewaakt dat een product met een Zilver-variant nooit "Verguld", "verguld" of "goudlaag" in `specRegel` heeft. Verder heeft elk product `afmetingen`, `gewicht` ("8 g"), `sluiting` ("Klapsluiting", "Oorsteker met stopper", "Karabijnsluiting", "Open ring"), `verzorging` (algemene tekst uit `pdpCopy.care.default`), `statement_meter` (1 tot 5: chunky-stukken 4 of 5, subtiel 1 of 2), en een korte stylingtekst (`description`, 1 tot 2 zinnen, eigen woorden).
-- `data/shopify-products.csv` bevat precies dezelfde producten (behalve `cadeaukaart`, die maakt Tristan als cadeaukaart in Shopify aan) in het importformaat van Shopify: `Handle, Title, Body (HTML), Vendor (Sparkela), Product Category, Type, Tags, Published, Option1 Name, Option1 Value, Variant SKU, Variant Grams, Variant Inventory Tracker (shopify), Variant Inventory Qty, Variant Inventory Policy (deny), Variant Fulfillment Service (manual), Variant Price, Variant Compare At Price, Variant Requires Shipping, Variant Taxable, Image Src, Status` plus metafield-kolommen in de vorm `spec_regel (product.metafields.custom.spec_regel)` enzovoort, voor alle velden van §6.4. `Status` is `draft` voor alle rijen: Tristan zet ze na controle op actief en publiceert ze in het Headless-kanaal (TODO-LAUNCH). De wachtlijst heeft ze niet nodig (§11.9).
+- Elk product heeft een `spec_regel` (type-afhankelijke maat). Producten met alleen Goud: "Verguld staal · 20 mm"; een stuk met een deel dat geen gewoon metaal is noemt dat deel ("Verguld staal met kleuraccent · 35 mm", "Verguld staal met schelpje · 25 mm", "Kralen met verguld staal · 18 cm"; beslissing 185). Producten met Goud en Zilver (1, 5, 17, 19) krijgen een specregel zonder laagwoord: "Staal, goud of zilver · 20 mm" (beslissing 115). Een content-test bewaakt dat een product met een Zilver-variant nooit "Verguld", "verguld" of "goudlaag" in `specRegel` heeft. Verder heeft elk product `afmetingen`, `gewicht` (per stuk, in de vorm "8 g"), `sluiting` ("Klapsluiting", "Oorsteker met stopper", "Karabijnsluiting"; ringen in maat 16 tot 19 "Gesloten ring", de bangle "Open model, zonder sluiting", de kralenarmband "Elastiek, zonder sluiting"; beslissing 165), `verzorging` (algemene tekst uit `pdpCopy.care.default`), `statement_meter` (1 tot 5: chunky-stukken 4 of 5, subtiel 1 of 2), en een korte stylingtekst (`description`, 1 tot 2 zinnen, eigen woorden).
+- `data/shopify-products.csv` bevat precies dezelfde producten (behalve `cadeaukaart`, die maakt Tristan als cadeaukaart in Shopify aan) in het huidige importformaat van Shopify (beslissing 164; Shopify accepteert de oudere namen `Handle`, `Body (HTML)`, `Variant SKU` enzovoort nog steeds): `Title, URL handle, Description, Vendor (Sparkela), Product category, Type, Tags, Published on online store (FALSE), Status, SKU, Option1 name, Option1 value, Price, Compare-at price, Charge tax, Inventory tracker (shopify), Inventory quantity, Continue selling when out of stock (deny), Weight value (grams), Weight unit for display, Requires shipping, Fulfillment service (manual), Product image URL, Image position, Image alt text, Gift card, SEO title, SEO description`, één rij per variant, plus metafield-kolommen in de vorm `spec_regel (product.metafields.custom.spec_regel)` enzovoort, voor alle velden van §6.4. `Status` is `draft` voor alle rijen: Tristan zet ze na controle op actief en publiceert ze in het Headless-kanaal (TODO-LAUNCH). De wachtlijst heeft ze niet nodig (§11.9).
 
 ### 5.5 `content/stacks.ts`
 
@@ -947,8 +955,8 @@ export interface SharedCopy {
     stackOne: string; stackTwo: string; stackReached: string;   // stackReached: "Je stack-korting van 15% is binnen"
     shopifyNote: string;                                         // "Verzendkosten zie je bij het afrekenen."
   };
-  price: { from: (amount: string) => string; was: string; lowest30d: (amount: string) => string; savings: (amount: string) => string };
-  // from: `Vanaf ${amount}` · was: "Van" (visually hidden before the struck price) · lowest30d: `Laagste prijs in de 30 dagen hiervoor: ${amount}` · savings: `Je bespaart ${amount}`
+  price: { from: (amount: string) => string; was: string; now: string; lowest30d: (amount: string) => string; savings: (amount: string) => string };
+  // from: `Vanaf ${amount}` · was: "Van" (visually hidden before the struck price) · now: "nu" (3b/B2, visually hidden before the current price next to a struck one) · lowest30d: `Laagste prijs in de 30 dagen hiervoor: ${amount}` · savings: `Je bespaart ${amount}`
   badges: Record<BadgeId, string>;   // "Nieuw", "Limited", "Laatste stuks", "Sale", "Bestseller", "Uitverkocht", "Early access", "Op voorraad"
   countdown: { pause: string; resume: string; live: string; days: string; hours: string };   // "Aftellen pauzeren", "Aftellen hervatten", "Nu live", "d", "u"
   ui: {
@@ -957,9 +965,12 @@ export interface SharedCopy {
     slideLabel: (n: number, total: number) => string;        // `${n} van ${total}`
     showImage: (n: number, total: number) => string;         // `Toon afbeelding ${n} van ${total}`
     carousel: string; slide: string;                          // aria-roledescription: "carrousel", "dia"
+    slides: string;                                           // "Dia's": name of the list inside a Carousel (fixer 3, decision 188)
     breadcrumbs: string; skipLink: string; newWindow: string; // "Kruimelpad", "Naar de inhoud", "(opent in nieuw venster)"
     photoPlaceholder: (label: string) => string;              // `FOTO: ${label}`
     videoPlaceholder: (label: string) => string;              // `VIDEO: ${label}`
+    // Added in 3b (B2): home: "Home" (first crumb) · imageKinds: Record<ImageKind, string> ("packshot", "draagfoto", "detail", "schaalfoto", "stackfoto", "foto")
+    // imageAlt: (title, kind) => `${title}, ${kind}` · rating: (average, count) => `Gemiddeld ${average} van 5 sterren (aantal beoordelingen: ${count})` · charactersLeft: (left: number) => "Nog 1 teken" | `Nog ${left} tekens`
   };
   announce: { added: (title: string) => string; removed: (title: string) => string; updated: (title: string, quantity: number) => string; error: string };
   // added: `Toegevoegd: ${title}` · removed: `Verwijderd: ${title}` · updated: `${title}: aantal ${quantity}` · error: "Dat lukte niet. Probeer het opnieuw." (CartAnnouncer, 4-6/C2a)
@@ -967,8 +978,15 @@ export interface SharedCopy {
   // type: "Oorbellen", "Armbanden", "Kettingen", "Ringen" · vibe: "Chunky en bold", "Clean en classy", "Kleurrijk en speels", "Retro"
   // moment: "Festival", "Date night", "Kantoor maar niet saai", "Strand", "Feestdagen"
   // price: "Tot €15", "€15 tot €20", "€20 tot €25", "Vanaf €25" (bedragen via formatMoneyShort) · sort: "Uitgelicht", "Prijs laag naar hoog", "Prijs hoog naar laag", "Nieuwste"
-  notFound: { title: string; text: string; shop: string; finder: string; search: string; favoritesTitle: string };
+  notFound: { title: string; text: string; shop: string; finder: string; search: string; favoritesTitle: string; metaTitle: string };
   // "Deze pagina bestaat niet (meer)", "Misschien vind je hier wat je zocht.", "Naar de shop", "Spark Finder", "Zoeken", "Lindes favorieten"
+  // metaTitle: "Pagina niet gevonden" (integrator 3b, decision 180: metadata of an unknown product, lib/seo.ts NOT_FOUND_TITLE)
+  dates: { today: string; tomorrow: string; hours: string; at: string; midnight: string; startsOn: string; endsOn: string; through: string; until: string };
+  // integrator 3b, read by lib/dates.ts (DATE_WORDS_NL): "vandaag", "morgen", "uur", "om", "middernacht", "Begint op", "Eindigt op", "t/m", "tot"
+  discounts: { stack: (percent: string) => string; giftWrap: string };
+  // integrator 3b, read by lib/pricing.ts (DISCOUNT_TITLES): stack: `Stack-korting ${percent}` ("15%") · giftWrap: "Cadeauverpakking december" (= title of the automatic discount in Shopify, §16.5)
+  money: MoneyCopy;
+  // fixer 3, decision 183: { rangeJoiner: "tot" } for formatMoneyRange ("€15 tot €50"). The object lives in content/copy/money.ts (MoneyCopy, imports nothing) because shared.ts imports lib/money.ts; lib/money.ts reads it there, sharedCopy.money is the same object
 }
 ```
 
@@ -1176,7 +1194,7 @@ export interface Claim {
 export interface VerifiedClaim { id: ClaimId; label: string; origin: "metafield" | "content" }
 ```
 
-`getVerifiedClaims(product): VerifiedClaim[]` in `lib/claims.ts`. De PDP toont een geverifieerde claim als `pdpCopy.claims.confirmed(label)` = "{label} (bevestigd door de leverancier)", nooit als "getest" (beslissing 82). Werking: `nikkelvrij` komt mee als `metafields.nikkelvrij === true` of als `content/claims.ts` een entry met `verified: true` en een `source` voor dit product heeft. Alle andere claims alleen via `content/claims.ts` met `verified: true` en `source`. Componenten tonen claims uitsluitend via deze functie.
+`getVerifiedClaims(product): VerifiedClaim[]` in `lib/claims.ts`. De PDP toont een geverifieerde claim als `pdpCopy.claims.confirmed(label)` = "{label} (bevestigd door de leverancier)", nooit als "getest" (beslissing 82). Werking: `nikkelvrij` komt mee als `metafields.nikkelvrij === true` of als `content/claims.ts` een entry met `verified: true` en een `source` voor dit product heeft, behalve als `metafields.nikkelvrij === false`: een expliciet nee in de productdata wint altijd van een content-claim, ook van `productHandles: "alle"` (fail closed, beslissing 182). Alle andere claims alleen via `content/claims.ts` met `verified: true` en `source`. Componenten tonen claims uitsluitend via deze functie.
 
 ### 6.7 Collecties, stacks, drops, acties
 
@@ -1476,6 +1494,12 @@ export type CartErrorCode =
   | "code-invalid" | "rate-limited" | "upstream" | "not-configured" | "empty";
 export type CartResult = { ok: true; cart: Cart | null } | { ok: false; error: CartErrorCode; cart: Cart | null };
 
+/** The only error a CartAdapter throws (getCheckoutUrl without lines); every other method resolves with a CartResult (beslissing 144). */
+export class CartError extends Error {
+  readonly code: CartErrorCode;
+  constructor(code: CartErrorCode, message?: string);
+}
+
 /** POST /api/cart body (shopify adapter only). */
 export type CartRequest =
   | { op: "add"; lines: CartLineInput[] }
@@ -1547,7 +1571,9 @@ export const MAX_LINE_QUANTITY = 99;
 export const MAX_CART_LINES = 50;
 ```
 
-Sorteren: `uitgelicht` op `featuredRank`, uitverkochte producten achteraan (beslissing 42); `prijs-*` op `priceRange.min`, gelijke prijs op `featuredRank`; `nieuwste` op `publishedAt` aflopend, dan `featuredRank`. Filters combineren als EN tussen facetten en OF binnen een facet. Prijsbuckets op `priceRange.min`: `tot-15` < 1500, `15-20` 1500 tot 1999, `20-25` 2000 tot 2499, `vanaf-25` ≥ 2500.
+Sorteren: `uitgelicht` op `featuredRank`, uitverkochte producten achteraan (beslissing 42); `prijs-*` op `priceRange.min`, gelijke prijs op `featuredRank`; `nieuwste` op `publishedAt` aflopend, dan `featuredRank`. Filters combineren als EN tussen facetten en OF binnen een facet. Prijsbuckets op `priceRange.min`: `tot-15` < 1500, `15-20` 1500 tot 1999, `20-25` 2000 tot 2499, `vanaf-25` ≥ 2500. De labels in `sharedCopy.vocab.price` (3a) gebruiken dezelfde grenzen.
+
+**Lokale id's** (`lib/commerce/local-data.ts`, gelijk aan `tests/fixtures/catalog.ts`, beslissing 145): product `local:<handle>`, variant `local:<handle>:<n>` met `n` vanaf 1 in de volgorde van `variants` in `content/products.ts`, cartregel `local:<variantId>` (§6.10).
 
 **`lib/shop-data.ts`** (server, de enige plek waar pagina's productdata halen):
 
@@ -1794,7 +1820,7 @@ export function nextPricingBoundary(now: number, config?: PricingConfig): number
 
 ### 8.2 Regels van `priceCart`
 
-1. **Regels.** Onbekende varianten vallen weg (notice `line-removed`). Aantal wordt begrensd op 1 tot 99 (notice `quantity-capped`). Cadeauverpakking komt nooit als gewone regel binnen; `giftWrap: true` voegt één regel toe als er minstens één fysiek product is (geen cadeaukaart, geen cadeauverpakking).
+1. **Regels.** Onbekende varianten en varianten die niet meer te koop zijn vallen weg (notice `line-removed`; bij een onbekende variant met `title: ""`). Dubbele varianten worden één regel; een aantal onder 1 valt stil weg; het aantal wordt begrensd op 99 en op de bekende voorraad (notice `quantity-capped`, beslissing 173). Cadeauverpakking komt nooit als gewone regel binnen; `giftWrap: true` voegt één regel toe als er minstens één fysiek product is (geen cadeaukaart, geen cadeauverpakking).
 2. **Subtotaal** (`merchandise`) = som van `unitPrice × quantity` over alle regels, inclusief cadeauverpakking en cadeaukaarten.
 3. **Stack-korting.** `stackUnits` = som van de aantallen van regels met type `oorbellen` of `armbanden` (geen cadeaukaarten, geen cadeauverpakking). Bij `stackUnits >= 3` krijgt elke in aanmerking komende regel `percentOf(regelSubtotaal, 15)`. Afronden per regel, half naar boven.
 4. **WELKOM10.** Grondslag = subtotaal van alle regels behalve cadeaukaarten, min de kortingen die al op die regels staan (in de praktijk alleen de gratis cadeauverpakking in december, regel 6; de stack-korting combineert niet, regel 5). Korting = `percentOf(grondslag, 10)`, toegewezen per regel naar rato (naar beneden afgerond, rest op de laatste regel). Dit volgt de inrichting in Shopify (§16.6): `WELKOM10` is daar een orderkorting die na de productkortingen werkt, en Shopify geeft nooit korting op cadeaukaarten. Buiten december krijgt een cadeauverpakking van €1,95 dus ook 10% (beslissing 104).
@@ -1855,7 +1881,7 @@ Deterministisch, zonder `Intl` (server en browser geven anders verschillende spa
 | --- | --- | --- |
 | `formatMoney(cents)` | 1495 / 3500 / 0 / 123450 / -224 | `€14,95` / `€35,00` / `€0,00` / `€1.234,50` / `−€2,24` (U+2212) |
 | `formatMoneyShort(cents)` | 3500 / 1495 | `€35` / `€14,95` (hele euro's zonder decimalen) |
-| `formatMoneyRange(min, max)` | 1500, 5000 | `€15 tot €50` |
+| `formatMoneyRange(min, max)` | 1500, 5000 | `€15 tot €50` (het woord "tot" is `sharedCopy.money.rangeJoiner`, beslissing 183) |
 | `parseShopifyMoney(amount)` | `"14.95"` / `"14.9"` / `"14"` / `"1234.50"` | 1495 / 1490 / 1400 / 123450 (string-split, geen `parseFloat`) |
 | `money(cents)` | 1495 | `{ cents: 1495, currency: "EUR" }` |
 
@@ -1880,7 +1906,7 @@ export const DAYS_NL = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag"
 export const MONTHS_NL = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"] as const;
 
 export interface ZonedParts { year: number; month: number; day: number; hour: number; minute: number; second: number; isoWeekday: 1|2|3|4|5|6|7; isoDate: IsoDate }
-export function toMs(value: IsoDateTime | number): number;                 // NaN-safe: throws on unparseable literal (content is static)
+export function toMs(value: IsoDateTime | number): number;                 // NaN-safe: throws on unparseable literal, also on a date or time that does not exist ("2026-02-30", "T24:00"; content is static)
 export function getZonedParts(now: number): ZonedParts;
 export function zonedTimeToInstant(isoDate: IsoDate, hour: number, minute: number): number;   // DST-safe
 export function addCalendarDays(isoDate: IsoDate, days: number): IsoDate;
@@ -2100,9 +2126,10 @@ export function useServerNow(): number;
 Werking (volgt `node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md`):
 
 1. De component rendert elke variant in een eigen `<span data-ts="{id}-{i}">` (of `div`), met `hidden` op alle behalve `serverIndex`, en `suppressHydrationWarning` op elke wrapper. `id` komt uit `useId()`.
-2. Direct erna staat een `InlineScript` (CORVANE `components/ui/InlineScript.tsx`: `type="text/javascript"` op de server, `"text/plain"` in de client) met `timeSwitchScript(id, boundaries)` uit `components/time/timeSwitchScript.ts`. Dat script draait tijdens het parsen, vóór de eerste paint: het telt `Date.now() >= boundary` en zet `hidden` goed.
+2. Direct erna, als laatste kind binnen het rootelement van de `TimeSwitch` (zo blijft de component één element, beslissing 168), staat een `InlineScript` (CORVANE `components/ui/InlineScript.tsx`: `type="text/javascript"` op de server, `"text/plain"` in de client) met `timeSwitchScript(id, boundaries)` uit `components/time/timeSwitchScript.ts`. Dat script draait tijdens het parsen, vóór de eerste paint: het telt `Date.now() >= boundary` en zet `hidden` goed.
 3. Na hydration bepaalt `useSyncExternalStore(subscribe, () => phaseIndex(boundaries, Date.now()), () => serverIndex)` de index. `subscribe` plant de volgende grens met `scheduleAt(boundary, cb)` uit `lib/schedule.ts` (en opnieuw daarna). Zo wisselt een open tabblad precies op tijd. Nooit `setTimeout(cb, boundary - now)` direct: browsers en Node bewaren de wachttijd als 32-bits getal, en boven 2^31−1 ms (ongeveer 24,8 dagen) gaat de timer meteen af. Bij de lancering ligt de btw-grens 35 dagen weg; dan zou elke pagina met een footer in een lus timers afvuren (beslissing 108).
 4. Bij een client-navigatie rendert React meteen met de echte index (het script draait dan niet, dat is goed).
+4a. Een layout-effect houdt de `hidden`-attributen gelijk aan de index, ook als er tussen parsen en hydration een grens voorbijgaat; bij `visibilitychange` (tabblad weer zichtbaar, bijvoorbeeld na slaapstand) wordt de tijd opnieuw bekeken (beslissing 168).
 5. Geen `Date.now()` in render: alleen in de snapshot-functie en in het script (gemeten: blijft `○`, digest E1).
 
 **Plekken en grenzen:**
@@ -2130,20 +2157,25 @@ export interface CountdownProps {
   fallbackLabel: string;               // fixed text before mount: formatEndLabel(target) for an end, formatStartLabel(target) for a start
   tone?: "op-donker" | "op-roest" | "licht";
   showPause?: boolean;                 // default true; hidden with reduced motion (then the fixed label shows)
+  className?: string;
 }
 ```
 
-- Vóór mount: `fallbackLabel` in dezelfde vaste box (`tabular`, `min-w` per formaat).
+- Vóór mount: `fallbackLabel` in dezelfde vaste box (`tabular`, `min-w` per formaat). Een eigen inline script (`components/time/countdownScript.ts`, zelfde `InlineScript`-patroon als §10.5) schrijft de lopende cijfers vóór de eerste paint in die box; hydration houdt ze (`suppressHydrationWarning`). De vaste tekst is dus alleen te zien zonder JavaScript, gepauzeerd en met reduced motion (beslissing 167). Is het doel al voorbij (statische pagina van vóór het doel), dan zet het script vóór hydration de `liveLabel` in de box (en verbergt het het schermlezerlabel en de pauzeknop, gemarkeerd met `data-countdown-hide`) of verbergt het zonder `liveLabel` de hele countdown, net als React daarna (beslissing 187). Zonder JavaScript blijft de vaste tekst staan; een countdown waarvan het doel kan verlopen terwijl de pagina gecachet is, staat daarom in een `TimeSwitch` op dat doel. `countdownScript.test.ts` vergelijkt de uitvoer van het script met `formatCountdown`.
 - **Start of einde.** Een countdown naar `startsAt` (promobalk `drop-upcoming`, `DropHero`, `DropTeaser`) krijgt `srLabel={formatCountdownSr(startsAt, "start")}` en `fallbackLabel={formatStartLabel(startsAt)}`. Een countdown naar `endsAt` (campagne, `DropBanner`) krijgt `formatCountdownSr(endsAt, "end")` en `formatEndLabel(endsAt)`. Zo zegt een timer naar een start nooit "Eindigt op" of "t/m".
 - Na mount: tikt elke seconde via `useNow(1000)`, cijfers `aria-hidden`, de `srLabel` als `VisuallyHidden`, geen live region.
-- Pauzeknop "Aftellen pauzeren" met `aria-pressed` en een vast label (WCAG 2.2.2). Gepauzeerd: de vaste eindtekst.
+- Pauzeknop "Aftellen pauzeren" met `aria-pressed` en een vast label (WCAG 2.2.2), 32 px zichtbaar met een tikvlak van 44 px via `before:` (zo groeit de promobalk van 40 px niet). Gepauzeerd: de vaste eindtekst.
 - Bij 0: `liveLabel` of niets. Nooit negatief, nooit opnieuw beginnen.
 
 ### 10.7 `useNow` en `scheduleAt`
 
-Port van CORVANE `lib/hooks/useNow.ts` (gedeelde klok per interval, `null` op de server en tijdens hydration). Gebruik voor timers en de lokale cart. Nooit `new Date()` in render.
+Port van CORVANE `lib/hooks/useNow.ts` (gedeelde klok per interval, `null` op de server en tijdens hydration). Gebruik voor timers en de lokale cart. Nooit `new Date()` in render. Anders dan in CORVANE geeft de hook epoch-milliseconden en geen `Date`, omdat elke tijdfunctie in `lib/` `now: number` neemt (beslissing 143).
 
 ```ts
+// lib/hooks/useNow.ts (3a/A1): "use client"
+/** Epoch ms after mount, ticking every intervalMs; null on the server, during prerender and during hydration. Same interval = one shared timer. */
+export function useNow(intervalMs?: number /* 1000 */): number | null;
+
 // lib/schedule.ts (3a/A1): client-safe, no next/* imports
 export const MAX_TIMEOUT_STEP_MS = 24 * 60 * 60 * 1000;
 /** Calls cb once, at or just after `at` (epoch ms). Waits in steps of at most MAX_TIMEOUT_STEP_MS and re-checks now() each step. Returns a cancel function. */
@@ -2276,7 +2308,7 @@ Zonder producten en zonder collectie `alle` slaagt de build (§7.7). De shoppagi
 | `holiday-sparkle` | Holiday Sparkle | 2026-11-27T00:00:00+01:00 | 2027-01-01T00:00:00+01:00 | 2026-11-26T00:00:00+01:00 | 21 tot 24 uit §5.4 |
 | `love-club` | Love Club | 2027-02-05T19:00:00+01:00 | 2027-03-01T00:00:00+01:00 | 2027-02-04T19:00:00+01:00 | `[]` |
 | `oranje-spark` | Oranje Spark | 2027-04-09T19:00:00+02:00 | 2027-05-01T00:00:00+02:00 | 2027-04-08T19:00:00+02:00 | `[]` |
-| `like-mother-like-daughter` | Like Mother, Like Daughter | 2027-04-30T19:00:00+02:00 | 2027-05-10T00:00:00+02:00 | 2027-04-29T19:00:00+02:00 | `[]` |
+| `like-mother-like-daughter` | Like Mother, Like Daughter | 2027-05-01T19:00:00+02:00 | 2027-05-10T00:00:00+02:00 | 2027-04-30T19:00:00+02:00 | `[]` |
 | `summer-spark` | Summer Spark | 2027-06-04T19:00:00+02:00 | 2027-09-01T00:00:00+02:00 | 2027-06-03T19:00:00+02:00 | `[]` |
 | `main-character` | Main Character | 2027-09-03T19:00:00+02:00 | 2027-10-01T00:00:00+02:00 | 2027-09-02T19:00:00+02:00 | `[]` |
 | `vamp` | Vamp | 2027-10-01T19:00:00+02:00 | 2027-11-01T00:00:00+01:00 | 2027-09-30T19:00:00+02:00 | `[]` |
@@ -2301,7 +2333,7 @@ export const drops: Drop[] = [
 ];
 ```
 
-Regels (getest in `content/drops.test.ts`): slugs uniek en gelijk aan `DropSlug`; `startsAt < endsAt`; alle tijden zijn literals met offset; `productHandles` is gelijk aan de producten met tag `drop:<slug>` in `content/products.ts`. Overlappende drops (Oranje Spark en Like Mother, Like Daughter) mogen; `getPromoState` kiest dan de eerst gestarte.
+Regels (getest in `content/drops.test.ts`): slugs uniek en gelijk aan `DropSlug`; `startsAt < endsAt`; alle tijden zijn literals met offset; `productHandles` is gelijk aan de producten met tag `drop:<slug>` in `content/products.ts`. Overlappende drops mogen (nu overlapt er geen); `getPromoState` kiest dan de eerst gestarte. Elke drop start publiek in de maand die brief §4 noemt; Like Mother, Like Daughter dus op zaterdag 1 mei, ruim voor Moederdag (9 mei 2027) (beslissing 184).
 
 ### 12.2 `content/offers.ts`
 
@@ -2374,20 +2406,22 @@ Legenda: **S** = server component (geen directive), **C** = client component (`"
 **`scripts/build-logo.mjs`** (`npm run logo`):
 
 1. Leest `node_modules/@fontsource/unbounded/files/unbounded-latin-900-normal.woff` met `opentype.js`.
-2. Zet "SPARKELA" om naar één pad: kapitalen, letter-spacing −0.03em (in font units: −0.03 × unitsPerEm per letter), schuinte `skewX(-10deg)` op de paden zelf (matrix, geen CSS).
-3. Vonk: pad `M50 0 C53 35 65 47 100 50 C65 53 53 65 50 100 C47 65 35 53 0 50 C35 47 47 35 50 0 Z`, geschaald naar een halve kapitaalhoogte, rechtop (niet geschoren). Plaatsing: de linkerpunt en de onderpunt van de vonk raken de rechterbovenhoek van de bounding box van de laatste A (zo lezen we "het midden van de linkeronderpunt" uit brief §3 voor een vierpuntige vonk).
+2. Zet "SPARKELA" om naar één pad: kapitalen, letter-spacing −0.03em (in font units: −0.03 × unitsPerEm per letter) bovenop de eigen kerning van het font (alleen P–A, −81 units; het script leest de kern-tabel zelf, omdat opentype.js 2 die overslaat; beslissing 159), schuinte `skewX(-10deg)` op de paden zelf (matrix, geen CSS).
+3. Vonk: pad `M50 0 C53 35 65 47 100 50 C65 53 53 65 50 100 C47 65 35 53 0 50 C35 47 47 35 50 0 Z`, geschaald naar een halve kapitaalhoogte, rechtop (niet geschoren). Plaatsing zoals in `Sparkela_Logo_Eindconcept.pdf` (gemeten in de vectordata, beslissing 159): de box van de vonk begint 0,095 kapitaalhoogte rechts van en 0,039 kapitaalhoogte onder de rechterbovenhoek van de vlakke top van de laatste A. (De eerdere lezing, de rechterbovenhoek van de bounding box van de geschoren A, ligt boven de rechtervoet en zet de vonk 0,26 kapitaalhoogte los van de letter.) De vonk krijgt alleen `translate` en `scale` (`SPARK_TRANSFORM`), nooit skew of rotate.
 4. Monogram: alleen de S (geschoren) met de vonk.
-5. Schrijft `components/brand/logo-paths.ts` (`export const WORDMARK_PATH`, `SPARK_PATH`, `MONOGRAM_S_PATH`, `LOGO_VIEWBOX`, `MONOGRAM_VIEWBOX`, `SPARK_TRANSFORM`), de SVG's in `public/brand/` (§3.6), `app/icon.svg` (bot-wit S op inkt, afgeronde vierkant 20%), `app/apple-icon.png` (180×180, bot-wit S en vonk op roest, via `sharp`), `app/favicon.ico` (PNG's 16, 32, 48 in een ICO-container, zelf geschreven header), `public/brand/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (veilige zone 80%).
+5. Schrijft `components/brand/logo-paths.ts` (`export const WORDMARK_PATH`, `SPARK_PATH`, `MONOGRAM_S_PATH`, `LOGO_VIEWBOX`, `MONOGRAM_VIEWBOX`, `SPARK_TRANSFORM`), de SVG's in `public/brand/` (§3.6), `app/icon.svg` (bot-wit S op inkt, afgeronde vierkant 20%; S en vonk 1,25 keer zo groot als in de app-iconen, ook in `favicon.ico`, zodat de S op 16 px leesbaar is, beslissing 160), `app/apple-icon.png` (180×180, bot-wit S en vonk op roest, via `sharp`), `app/favicon.ico` (PNG's 16, 32, 48 in een ICO-container, zelf geschreven header), `public/brand/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (veilige zone 80%).
 6. Kleuren uit `lib/brand-colors.ts` (het script importeert een `.mjs`-kopie niet; het leest de waarden met een kleine regex uit `lib/brand-colors.ts`, of de waarden staan als constante bovenin het script met een test die ze vergelijkt).
 
 | Component | S/C | Props | Rendert | Bron |
 | --- | --- | --- | --- | --- |
 | `LogoDefs` | S | geen | 0×0 `<svg aria-hidden>` met `<path id="sparkela-wordmark">`, `<path id="sparkela-spark">`, `<path id="sparkela-s">` (één keer per document, CORVANE D53.7) | `Wordmark.tsx` (patroon) |
-| `Logo` | S | `{ variant?: LogoVariant; width?: number; className?: string; title?: string }` met `LogoVariant = "header" \| "op-donker" \| "op-roest" \| "op-botwit" \| "op-olijf" \| "op-leisteen" \| "op-steen"` | Inline `<svg role="img" aria-label="Sparkela">` met `<use href="#sparkela-wordmark">` en de vonk. `width >= 70`: met vonk; `50 <= width < 70`: zonder vonk; `width < 50`: dev-warning "gebruik Monogram" (brief §3: onder 40 px het monogram, 40 tot 50 px vermijden) | `Wordmark.tsx` |
+| `Logo` | S | `{ variant?: LogoVariant; width?: number; className?: string; title?: string }` (`width` = breedte van het logo zelf, zonder vrije ruimte; standaard 120; `logoLayout(width)` geeft viewBox, buitenmaat en `clearSpace` in px, beslissing 161) met `LogoVariant = "header" \| "op-donker" \| "op-roest" \| "op-botwit" \| "op-olijf" \| "op-leisteen" \| "op-steen"` | Inline `<svg role="img" aria-label="Sparkela">` met `<use href="#sparkela-wordmark">` en de vonk. `width >= 70`: met vonk; `50 <= width < 70`: zonder vonk; `width < 50`: dev-warning "gebruik Monogram" (brief §3: onder 40 px het monogram, 40 tot 50 px vermijden) | `Wordmark.tsx` |
 | `Monogram` | S | `{ variant?: "inkt" \| "botwit" \| "roest" \| "botwit-op-roest" \| "botwit-op-inkt"; size?: number; className?: string }` | S met vonk, `aria-label="Sparkela"` | `VaneIcon.tsx` (patroon) |
 | `Spark` | S | `{ className?: string; title?: string }` | Losse vonk (`aria-hidden` zonder `title`), voor kaarten in de popup en decoratie | nieuw |
 
-Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bot-wit woord, roest vonk · `op-roest` bot-wit woord en vonk · `op-botwit` roest woord en vonk · `op-olijf`, `op-leisteen` bot-wit woord en vonk · `op-steen` inkt woord, bot-witte vonk. Vrije ruimte rondom: minstens de hoogte van de S (padding in de component). Nooit schaduw, contour, andere hoek of uitrekken. Het `Monogram` staat nooit in dezelfde header, lockup of hetzelfde blok als het woordmerk: het is alleen voor favicon, app-iconen, avatar en plekken onder 40 px.
+Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bot-wit woord, roest vonk · `op-roest` bot-wit woord en vonk · `op-botwit` roest woord en vonk · `op-olijf`, `op-leisteen` bot-wit woord en vonk · `op-steen` inkt woord, bot-witte vonk. Vrije ruimte rondom: de hoogte van de S, in de component zelf: de gerenderde `<svg>` is aan elke kant `clearSpace` px groter dan `width` (beslissing 161). Wie de letters op de rand van de container wil uitlijnen (header), compenseert met `logoLayout(w).clearSpace`. Nooit schaduw, contour, andere hoek of uitrekken. Het `Monogram` staat nooit in dezelfde header, lockup of hetzelfde blok als het woordmerk: het is alleen voor favicon, app-iconen, avatar en plekken onder 40 px.
+
+Extra exports (3b/B1, beslissing 162): `logo-paths.ts` ook `CAP_HEIGHT`, `LOGO_BOX`, `WORDMARK_BOX`/`WORDMARK_VIEWBOX`, `CLEAR_SPACE`, `SPARK_VIEWBOX`, `MONOGRAM_SPARK_TRANSFORM`, `MONOGRAM_BOX`, `MONOGRAM_TILE`/`MONOGRAM_TILE_VIEWBOX`; `LogoDefs.tsx` de ids `LOGO_WORDMARK_ID`, `LOGO_SPARK_ID`, `LOGO_S_ID`; `Logo.tsx` `LOGO_SPARK_MIN_WIDTH` (70), `LOGO_MIN_WIDTH` (50), `LOGO_DEFAULT_WIDTH` (120) en `logoLayout`. Het OG-logo (10-11/E1) gebruikt `LOGO_VIEWBOX`, `WORDMARK_PATH`, `SPARK_PATH` en `SPARK_TRANSFORM`; het manifest de iconen `/brand/icon-192.png`, `/brand/icon-512.png` en `/brand/icon-maskable-512.png` (`purpose: "maskable"`).
 
 ### 13.2 UI-primitives (`components/ui/`, 3b/B2)
 
@@ -2409,15 +2443,21 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | `Select` | C | `{ id?: string; label: string; hideLabel?: boolean; value: string; options: Array<{ value: string; label: string }>; onChange(v: string): void }` | Native `<select>` in pill van 44 px, `border-rand-invoer` | `SortSelect.tsx` |
 | `Stars` | S | `{ rating: RatingSummary \| null; size?: "sm" \| "md"; showCount?: boolean; tone? }` | Niets bij `null` (altijd zolang er geen reviews zijn) | `Stars.tsx` |
 | `Flag` | S | `{ label?: string; decorative?: boolean }` | NL-vlag als inline SVG met `fill-vlag-rood`, `fill-vlag-wit`, `fill-vlag-blauw` (tokens uit §4.1), dunne rand `stroke-rand` | `Flag.tsx` |
-| `ScrollRow` | C | `ComponentPropsWithoutRef<"ul"> & { label: string }` | Scroll-snap-lijst, `role="list"`, alleen focusbaar (`tabIndex=0`) als hij overloopt (ResizeObserver), vorige/volgende-knoppen vanaf `md` | `ScrollRow.tsx` |
-| `Carousel` | C | `{ label: string; items: ReactNode[]; itemClassName?: string }` | `ScrollRow` met `aria-roledescription="carrousel"`, elk item `role="group" aria-roledescription="dia" aria-label="{n} van {total}"`, knoppen "Vorige" en "Volgende" | nieuw (op `ScrollRow`) |
+| `ScrollRow` | C | `ComponentPropsWithoutRef<"ul"> & { label: string; controls?: "md" \| "always" \| "none"; wrapperClassName?: string }` | Scroll-snap-lijst, `role="list"`, alleen focusbaar (`tabIndex=0`) als hij overloopt (ResizeObserver). Vorige/volgende-knoppen zweven over de randen (geen gereserveerde ruimte) en verschijnen pas als de rij gemeten overloopt; `controls` standaard `"md"` (beslissing 169) | `ScrollRow.tsx` |
+| `Carousel` | C | `{ label: string; items: ReactNode[]; itemClassName?: string; className?: string }` | `role="region"` met `aria-roledescription="carrousel"` en `aria-label` › `ScrollRow` (lijst, naam `sharedCopy.ui.slides` "Dia's", zodat de naam van de carrousel niet twee keer klinkt; beslissing 188) › `listitem` › `role="group" aria-roledescription="dia" aria-label="{n} van {total}"`; knoppen "Vorige" en "Volgende" altijd (`controls="always"`). `itemClassName` zet de breedte van de dia's (beslissing 169) | nieuw (op `ScrollRow`) |
 | `VisuallyHidden` | S | `{ as?; children }` | sr-only | `VisuallyHidden.tsx` |
 | `InlineScript` | C | `{ html: string }` | Zie §10.5 | `InlineScript.tsx` |
-| `MotionStyles` | S | geen | `<style href="sparkela-motion" precedence="default">` met alle keyframes | `MotionStyles.tsx` |
+| `MotionStyles` | S | geen | `<style href="sparkela-motion" precedence="default">` met alle keyframes. Eén keer, in `app/layout.tsx`; `Sheet`, `Modal` en `Accordion` renderen hem niet zelf (beslissing 171). De hulpklassen `anim-overlay`, `anim-sheet-right/left/top`, `anim-modal`, `anim-accordion` en `anim-paneel` in `globals.css` kiezen per Radix-`data-state` een keyframe en staan altijd achter `motion-safe:` | `MotionStyles.tsx` |
 | `Checkbox` | C | `{ id?: string; checked: boolean; onChange(v: boolean): void; label: ReactNode; description?: ReactNode; required?: boolean; error?: string }` | Native checkbox 24 px met tikvlak 44 px, rand `--rand-invoer` | nieuw |
 | `TextField` | C | `{ id?: string; label: string; type?: "text" \| "email"; autoComplete?: string; value; onChange; error?: string; hint?: string; required?: boolean; multiline?: boolean; maxLength?: number }` | Label boven het veld, fout eronder met `aria-describedby`, `aria-invalid` | `ContactForm.tsx` (FormField) |
 | `ProgressBar` | S | `{ value: number /* 0..1 */; label: string; segments?: number }` | Balk 4 px, `role="progressbar"` met `aria-valuenow`, forced-colors-vulling | `ShippingProgress.tsx` |
 | `Spinner` | S | `{ label: string }` | Klein draaiend icoon met sr-tekst, `motion-safe` | nieuw |
+
+Uitwerking in 3b (B2):
+
+- **`Button`** (beslissing 170): icoonknoppen in `sm` zijn 44 px; tekstknoppen in `sm` 36 px met een tikvlak van 44 px via `before:`. `outline` krijgt bij hover een inset-ring in plaats van een vulling; `ghost` erft de tekstkleur en krijgt bij hover 10% van die kleur, zodat hij op lichte en donkere vlakken werkt. Een ladende knop krijgt `aria-disabled` en `aria-busy`, nooit `disabled`.
+- **Extra props** (beslissing 171, alleen toevoegingen): `Sheet` `surface` (`"pagina"` of `"vlak"`), `trigger`, `defaultOpen`, `padded`, `className`, `bodyClassName`, `hideDescription`, en `size="md"` is op mobiel volle breedte en vanaf `md` 432 px (cart drawer); `Modal` dezelfde plus `tone`; `Select` `layout` (`"stack"` of `"inline"`), `name`, `selectClassName`; `TextField` `name`, `inputMode`, `onBlur`, `markOptional`, `rows`, `placeholder`; `Checkbox` `name`; `ProgressBar` `tone`; `Tabs` `className`, `panelClassName`. `Sheet.tsx` exporteert ook `useReturnFocus` en `overlayClasses`.
+- **Gebruik in 4-6 (C3):** cart drawer `Sheet side="right" size="md"`, menu `Sheet side="left" size="sm" surface="vlak"`, megamenupaneel `motion-safe:anim-paneel` met een eigen `data-state`, promobalk `<Countdown tone="op-donker">`, footer `VatNotice tone="donker"`.
 
 ### 13.3 Tijd (`components/time/`, 3b/B2)
 
@@ -2434,8 +2474,10 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | Component | S/C | Props | Rendert | Bron |
 | --- | --- | --- | --- | --- |
 | `PhotoSlot` | S | `{ assetKey?: AssetKey; label: string; aspect?: "4:5" \| "3:4" \| "16:9" \| "1:1" \| "9:16" \| "fill"; sizes?: string; preload?: boolean; tone?: "vlak" \| "kaart" \| "donker"; alt?: string; className?: string }` | Met een aangeleverd bestand (`SUPPLIED.has(key)`): `next/image` met `sizes` en `preload` voor LCP. Anders een vlak in `--vlak` met "FOTO: {label}" in Inter 12 px, midden, zelfde verhouding. Geen verloop, geen icoon | `PhotoSlot.tsx` |
-| `VideoSlot` | S/C | `{ assetKey?: AssetKey; label: string; className?: string }` | 9:16, nooit autoplay; placeholder "VIDEO: {label}"; met bestand een `<video controls preload="none" poster>` | `VideoSlot.tsx` |
-| `ProductPhoto` | S | `{ image: ProductImage \| null; productTitle: string; kind?: ImageKind; sizes: string; preload?: boolean; className?: string }` | `next/image` via de Shopify-loader; zonder beeld een `PhotoSlot` met "FOTO: {titel}, {kind}" | nieuw |
+| `VideoSlot` | S/C | `{ assetKey?: AssetKey; label: string; tone?: "vlak" \| "kaart" \| "donker"; className?: string }` | 9:16, nooit autoplay; placeholder "VIDEO: {label}"; met bestand een `<video controls preload="none" poster>` | `VideoSlot.tsx` |
+| `ProductPhoto` | S | `{ image: ProductImage \| null; productTitle: string; kind?: ImageKind; sizes: string; preload?: boolean; className?: string }` | Altijd 4:5. `next/image` via de Shopify-loader; een lege alt uit Shopify wordt `sharedCopy.ui.imageAlt(title, sharedCopy.ui.imageKinds[kind])`; zonder beeld een `PhotoSlot` met "FOTO: {titel}, {kind}" | nieuw |
+
+Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-tekst die de echte foto zou krijgen; een decoratief vlak (`alt=""`) is `aria-hidden` (beslissing 172).
 
 ### 13.5 Layout (`components/layout/`, 4-6/C3)
 
@@ -2471,9 +2513,9 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | `AnalyticsLoader` | C | geen | GTM alleen na `granted` en geldig ID; Consent Mode-volgorde zoals CORVANE | `AnalyticsLoader.tsx` |
 | `CookieSettingsButton` | C | `{ className?: string; tone?: "licht" \| "donker" }` | Knop met `cookieTable.settingsLabel`; dispatcht `OPEN_CONSENT_EVENT` (`"sparkela:open-consent"`, uit `lib/analytics.ts`); rendert niets zonder `site.analytics.enabled`. Eigenaar 4-6/C1 (paar 1), de footer van C3 gebruikt hem | `footer/CookieSettingsButton.tsx` |
 
-`lib/analytics.ts` (port, 3b/B1, `sparkela:`-sleutels, client-veilig): `OPEN_CONSENT_EVENT = "sparkela:open-consent"`, `track(event: AnalyticsEvent)`, `productToItem(p, variant, qty)`, `cartToItems(cart)`, `getConsent()`, `setConsent(v)`, `subscribeConsent(cb)`, `shouldShowConsentBanner()`, `shouldLoadAnalytics()`, `isValidGtmId(id)`. `track` pusht altijd naar `window.dataLayer` (ook zonder consent: dat is een lokale array zonder netwerk); GTM leest hem pas na toestemming. Op de server doet `track` niets.
+`lib/analytics.ts` (port, 3b/B1, `sparkela:`-sleutels, client-veilig): `OPEN_CONSENT_EVENT = "sparkela:open-consent"`, `track(event: AnalyticsEvent)`, `productToItem(p, variant, qty)`, `cartToItems(cart)`, `getConsent()`, `setConsent(v)`, `subscribeConsent(cb)`, `shouldShowConsentBanner({ enabled, consent, reopened })`, `shouldLoadAnalytics({ enabled, gtmId, consent })` (invoerobjecten, zodat ze puur blijven), `isValidGtmId(id)`. Daarnaast (beslissing 163): `centsToEuros`, `getServerConsent`, `resetConsent`, `gtmScriptUrl(id)`, `initConsentMode()`, `syncConsentMode(consent)`, `startTagManager()`, `clearAnalyticsCookies()` (voor `AnalyticsLoader`, C3) en de kant-en-klare events `viewItemEvent(product, variant)` (D2, `BuyBox`), `addToCartEvent(product, variant, qty)` en `beginCheckoutEvent(cart)` (C2a), `signUpEvent(source)` (C1, `SubscribeForm`); de omrekening van centen naar euro's (ook eenheidsprijs × aantal) blijft zo in `lib/analytics.ts`. `track` pusht altijd naar `window.dataLayer` (ook zonder consent: dat is een lokale array zonder netwerk); GTM leest hem pas na toestemming. Op de server doet `track` niets.
 
-`lib/subscription.ts` (3b/B1, client-veilig): `markSubscribed(): void`, `hasSubscribed(): boolean`, `useSubscribed(): boolean` (`useSyncExternalStore`, `false` op de server), op `storageKeys.emailCaptureSubscribed` via `lib/storage.ts`. `SubscribeForm` (C1) en de popup (D4) gebruiken dit; zo hoeft niemand in 4-6 te wachten op `components/email/state.ts`.
+`lib/subscription.ts` (3b/B1, client-veilig): `markSubscribed(): void`, `hasSubscribed(): boolean`, `useSubscribed(): boolean` (`useSyncExternalStore`, `false` op de server), op `storageKeys.emailCaptureSubscribed` via `lib/storage.ts`; `subscribeSubscribed(cb)` synchroniseert tussen tabbladen. `SubscribeForm` (C1) en de popup (D4) gebruiken dit; zo hoeft niemand in 4-6 te wachten op `components/email/state.ts`.
 
 ### 13.7 Cart (`components/cart/`)
 
@@ -3186,7 +3228,8 @@ export function productJsonLd(product: Product): object;   // brand Sparkela, sk
 export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>): object;
 ```
 
-- `app/layout.tsx`: `metadataBase: siteUrl`, `title: { default: "Sparkela | Chunky sieraden met een spark", template: "%s | Sparkela" }`, `description`, `openGraph` (locale `nl_NL`, siteName), `twitter: { card: "summary_large_image" }`, geen root-canonical. `<html lang="nl">`.
+- Uitwerking in 3b (B3, beslissing 177): `STATIC_ROUTES` bevat de 13 indexeerbare statische pagina's (ook alle juridische), zonder collecties, producten, drops, `/wachtlijst` en de noindex-pagina's. De titel van `productMetadata(null)` is `NOT_FOUND_TITLE` (= `sharedCopy.notFound.metaTitle`). In `productJsonLd` hebben cadeaukaart-offers geen verzending en geen retourbeleid, en het retourbeleid noemt geen `returnFees`; het logo van `organizationJsonLd` is `/brand/icon-512.png`. `lib/seo.ts` leest `getEnv()` bij het laden, dus alleen servercode importeert hem.
+- `app/layout.tsx`: `metadataBase: siteUrl`, `title: { default: "Sparkela | Chunky sieraden met een spark", template: "%s | Sparkela" }`, `description`, `openGraph` (locale `OG_LOCALE`, siteName; sinds integrator 3b uit `lib/seo.ts`, beslissingen 153 en 179), `twitter: { card: "summary_large_image" }`, geen root-canonical. `<html lang="nl">`.
 - Elke pagina zet `canonical` via `pageMetadata` (`path`). De homepage gebruikt `{ absolute: … }`.
 - `sitemap.ts`: `STATIC_ROUTES`, alle collecties, `getSitemapProducts()` (listable), drops met fase `live` of `afgelopen`; `lastModified: CONTENT_UPDATED`; geen `images`, video of alternates (D54.3). Noindex-pagina's staan er niet in.
 - `robots.ts`: `allow: "/"`, `disallow: ["/api/"]`, `sitemap: ${siteUrl}/sitemap.xml`. Noindex-pagina's nooit in `disallow` (D53.4).
@@ -3317,7 +3360,7 @@ Omgeving `node`. Componenten alleen met `renderToStaticMarkup`. Modules met `nex
 9. **Juridisch**: elk `content/legal/*.md`-bestand begint met `TODO: laten controleren`.
 10. **GPSR**: elk sieraad heeft `gpsrFabrikant`, `gpsrVerantwoordelijkeEu` en `gpsrWaarschuwingen`. Placeholders staan altijd tussen `[` en `]`; een waarschuwingstekst zonder haken in een lokaal product faalt (geen verzonnen veiligheidsinformatie). Met `COMMERCE_PROVIDER=shopify` waarschuwt de Shopify-catalogusprovider in de build voor elk GPSR-veld dat nog `[` bevat.
 11. **Verbatim copy**: alle sleutels uit §5.2 hebben exact hun tekst.
-12. **Geen referentietekst** (brief §10): een overlapcontrole op reeksen van 5 woorden (genormaliseerd: kleine letters, zonder leestekens) van alle strings in `content/` en `content/copy/` en alle string-literals in `components/` tegen (a) de strings in CORVANE's `content/` (pad uit `CORVANE_CONTENT_DIR`, anders `../../trissiewissie2024/corvane/corvane/content` als die bestaat; ontbreekt hij, dan wordt dit deel overgeslagen met een melding) en (b) de labels in `reference/**/*.structure.json` (nu `reference/corvane/desktop/*.structure.json` en `reference/corvane/mobile/*.structure.json`). Bestaat `reference/` maar vindt de glob niets, dan faalt de guard met een melding (nooit stil slagen). Een overgeslagen deel print een zichtbare regel `SKIPPED: <naam>` (`console.warn`): altijd `SKIPPED: lashthing`, want lashthing.nl is nooit opgehaald (REFERENCE §1.1) en er is dus geen tekst om mee te vergelijken; de guard draait opnieuw na de opname uit REFERENCE §6 (§22 punt 15). Plus een woordcontrole op CORVANE-woorden in `components/` en `content/`: "scent", "spray", "geur", "parfum", "vane", "corvane" (beslissing 99).
+12. **Geen referentietekst** (brief §10): een overlapcontrole op reeksen van 5 woorden (genormaliseerd: kleine letters, zonder leestekens) van alle strings in `content/` en `content/copy/` en alle string-literals in `components/` tegen (a) de strings in CORVANE's `content/` (pad uit `CORVANE_CONTENT_DIR`, anders `../../trissiewissie2024/corvane/corvane/content` als die bestaat; ontbreekt hij, dan wordt dit deel overgeslagen met een melding) en (b) de labels in `reference/**/*.structure.json` (nu `reference/corvane/desktop/*.structure.json` en `reference/corvane/mobile/*.structure.json`). Bestaat `reference/` maar vindt de glob niets, dan faalt de guard met een melding (nooit stil slagen). `reference/` staat in `.gitignore`: op een verse clone of in CI ontbreekt de map, en dan slaat de guard deel (b) over met `SKIPPED: reference` (beslissing 146). Een overgeslagen deel print een zichtbare regel `SKIPPED: <naam>` (`console.warn`): altijd `SKIPPED: lashthing`, want lashthing.nl is nooit opgehaald (REFERENCE §1.1) en er is dus geen tekst om mee te vergelijken; de guard draait opnieuw na de opname uit REFERENCE §6 (§22 punt 15). Plus een woordcontrole op CORVANE-woorden in `components/` en `content/`: "scent", "spray", "geur", "parfum", "vane", "corvane" (beslissing 99).
 13. **Specregel per materiaal**: een product met een Zilver-variant heeft geen "Verguld", "verguld" of "goudlaag" in `specRegel` (beslissing 115).
 
 ### 19.2 Playwright (`npm run test:e2e`)
@@ -3347,8 +3390,9 @@ Tegen de productiebuild met `COMMERCE_PROVIDER=local`. Selectors op rol en label
 
 ```ts
 import { defineConfig, devices } from "@playwright/test";
-const PORT = Number(process.env.PORT ?? 3200);
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
+import { TEST_ENV, TEST_PORT } from "./tests/test-env.mjs";
+// Always TEST_PORT, never process.env.PORT: start:test listens on 3200 whatever PORT a shell or CI sets (beslissing 152).
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${TEST_PORT}`;
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
 // tests/test-env.mjs (plain JS, also imported by scripts/with-test-env.mjs):
 // export const TEST_PORT = 3200;
@@ -3359,7 +3403,6 @@ const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
 //   EARLY_ACCESS_SECRET: "test-early-access-secret-0123456789abcdef",
 //   NEXT_PUBLIC_SITE_URL: "http://localhost:3200",
 // };
-import { TEST_ENV } from "./tests/test-env.mjs";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -3582,7 +3625,7 @@ Buffer: van 16 tot 24 november voor fixes uit de echte winkel. Schuift een golf 
 
 ## 22. Open punten en aannames
 
-Alle aannames staan ook genummerd in `docs/DECISIONS.md` (15 tot en met 142). Deze punten moeten Linde en Tristan nog bevestigen of met de echte winkel worden getest:
+Alle aannames staan ook genummerd in `docs/DECISIONS.md` (15 tot en met 142 uit fase 2, vanaf 143 uit de bouwgolven). Deze punten moeten Linde en Tristan nog bevestigen of met de echte winkel worden getest:
 
 1. **Dropdata 2027** (beslissing 22): de start- en einddata van Love Club tot en met Spark Friday zijn voorstellen.
 2. **Einde lanceringscadeau**: 30 november 23.59 uur aangenomen; wat het cadeautje is, beslissen Linde en Tristan.

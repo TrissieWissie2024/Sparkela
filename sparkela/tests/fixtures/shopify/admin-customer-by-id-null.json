@@ -1,0 +1,4 @@
+{
+  "data": { "customer": null },
+  "extensions": { "cost": { "requestedQueryCost": 1, "actualQueryCost": 1, "throttleStatus": { "maximumAvailable": 2000, "currentlyAvailable": 1999, "restoreRate": 100 } } }
+}

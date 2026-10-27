@@ -1,0 +1,9 @@
+{
+  "data": {
+    "customerEmailMarketingConsentUpdate": {
+      "customer": { "id": "gid://shopify/Customer/7001" },
+      "userErrors": []
+    }
+  },
+  "extensions": { "cost": { "requestedQueryCost": 10, "actualQueryCost": 10, "throttleStatus": { "maximumAvailable": 2000, "currentlyAvailable": 1990, "restoreRate": 100 } } }
+}

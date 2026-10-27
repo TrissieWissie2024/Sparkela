@@ -1,10 +1,19 @@
+import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { storageKeys } from "@/lib/storage";
 import type { IsoDate } from "@/lib/types";
+import { EARLY_ACCESS_HOURS } from "@/content/drops";
+import { shipping } from "@/content/shipping";
+import { site } from "@/content/site";
 
 /**
  * Legal pages (docs/PLAN.md §5.1, §14.13 to §14.16): the index of content/legal/*.md, the review notice every legal
- * page starts with, and the cookie table of /cookies. The Markdown files themselves come in wave 4-6 (C1); every one
- * starts with legalReviewNotice (content guard). updatedAt is a literal, never computed.
+ * page starts with, the cookie table of /cookies, the labels of the legal UI (legalUi) and the values the Markdown
+ * texts fill in (legalVariables). Every Markdown file starts with legalReviewNotice (content guard). updatedAt is a
+ * literal, never computed.
+ *
+ * The Markdown texts never retype a company detail, an amount, a time or a number of days: they write
+ * `{{verzendkosten}}`, `{{kvk}}` and so on, and components/legal/LegalPage.tsx fills them in from legalVariables, which
+ * reads content/site.ts, content/shipping.ts and content/offers.ts (plan §21.2). An unknown name fails the build.
  */
 
 export type LegalSlug = "algemene-voorwaarden" | "privacy" | "cookies" | "verzenden-en-retourneren" | "herroepen";
@@ -12,6 +21,8 @@ export type LegalSlug = "algemene-voorwaarden" | "privacy" | "cookies" | "verzen
 export interface LegalPageMeta {
   slug: LegalSlug;
   title: string;
+  /** Meta description of the page. */
+  description: string;
   /** Path of the Markdown source, relative to the app root. */
   file: `content/legal/${LegalSlug}.md`;
   /** "Laatst bijgewerkt" on the page. */
@@ -21,16 +32,67 @@ export interface LegalPageMeta {
 /** The first line of every legal text until a lawyer has checked it (brief §6). */
 export const legalReviewNotice = "TODO: laten controleren";
 
-/** Placeholder date until C1 writes the texts; update with every change to a legal text. */
+/** Date of the first drafts (wave 4-6); update the page's updatedAt with every change to its text. */
 const UPDATED_AT: IsoDate = "2026-10-27";
 
 export const legalPages: LegalPageMeta[] = [
-  { slug: "algemene-voorwaarden", title: "Algemene voorwaarden", file: "content/legal/algemene-voorwaarden.md", updatedAt: UPDATED_AT },
-  { slug: "privacy", title: "Privacybeleid", file: "content/legal/privacy.md", updatedAt: UPDATED_AT },
-  { slug: "cookies", title: "Cookies", file: "content/legal/cookies.md", updatedAt: UPDATED_AT },
-  { slug: "verzenden-en-retourneren", title: "Verzenden en retourneren", file: "content/legal/verzenden-en-retourneren.md", updatedAt: UPDATED_AT },
-  { slug: "herroepen", title: "Herroepen", file: "content/legal/herroepen.md", updatedAt: UPDATED_AT },
+  {
+    slug: "algemene-voorwaarden",
+    title: "Algemene voorwaarden",
+    description: "De afspraken als je bij Sparkela bestelt: aanbod, betalen, levering, bedenktijd, garantie en klachten.",
+    file: "content/legal/algemene-voorwaarden.md",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    slug: "privacy",
+    title: "Privacybeleid",
+    description: "Welke gegevens Sparkela gebruikt, waarvoor, hoe lang en welke rechten je hebt.",
+    file: "content/legal/privacy.md",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    slug: "cookies",
+    title: "Cookies",
+    description: "Welke cookies en opslag sparkela.nl gebruikt, waarvoor en hoe lang.",
+    file: "content/legal/cookies.md",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    slug: "verzenden-en-retourneren",
+    title: "Verzenden en retourneren",
+    description: "Verzendkosten, wanneer je bestelling komt, bedenktijd, de hygiëneregel en hoe je retourneert.",
+    file: "content/legal/verzenden-en-retourneren.md",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    slug: "herroepen",
+    title: "Modelformulier voor herroeping",
+    description: "Het modelformulier om je bestelling bij Sparkela te herroepen.",
+    file: "content/legal/herroepen.md",
+    updatedAt: UPDATED_AT,
+  },
 ];
+
+/** Labels of the legal pages (LegalPage, LegalNotice, UpcomingHolidays, /cookies). */
+export interface LegalUi {
+  /** "Laatst bijgewerkt: 27 oktober 2026"; the date comes formatted. */
+  updated: (date: string) => string;
+  /** Accessible name of the review notice banner. */
+  noticeLabel: string;
+  /** Accessible name of the holiday list of one year. */
+  holidaysYear: (year: string) => string;
+  cookieSettingsIntro: string;
+  /** Accessible name of the links to the other legal pages under every legal text. */
+  relatedLabel: string;
+}
+
+export const legalUi: LegalUi = {
+  updated: (date) => `Laatst bijgewerkt: ${date}`,
+  noticeLabel: "Concepttekst",
+  holidaysYear: (year) => `Feestdagen in ${year} waarop we niet versturen`,
+  cookieSettingsIntro: "Wil je je keuze voor statistiekcookies aanpassen? Dat kan hier.",
+  relatedLabel: "Meer juridische informatie",
+};
 
 export interface CookieRow {
   name: string;
@@ -67,4 +129,34 @@ export const cookieTable: CookieTable = {
     { name: "_ga, _ga_<id>", purpose: "Statistieken over het gebruik van de site (Google Analytics via Google Tag Manager).", duration: "Tot 2 jaar", when: "Alleen na je toestemming" },
   ],
   settingsLabel: "Cookie-instellingen",
+};
+
+const country = shipping.countries[shipping.defaultCountry];
+
+/**
+ * The values the Markdown texts fill in (`{{name}}`). Company details stay placeholders in content/site.ts until
+ * Tristan fills them in (plan §22 point 11); the legal texts follow automatically.
+ */
+export const legalVariables: Readonly<Record<string, string>> = {
+  handelsnaam: site.company.tradeName,
+  bedrijfsnaam: site.company.legalName,
+  adres: site.company.address,
+  kvk: site.company.kvk,
+  btwId: site.company.vatId,
+  email: site.email,
+  betaalmethoden: site.paymentMethods.join(", "),
+  vervoerder: shipping.carrier,
+  verzendmethode: shipping.method,
+  land: country.label,
+  verzendkosten: formatMoney(country.rate),
+  gratisVanaf: formatMoneyShort(country.freeFrom),
+  cutoff: shipping.cutoff.label,
+  levertijdMin: String(country.transitDays.min),
+  levertijdMax: String(country.transitDays.max),
+  retourDagen: String(site.returnDays),
+  garantieMaanden: String(site.guarantee.months),
+  hygieneRegel: site.hygieneRule,
+  herroepLink: site.withdrawalLinkLabel,
+  vroegeToegangUren: String(EARLY_ACCESS_HOURS),
+  cookieInstellingen: cookieTable.settingsLabel,
 };

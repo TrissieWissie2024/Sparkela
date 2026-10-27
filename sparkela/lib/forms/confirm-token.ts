@@ -2,8 +2,10 @@ import { readSecret } from "@/lib/env";
 
 /**
  * The token of the double opt-in link (docs/PLAN.md §15.2 step 5, §15.3, decisions 74 and 110):
- * `base64url(JSON { c, t })` + "." + `base64url(HMAC-SHA256(NEWSLETTER_CONFIRM_SECRET, payload))`, where `c` is the
- * numeric part of the Shopify customer GID and `t` the creation time in epoch ms. Valid for 7 days.
+ * `base64url(JSON { c, t, g? })` + "." + `base64url(HMAC-SHA256(NEWSLETTER_CONFIRM_SECRET, payload))`, where `c` is
+ * the numeric part of the Shopify customer GID, `t` the creation time in epoch ms and `g` the sign-up's tags ("club",
+ * "bron:…", "quiz:…") for an existing customer: those are only added after the double opt-in (decision 199). Valid for
+ * 7 days.
  *
  * The token holds a customer id, never an e-mail address: the link ends up in server logs, browser history and (with
  * analytics) page_location, and ConfirmSubscription removes it from the address bar right after reading it.
@@ -18,7 +20,19 @@ const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 const CUSTOMER_GID_PREFIX = "gid://shopify/Customer/";
 const NUMERIC_ID = /^\d{1,20}$/;
 
-export type ConfirmTokenResult = { customerId: string } | "invalid" | "expired";
+export type ConfirmTokenResult = { customerId: string; tags: string[] } | "invalid" | "expired";
+
+/** The tags a token may carry: what newsletterTags() (lib/commerce/shopify/admin.ts) makes, nothing else. */
+const TOKEN_TAG = /^(?:club|bron:[a-z-]{1,20}|quiz:(?:vibe|moment|type)-[a-z0-9-]{1,40})$/;
+const MAX_TOKEN_TAGS = 5;
+
+function isTokenTags(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length <= MAX_TOKEN_TAGS &&
+    value.every((tag) => typeof tag === "string" && TOKEN_TAG.test(tag))
+  );
+}
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -74,12 +88,20 @@ export function customerGid(customerId: string): string {
 
 /**
  * A signed token for the confirmation link. `customerId` is the numeric id (or the full GID). `secret` defaults to
- * NEWSLETTER_CONFIRM_SECRET; the route checks it first and answers "not-configured" without it.
+ * NEWSLETTER_CONFIRM_SECRET; the route checks it first and answers "not-configured" without it. `tags` are added to
+ * the customer on confirmation (an existing customer's tags are never changed before the double opt-in).
  */
-export async function createConfirmToken(customerId: string, now: number, secret?: string): Promise<string> {
+export async function createConfirmToken(
+  customerId: string,
+  now: number,
+  secret?: string,
+  tags: readonly string[] = [],
+): Promise<string> {
   const id = customerIdFromGid(customerId) ?? customerId;
   if (!NUMERIC_ID.test(id)) throw new Error("createConfirmToken needs a numeric Shopify customer id.");
-  const payload = toBase64url(encoder.encode(JSON.stringify({ c: id, t: now })));
+  if (!isTokenTags([...tags])) throw new Error("createConfirmToken only carries newsletter tags.");
+  const content = tags.length > 0 ? { c: id, t: now, g: [...tags] } : { c: id, t: now };
+  const payload = toBase64url(encoder.encode(JSON.stringify(content)));
   return `${payload}.${await sign(payload, requireSecret(secret))}`;
 }
 
@@ -103,11 +125,12 @@ export async function verifyConfirmToken(token: string, now: number, secret?: st
     return "invalid";
   }
   if (typeof data !== "object" || data === null) return "invalid";
-  const { c, t } = data as { c?: unknown; t?: unknown };
+  const { c, t, g } = data as { c?: unknown; t?: unknown; g?: unknown };
   if (typeof c !== "string" || !NUMERIC_ID.test(c) || typeof t !== "number" || !Number.isFinite(t)) return "invalid";
+  if (g !== undefined && !isTokenTags(g)) return "invalid";
   if (t > now + MAX_CLOCK_SKEW_MS) return "invalid";
   if (now - t > CONFIRM_TOKEN_TTL_MS) return "expired";
-  return { customerId: c };
+  return { customerId: c, tags: g ?? [] };
 }
 
 /** Hex SHA-256 of a value: the Idempotency-Key of the confirmation mail is `subscribe-<sha256(token)>` (decision 111). */

@@ -390,8 +390,8 @@ export type FormErrorCode = "invalid" | "rate-limited" | "not-configured" | "ups
 export type FormResponse<T = undefined> =
   | { ok: true; data: T }
   | { ok: false; error: FormErrorCode; fieldErrors?: Record<string, string>; fallbackEmail: string };
-/** "pending": confirmation mail sent (double opt-in, §15.2). "already-subscribed": nothing sent. */
-export interface SubscribeResult { status: "pending" | "already-subscribed"; code: "WELKOM10" }
+/** "pending": a mail is on its way (the confirmation link, or "je bent al lid" for a member), for every address (§15.2, decision 199). */
+export interface SubscribeResult { status: "pending"; code: "WELKOM10" }
 export interface SubscribeConfirmRequest { token: string }
 export interface SubscribeConfirmResult { status: "confirmed" | "already-confirmed" }
 export type SubscribeConfirmErrorCode = "expired" | "invalid";   // sent as FormErrorCode "invalid" + fieldErrors.token

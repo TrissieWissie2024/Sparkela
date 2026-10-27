@@ -1,0 +1,9 @@
+{
+  "data": {
+    "customerCreate": {
+      "customer": { "id": "gid://shopify/Customer/7003" },
+      "userErrors": []
+    }
+  },
+  "extensions": { "cost": { "requestedQueryCost": 10, "actualQueryCost": 10, "throttleStatus": { "maximumAvailable": 2000, "currentlyAvailable": 1990, "restoreRate": 100 } } }
+}

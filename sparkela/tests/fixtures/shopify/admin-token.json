@@ -1,0 +1,5 @@
+{
+  "access_token": "test-admin-access-token-0123456789abcdef",
+  "scope": "read_customers,write_customers",
+  "expires_in": 86399
+}

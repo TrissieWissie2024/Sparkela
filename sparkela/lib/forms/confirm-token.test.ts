@@ -22,7 +22,7 @@ describe("confirm token (plan §15.2, §15.3)", () => {
   it("round-trips a customer id and matches the validation pattern", async () => {
     const token = await createConfirmToken("gid://shopify/Customer/7001", NOW, SECRET);
     expect(token).toMatch(CONFIRM_TOKEN_PATTERN);
-    expect(await verifyConfirmToken(token, NOW, SECRET)).toEqual({ customerId: "7001" });
+    expect(await verifyConfirmToken(token, NOW, SECRET)).toEqual({ customerId: "7001", tags: [] });
   });
 
   it("contains a customer id and no e-mail address", async () => {
@@ -33,9 +33,22 @@ describe("confirm token (plan §15.2, §15.3)", () => {
     expect(token).not.toContain("@");
   });
 
+  it("carries an existing customer's sign-up tags, signed, and refuses anything else (decision 199)", async () => {
+    const tags = ["club", "bron:finder", "quiz:vibe-retro", "quiz:moment-strand", "quiz:type-verras-me"];
+    const token = await createConfirmToken("7001", NOW, SECRET, tags);
+    expect(token).toMatch(CONFIRM_TOKEN_PATTERN);
+    expect(token.length).toBeLessThanOrEqual(600);
+    expect(await verifyConfirmToken(token, NOW, SECRET)).toEqual({ customerId: "7001", tags });
+
+    await expect(createConfirmToken("7001", NOW, SECRET, ["vip"])).rejects.toThrow();
+    const [, signature] = token.split(".");
+    const forged = Buffer.from(JSON.stringify({ c: "7001", t: NOW, g: ["vip"] })).toString("base64url");
+    expect(await verifyConfirmToken(`${forged}.${signature}`, NOW, SECRET)).toBe("invalid");
+  });
+
   it("is valid for 7 days and expired after that", async () => {
     const token = await createConfirmToken("7001", NOW, SECRET);
-    expect(await verifyConfirmToken(token, NOW + CONFIRM_TOKEN_TTL_MS, SECRET)).toEqual({ customerId: "7001" });
+    expect(await verifyConfirmToken(token, NOW + CONFIRM_TOKEN_TTL_MS, SECRET)).toEqual({ customerId: "7001", tags: [] });
     expect(await verifyConfirmToken(token, NOW + CONFIRM_TOKEN_TTL_MS + 1, SECRET)).toBe("expired");
   });
 

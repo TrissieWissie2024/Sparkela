@@ -1,0 +1,9 @@
+{
+  "data": {
+    "customerCreate": {
+      "customer": null,
+      "userErrors": [{ "field": ["email"], "message": "Email has already been taken" }]
+    }
+  },
+  "extensions": { "cost": { "requestedQueryCost": 10, "actualQueryCost": 10, "throttleStatus": { "maximumAvailable": 2000, "currentlyAvailable": 1990, "restoreRate": 100 } } }
+}

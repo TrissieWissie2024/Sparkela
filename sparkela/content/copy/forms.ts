@@ -10,15 +10,21 @@ import { site } from "@/content/site";
  */
 export interface FormsCopy {
   subscribe: {
+    /** Accessible name of every sign-up form. */
+    formLabel: string;
     emailLabel: string;
     emailPlaceholder: string;
     /** Next to every sign-up field: what you sign up for (brief §2.8). */
     what: string;
     consentError: string;
-    /** After a sign-up: the confirmation mail is on its way (double opt-in, plan §15.2). */
+    /**
+     * After every sign-up: a mail is on its way (the confirmation link, or for a member a "je bent al lid" mail). The
+     * same answer for every address, so the form never tells whether an address is a member (decision 199).
+     */
     pending: string;
-    alreadySubscribed: string;
     sending: string;
+    /** Heading of the success state (focus moves there). */
+    successTitle: string;
   };
   confirm: {
     title: string;
@@ -30,7 +36,7 @@ export interface FormsCopy {
     already: string;
     expired: string;
     invalid: string;
-    /** Heading above the sign-up form shown after an expired or invalid link. */
+    /** Heading above the sign-up form shown after an expired or invalid link; states the reward up front (brief §2.8). */
     retryTitle: string;
     toShop: string;
     toWaitlist: string;
@@ -70,6 +76,10 @@ export interface FormsCopy {
     summary: { name: string; orderNumber: string; email: string; products: string; productsEmpty: string };
     /** Subject of the mailto fallback without mail keys (plan §15.4 step 3). */
     mailtoSubject: (orderNumber: string) => string;
+    /** First line of the mailto body: an unambiguous withdrawal statement, followed by the filled-in fields. */
+    mailtoIntro: string;
+    /** Under the intro on /herroepen, above the form. */
+    hygieneTitle: string;
   };
   contact: {
     title: string;
@@ -87,6 +97,7 @@ export interface FormsCopy {
     moreTitle: string;
     faqLink: string;
     shippingLink: string;
+    withdrawalLink: string;
   };
   waitlist: {
     title: string;
@@ -146,6 +157,12 @@ export interface FormsCopy {
       subject: (orderNumber: string, reference: string) => string;
       intro: string;
     };
+    /** A sign-up of an address that is already a confirmed member (lib/mail.ts memberMail, decision 199). */
+    member: {
+      subject: string;
+      intro: string;
+      ignore: string;
+    };
     contact: {
       subject: (name: string) => string;
       intro: string;
@@ -154,6 +171,7 @@ export interface FormsCopy {
   };
   miniFooter: {
     legalLabel: string;
+    companyLabel: string;
     kvk: (kvk: string) => string;
     vatId: (vatId: string) => string;
   };
@@ -164,13 +182,14 @@ const days = String(site.returnDays);
 
 export const formsCopy: FormsCopy = {
   subscribe: {
+    formLabel: "Aanmelden voor de Sparkela Club",
     emailLabel: "Je e-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
     what: "Nieuwe drops, early access en af en toe een actie. Afmelden kan altijd.",
     consentError: "Vink aan dat je de nieuwsbrief wilt ontvangen.",
-    pending: `Check je mail en bevestig je aanmelding. Je code ${code} kun je meteen gebruiken.`,
-    alreadySubscribed: `Je bent al lid. Je code is ${code}.`,
+    pending: `Check je mail om je aanmelding af te ronden. Je code ${code} kun je meteen gebruiken.`,
     sending: "Je aanmelding wordt verstuurd.",
+    successTitle: "Bijna klaar",
   },
   confirm: {
     title: "Bevestig je aanmelding",
@@ -182,7 +201,7 @@ export const formsCopy: FormsCopy = {
     already: "Je aanmelding was al bevestigd. Je zit al in de Club.",
     expired: "Deze link is verlopen. Meld je opnieuw aan, dan sturen we je een nieuwe.",
     invalid: "Deze link werkt niet. Meld je opnieuw aan, dan sturen we je een nieuwe.",
-    retryTitle: "Meld je opnieuw aan",
+    retryTitle: `Meld je opnieuw aan en krijg ${percent}% op je eerste bestelling`,
     toShop: "Naar de shop",
     toWaitlist: "Naar de wachtlijst",
     noScript: (email) => `Zonder JavaScript werkt deze knop niet. Zet JavaScript aan of mail ons op ${email}.`,
@@ -229,6 +248,8 @@ export const formsCopy: FormsCopy = {
       productsEmpty: "Niet ingevuld",
     },
     mailtoSubject: (orderNumber) => `Herroeping bestelling ${orderNumber}`,
+    mailtoIntro: "Hierbij herroep ik de overeenkomst over de bestelling hieronder.",
+    hygieneTitle: "Let op bij oorbellen en piercings",
   },
   contact: {
     title: "Contact",
@@ -252,6 +273,7 @@ export const formsCopy: FormsCopy = {
     moreTitle: "Misschien staat je antwoord er al",
     faqLink: "Veelgestelde vragen",
     shippingLink: "Verzenden en retourneren",
+    withdrawalLink: "Bestelling herroepen",
   },
   waitlist: {
     title: "Sparkela komt eraan",
@@ -308,6 +330,11 @@ export const formsCopy: FormsCopy = {
       subject: (orderNumber, reference) => `Herroeping ${orderNumber} (${reference})`,
       intro: "Er is een herroeping binnengekomen via het formulier op de site. Beantwoord deze mail om de klant te mailen.",
     },
+    member: {
+      subject: "Je bent al lid van de Sparkela Club",
+      intro: "Dit e-mailadres is net aangemeld voor de Sparkela Club. Je bent al lid, dus er verandert niets: je hoort nog steeds als eerste van nieuwe drops.",
+      ignore: "Heb je je niet zelf aangemeld? Dan hoef je niets te doen.",
+    },
     contact: {
       subject: (name) => `Contact: ${name}`,
       intro: "Nieuw bericht via het contactformulier. Beantwoord deze mail om de afzender direct te mailen.",
@@ -316,6 +343,7 @@ export const formsCopy: FormsCopy = {
   },
   miniFooter: {
     legalLabel: "Juridisch",
+    companyLabel: "Bedrijfsgegevens",
     kvk: (kvk) => `KvK ${kvk}`,
     vatId: (vatId) => `Btw-id ${vatId}`,
   },

@@ -51,10 +51,15 @@ describe("lib/early-access", () => {
     );
   });
 
+  /** A clean environment for the script: no .env values from the shell leak in. */
+  function scriptEnv(secret: string): NodeJS.ProcessEnv {
+    return { NODE_ENV: "test", PATH: process.env.PATH ?? "", EARLY_ACCESS_SECRET: secret, NEXT_PUBLIC_SITE_URL: "https://sparkela.nl" };
+  }
+
   it("prints the same link from scripts/early-access-link.mjs (npm run early-access-link)", async () => {
     const output = execFileSync(process.execPath, ["scripts/early-access-link.mjs", "holiday-sparkle"], {
       cwd: appRoot,
-      env: { PATH: process.env.PATH ?? "", EARLY_ACCESS_SECRET: SECRET, NEXT_PUBLIC_SITE_URL: "https://sparkela.nl" },
+      env: scriptEnv(SECRET),
       encoding: "utf8",
     });
     expect(output.trim()).toBe(await earlyAccessLink("holiday-sparkle", SECRET, "https://sparkela.nl"));
@@ -64,7 +69,7 @@ describe("lib/early-access", () => {
     const run = (args: string[], secret: string) => () =>
       execFileSync(process.execPath, ["scripts/early-access-link.mjs", ...args], {
         cwd: appRoot,
-        env: { PATH: process.env.PATH ?? "", EARLY_ACCESS_SECRET: secret, NEXT_PUBLIC_SITE_URL: "https://sparkela.nl" },
+        env: scriptEnv(secret),
         encoding: "utf8",
         stdio: "pipe",
       });

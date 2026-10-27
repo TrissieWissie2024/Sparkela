@@ -76,7 +76,7 @@ Alle pagina's behalve `/wachtlijst` en `/nieuwsbrief/bevestigen` staan in de rou
 | `/collections/[handle]` | `app/(shop)/collections/[handle]/page.tsx` | `getShopCollection(handle)`, `content/collections.ts` | `○` per handle + `◐` shell | wachtlijst | index |
 | `/products/[handle]` | `app/(shop)/products/[handle]/page.tsx` | `getShopProduct(handle)`, stacks, claims, faq | `○` per handle + `◐` shell | wachtlijst; dropproduct: EA | index (cadeauverpakking: noindex) |
 | `/drops/[slug]` | `app/(shop)/drops/[slug]/page.tsx` | `content/drops.ts`, producten van de drop | `○` per slug + `◐` shell | EA voor die drop | index vanaf `startsAt` (via sitemap) |
-| `/drops/[slug]/binnenkort` | `app/(shop)/drops/[slug]/binnenkort/page.tsx` | `content/drops.ts` | `○` per slug + `◐` shell | open (alleen via proxy-rewrite bereikt) | noindex, canonical `/drops/[slug]` |
+| `/drops/[slug]/binnenkort` | `app/(shop)/drops/[slug]/binnenkort/page.tsx` (`ensureStatic = "navigation"`, `instant = false`, §14.6) | `content/drops.ts` | `○` per slug + `◐` shell | open (alleen via proxy-rewrite bereikt) | noindex, canonical `/drops/[slug]` |
 | `/stacks` | `app/(shop)/stacks/page.tsx` | `content/stacks.ts`, producten | `○` | wachtlijst | index |
 | `/cadeaukaarten` | `app/(shop)/cadeaukaarten/page.tsx` | product `cadeaukaart`, `offers.giftCards` | `○` | wachtlijst | index |
 | `/sparkela-club` | `app/(shop)/sparkela-club/page.tsx` | `site.club`, `content/copy/pages.ts` `club` | `○` | wachtlijst | index |
@@ -94,7 +94,7 @@ Alle pagina's behalve `/wachtlijst` en `/nieuwsbrief/bevestigen` staan in de rou
 | `/checkout` | `app/(shop)/checkout/page.tsx` | lokale cart (client) | `○` | wachtlijst | noindex |
 | `/wachtlijst` | `app/(kaal)/wachtlijst/page.tsx` | `content/copy/forms.ts` `waitlist` | `○` | open | index tijdens prelaunch, canonical `/`; na launch 307 naar `/sparkela-club` |
 | `/nieuwsbrief/bevestigen` | `app/(kaal)/nieuwsbrief/bevestigen/page.tsx` | `content/copy/forms.ts` `confirm`; token uit `?t=` (client) | `○` | open | noindex |
-| 404 (geen route) | `app/not-found.tsx` | `content/copy/pages.ts` `notFound` | `○` | wachtlijst | noindex (automatisch) |
+| 404 (geen route) | `app/not-found.tsx` | `sharedCopy.notFound` (`content/copy/shared.ts`) via `NotFoundView` | `○` | wachtlijst | noindex (automatisch) |
 | 404 (onbekende handle) | `app/(shop)/not-found.tsx` | idem | in de shell | wachtlijst | noindex |
 
 - `/account`: `proxy.ts` stuurt met 307 door naar `SHOPIFY_CUSTOMER_ACCOUNT_URL` als die variabele bestaat. Zonder variabele toont de pagina "Inloggen kan straks hier" met links naar contact en herroepen.
@@ -199,12 +199,12 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `tsconfig.json` | Ongewijzigd; tests importeren `describe`, `it` en `expect` expliciet uit `vitest` | 3a/A1 |
 | `vitest.config.mts` | `@`-alias, alias `server-only` → `tests/stubs/server-only.ts`, `environment: "node"`, includes `lib/**/*.test.ts`, `content/**/*.test.ts`, `components/**/*.test.{ts,tsx}`, `tests/unit/**/*.test.ts` | 3a/A1 |
 | `playwright.config.ts` | Projecten mobile/desktop, webServer met productiebuild, `PW_CHROMIUM_PATH`, testklok (§19.3) | 3a/A1 |
-| `tests/test-env.mjs` | `TEST_ENV` (één bron voor Playwright, `build:test` en `start:test`, §19.3) | 3a/A1 |
+| `tests/test-env.mjs` | `TEST_PORT`, `TEST_ENV` en `TEST_NOW` (één bron voor Playwright, `build:test`, `start:test` en Vitest, §19.3) | 3a/A1 |
 | `scripts/with-test-env.mjs` | Start het meegegeven commando (`next build`, `next start -p 3200`) met `TEST_ENV` erbij in de omgeving | 3a/A1 |
 | `.env.example` | Alle variabelen met uitleg (§3.9) | 3a/A1 |
 | `tests/stubs/server-only.ts` | Leeg bestand voor Vitest | 3a/A1 |
 | `tests/fixtures/catalog.ts` | `makeProduct()`, `makeCatalogProduct()` en de stukken uit §8.4 als vaste `CatalogProduct`-literals (handle, type, prijs, variant-id), zodat logica-tests niet op `content/products.ts` of `toCatalogProduct` wachten | 3a/A1 |
-| `tests/fixtures/local-catalog.ts` | `localCatalogProducts(now: number): CatalogProduct[]`: alle 26 lokale producten via `lib/commerce/local.ts` en `toCatalogProduct(p, badgeContextAt(now))`, voor tests van later (onder andere `finderState.test.ts`) | 4-6/C2a |
+| `tests/fixtures/local-catalog.ts` | Synchroon en zonder `server-only`-imports, zodat Vitest én Playwright hem kunnen laden: `localCatalogProducts(now: number): CatalogProduct[]` (alle 26 lokale producten: `buildLocalProducts()` uit `lib/commerce/local-data.ts` en `toCatalogProduct(p, badgeContextAt(now))`) en `localShopRoutes(now: number): string[]` (`STATIC_ROUTES` uit `lib/seo.ts`, `/collections/<handle>` voor elke handle uit `content/collections.ts`, en `/products/<handle>` voor `localCatalogProducts(now).filter((p) => p.listable)`). E2's `SHOP_ROUTES` en E1's `sitemap.test.ts` gebruiken allebei `localShopRoutes(TEST_NOW)` (beslissing 140) | 4-6/C2a |
 | `.gitignore` | Extra regel `screenshots/` | 3a/A1 |
 | `proxy.ts` | Prelaunch, preview, early access, drop-gating, `/account`, `/wachtlijst` na launch (§11) | 4-6/C1 |
 | `README.md` (vervangt) | Golf 4-6: starten en de sectie "Wachtlijst live zetten" (§11.9). Golf 12: content, Shopify, Vercel en de rest | 4-6/C1, 12/F1 |
@@ -223,7 +223,7 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `app/manifest.ts` | Naam, `start_url: "/"`, kleuren via `lib/brand-colors.ts`, iconen | 10-11/E1 |
 | `app/opengraph-image.tsx` | Merk-OG 1200×630 | 10-11/E1 |
 | `app/sitemap.ts` | Statische routes, collecties, zichtbare producten, gestarte drops | 10-11/E1 |
-| `app/robots.ts` | Alles toegestaan behalve `/api/`; sitemap-URL | 10-11/E1 |
+| `app/robots.ts` (+ `tests/unit/robots.test.ts`) | Alles toegestaan behalve `/api/`; sitemap-URL | 10-11/E1 |
 | `app/not-found.tsx` | Globale 404 met `ShopChrome` eromheen en `NotFoundView` | 7-9/D4 |
 | `app/(kaal)/layout.tsx` | Minimale chrome: `ClockProvider`, `<main id="main">` en `MiniFooter` | 4-6/C1 |
 | `app/(kaal)/wachtlijst/page.tsx` | Wachtlijstpagina (§14.20) | 4-6/C1 |
@@ -266,7 +266,7 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | --- | --- | --- |
 | `components/brand/Logo.tsx`, `Monogram.tsx`, `Spark.tsx`, `LogoDefs.tsx`, `logo-paths.ts` | Woordmerk, monogram, vonk; paden uit het logoscript | 3b/B1 |
 | `components/ui/*` | Primitives (§13.2) | 3b/B2 |
-| `components/time/TimeSwitch.tsx`, `TimeGate.tsx`, `Countdown.tsx`, `ClockProvider.tsx`, `timeSwitchScript.ts` | Tijd in de UI (§10) | 3b/B2 |
+| `components/time/TimeSwitch.tsx`, `TimeGate.tsx`, `Countdown.tsx`, `ClockProvider.tsx`, `timeSwitchScript.ts`, `VatNotice.tsx` | Tijd in de UI (§10); `VatNotice` hier, zodat C1 (`MiniFooter`) en C3 hem in 4-6 allebei gebruiken (beslissing 138) | 3b/B2 |
 | `components/media/PhotoSlot.tsx`, `VideoSlot.tsx`, `ProductPhoto.tsx` | Beeldplekken en productfoto | 3b/B2 |
 | `components/legal/LegalPage.tsx`, `LegalNotice.tsx`, `Markdown.tsx`, `UpcomingHolidays.tsx` | Juridische pagina's | 4-6/C1 |
 | `components/forms/SubscribeForm.tsx`, `ConsentCheckbox.tsx`, `ConfirmSubscription.tsx`, `WithdrawalForm.tsx`, `ContactForm.tsx`, `Honeypot.tsx`, `FormStatus.tsx`, `submitForm.ts` | Formulieren | 4-6/C1 |
@@ -275,8 +275,9 @@ Paden zijn relatief aan `sparkela/`. Kolom **Golf/eigenaar** verwijst naar §20 
 | `components/cart/CartProvider.tsx`, `useCart.ts`, `CartAnnouncer.tsx` | Cart-state; kiest de adapter uit `lib/commerce/cart/` | 4-6/C2a |
 | `components/cart/CartDrawer.tsx`, `CartDrawerLoader.tsx`, `CartLineItem.tsx`, `QuantityStepper.tsx`, `CartProgressBars.tsx`, `GiftWrapToggle.tsx`, `GiftWrapPrice.tsx`, `GiftMessageField.tsx`, `CampaignCartNote.tsx`, `CartUpsell.tsx`, `CartTotals.tsx`, `CheckoutButton.tsx`, `CartEmpty.tsx` | Cart-UI | 4-6/C3 |
 | `components/product/QuickAdd.tsx` | Snel toevoegen (kaart, cart-upsell) | 4-6/C3 |
-| `components/layout/ShopChrome.tsx`, `AnnouncementBar.tsx`, `UspBar.tsx`, `CampaignMessage.tsx`, `DropMessage.tsx`, `Header.tsx`, `header/*`, `MobileNav.tsx`, `MobileNavSheet.tsx`, `SearchDialog.tsx`, `Footer.tsx`, `footer/*`, `PaymentBadges.tsx`, `VatNotice.tsx`, `ShipLabel.tsx`, `SkipLink.tsx`, `RouteFocus.tsx` | Chrome | 4-6/C3 (`SkipLink`, `RouteFocus` in 3a/A2; `ShopChrome` in 7-9 bij de integrator) |
-| `components/consent/ConsentBanner.tsx`, `AnalyticsLoader.tsx`, `CookieSettingsButton.tsx` | Consent | 4-6/C3 |
+| `components/layout/ShopChrome.tsx`, `AnnouncementBar.tsx`, `UspBar.tsx`, `CampaignMessage.tsx`, `DropMessage.tsx`, `Header.tsx`, `header/*`, `MobileNav.tsx`, `MobileNavSheet.tsx`, `SearchDialog.tsx`, `Footer.tsx`, `footer/*`, `PaymentBadges.tsx`, `ShipLabel.tsx`, `SkipLink.tsx`, `RouteFocus.tsx` | Chrome | 4-6/C3 (`SkipLink`, `RouteFocus` in 3a/A2; `ShopChrome` in 7-9 bij de integrator) |
+| `components/consent/ConsentBanner.tsx`, `AnalyticsLoader.tsx` | Consent | 4-6/C3 |
+| `components/consent/CookieSettingsButton.tsx` | Opent de consentbanner opnieuw (`OPEN_CONSENT_EVENT`); gebruikt door `/cookies` (C1) en de footer (C3) | 4-6/C1 (beslissing 138) |
 | `components/product/ProductCard.tsx`, `ProductGrid.tsx`, `SortSelect.tsx`, `ProductCardSkeleton.tsx` | Kaart en grid | 4-6/C4 |
 | `components/collection/CollectionView.tsx`, `FilterBar.tsx`, `FilterSheet.tsx`, `StylingTile.tsx`, `collectionQueryScript.ts`, `filterParams.ts` (+ test) | Collectie | 7-9/D3 |
 | `components/pdp/*` | Productpagina (§13.9) | 7-9/D2 |
@@ -302,15 +303,15 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `content/site.ts`, `offers.ts`, `drops.ts`, `shipping.ts` | Config: volledig in golf 3a (§5.3, §9.3, §12) | 3a/A2 |
 | `content/products.ts` | 24 testproducten plus `cadeauverpakking` en `cadeaukaart` | 3a/A2 minimaal (2 producten), 3b/B4 volledig |
 | `content/navigation.ts`, `collections.ts`, `stacks.ts`, `reviews.ts`, `faq.ts`, `claims.ts`, `quiz.ts`, `home.ts`, `assets.ts` | Data en homecopy (§5) | 3a/A2 skelet met typen, 3b/B4 gevuld; daarna `home.ts` 7-9/D1, `collections.ts` 7-9/D3, `navigation.ts` 4-6/C3 |
-| `content/legal.ts` | Index van `content/legal/*.md`; exporteert ook `type LegalSlug = "algemene-voorwaarden" \| "privacy" \| "cookies" \| "verzenden-en-retourneren" \| "herroepen"` en `legalReviewNotice` | 3a/A2 skelet, 3b/B4, 4-6/C1 |
+| `content/legal.ts` | Index van `content/legal/*.md`; exporteert ook `type LegalSlug = "algemene-voorwaarden" \| "privacy" \| "cookies" \| "verzenden-en-retourneren" \| "herroepen"`, `legalReviewNotice` en `cookieTable` | 3a/A2 skelet, 3b/B4, 4-6/C1 |
 | `content/copy/shared.ts` | `sharedCopy`: teksten die `lib/` teruggeeft (leverbalk, leverschatting, voortgang, laagste prijs, badges, countdown), generieke labels (sluiten, menu, vorige, volgende, pauzeren, laden, fout, afbeeldingslabels), cart-meldingen (`announce`), het vocabulaire voor type, vibe, moment, prijs en sortering (`vocab`) en de 404 (`notFound`) (§5.9) | 3a/A2 volledig, 3b/B2, daarna integrator |
 | `content/copy/forms.ts` | `formsCopy`: aanmelden, consent-fout, bevestigen (dubbele opt-in), herroepen, contact, wachtlijst, formulierstatus, validatiefouten | 3a/A2 skelet, 4-6/C1 |
-| `content/copy/chrome.ts` | `chromeCopy`: promobalk, header, zoekdialoog, mobiel menu, footer, consentbanner, cookietabel | 3a/A2 skelet, 4-6/C3 |
+| `content/copy/chrome.ts` | `chromeCopy`: promobalk, header, zoekdialoog, mobiel menu, footer, consentbanner (de cookietabel staat in `content/legal.ts`) | 3a/A2 skelet, 4-6/C3 |
 | `content/copy/cart.ts` | `cartCopy`: drawer, regels, totalen, cadeauverpakking, cadeauboodschap, upsell, meldingen, fouten, lege staat, campagneregel, quick-add | 3a/A2 skelet, 4-6/C3 |
 | `content/copy/product-card.ts` | `cardCopy`: gridlabels, kaart-aria (sorteerlabels staan in `sharedCopy.vocab.sort`) | 3a/A2 skelet, 4-6/C4 |
 | `content/copy/collection.ts` | `collectionCopy`: filters (de facetlabels zelf komen uit `sharedCopy.vocab`), aantal, lege staat; zoekpagina; drop-, stacks- en cadeaukaartpagina | 3a/A2 skelet, 7-9/D3 |
 | `content/copy/pdp.ts` | `pdpCopy`: koopkolom, varianten, ringmaatgids, stack-kiezer, trustrij, specs, claims, accordions, GPSR, verzorging (`care.default`) | 3a/A2 skelet, 3b/B4 (`care.default`), 7-9/D2 |
-| `content/copy/pages.ts` | `pagesCopy`: Over Sparkela, Club-pagina, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout, 404 | 3a/A2 skelet, 7-9/D4 |
+| `content/copy/pages.ts` | `pagesCopy`: Over Sparkela, Club-pagina, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout (de 404-copy staat in `sharedCopy.notFound`) | 3a/A2 skelet, 7-9/D4 |
 | `content/legal/algemene-voorwaarden.md`, `privacy.md`, `cookies.md`, `verzenden-en-retourneren.md`, `herroepen.md` | Juridische teksten, bovenaan `TODO: laten controleren` | 4-6/C1 |
 | `content/content-guard.test.ts` | Bewakers voor §2 van de brief (§19.1); scant automatisch elk bestand in `content/` en `content/copy/` | 3b/B4 |
 | `content/offers.test.ts`, `content/drops.test.ts`, `content/shipping.test.ts`, `content/quiz.test.ts` | Datacontroles | 3b/B4 |
@@ -322,9 +323,10 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `lib/types.ts` | Alle domeintypen (§6) | 3a/A1 |
 | `lib/env.ts` | Server-env lezen en valideren (`getEnv()`), geen secrets naar de client; `readSecret(name)` geeft `null` (plus één `console.warn`) als een geheim korter is dan 32 tekens | 3a/A1 |
 | `lib/money.ts` (+ test) | `formatMoney`, `formatMoneyShort`, `parseShopifyMoney`, `cents` | 3a/A1 |
-| `lib/schedule.ts` (+ test) | `scheduleAt(at, cb)`: timer naar een tijdstip in stappen van hooguit 24 uur (§10.5, beslissing 108) | 3a/A1 |
+| `lib/schedule.ts` (+ test) | `scheduleAt(at, cb)`: timer naar een tijdstip in stappen van hooguit 24 uur (§10.5, beslissing 108); `phaseIndex`, `CountdownParts`, `getCountdown`, `formatCountdown` (§10.7, beslissing 137) | 3a/A1 |
 | `lib/image-loader.ts` | `next/image`-loader (Shopify `?width=`, §17.1); in 3a, omdat `next.config.ts` hem noemt en Next de config anders bij elke build en typegen weigert | 3a/A1 |
-| `lib/cn.ts`, `lib/storage.ts`, `lib/hooks/useNow.ts`, `lib/hooks/useAfterLoad.ts`, `lib/hooks/useMediaQuery.ts`, `lib/hooks/useMounted.ts`, `lib/hooks/useLatch.ts` | Hulpjes (port CORVANE, `sparkela:`-sleutels); `useLatch(value)` blijft `true` zodra `value` één keer `true` was (lazy eilanden blijven gemount) | 3a/A1 |
+| `lib/storage.ts` | Port CORVANE: `readStorage`, `writeStorage`, `removeStorage`, `readJson`, `writeJson` (alles in try/catch, `null`/`false` zonder opslag) en `storageKeys = { cart: "sparkela:cart:v1", emailCaptureLastShown: "sparkela:email-capture:last-shown", emailCaptureSubscribed: "sparkela:email-capture:subscribed", consent: "sparkela:consent:v1" }` (alle sleutels al in 3a, zodat B1, C2a, C3 en D4 niets toevoegen) | 3a/A1 |
+| `lib/cn.ts`, `lib/hooks/useNow.ts`, `lib/hooks/useAfterLoad.ts`, `lib/hooks/useMediaQuery.ts`, `lib/hooks/useMounted.ts`, `lib/hooks/useLatch.ts` | Hulpjes (port CORVANE, `sparkela:`-sleutels); `useLatch(value)` blijft `true` zodra `value` één keer `true` was (lazy eilanden blijven gemount) | 3a/A1 |
 | `lib/brand-colors.ts` | Hexwaarden voor plekken zonder CSS (manifest, OG, logoscript, `themeColor`) | 3a/A1 |
 | `lib/commerce/types.ts` | `CatalogSource`, `CartAdapter`, `CommerceProvider`, cart-request-typen (§7.1) | 3a/A1 |
 | `lib/dates.ts` (+ `lib/dates.test.ts`) | Datumlogica (§9) | 3b/B3 |
@@ -338,19 +340,20 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `lib/catalog.ts` (+ test) | Puur: tags, badges, zichtbaarheid, collectieregels, filter, sorteer, zoeken, `needsHygieneSeal`, `materialForVariant` (§7.2) | 4-6/C2a |
 | `lib/shop-data.ts` | Cached samenstelling: catalogus + klok (§7.2) | 4-6/C2a |
 | `lib/commerce/index.ts` | Provider kiezen; cached `getProducts`, `getProduct`; gewone `getCollection`, `search` | 4-6/C2a |
-| `lib/commerce/local.ts` | Lokale catalogusprovider | 4-6/C2a |
+| `lib/commerce/local-data.ts` | Puur, synchroon, geen `server-only`: `buildLocalProducts(): Product[]` (de 26 producten uit `content/products.ts` als domeinproducten); gedeeld door de provider en `tests/fixtures/local-catalog.ts` (beslissing 140) | 4-6/C2a |
+| `lib/commerce/local.ts` | Lokale catalogusprovider (`server-only`); `getProducts()` geeft `buildLocalProducts()` | 4-6/C2a |
 | `lib/commerce/collections.ts` | `buildCollection(definition, products, now, drops)` op basis van regels (gedeeld) | 4-6/C2a |
 | `lib/commerce/cart/local-adapter.ts` | `CartAdapter` voor `local` (client-veilig, geen `server-only`) | 4-6/C2a |
 | `lib/commerce/cart/shopify-adapter.ts` | `CartAdapter` voor `shopify`: `fetch` naar `/api/cart` (client-veilig) | 4-6/C2b |
 | `lib/commerce/cart-gate.ts` (+ test) | Puur: mag deze toevoeging nu (prelaunch, drop-fase, cookies)? (§7.4) | 4-6/C2b |
-| `lib/commerce/shopify/config.ts` | API-versie, endpoints, tokens (§16.1); al in 3a, omdat C1 (`admin.ts`) en C2b hem allebei gebruiken | 3a/A1 |
-| `lib/commerce/shopify/client.ts` | `storefront<T>()`, fouten, retry, timeout | 4-6/C2b |
+| `lib/commerce/shopify/config.ts` | API-versie, endpoints, tokens (§16.1), `ShopifyError` (§16.2); al in 3a, omdat C1 (`admin.ts`) en C2b hem allebei gebruiken | 3a/A1 |
+| `lib/commerce/shopify/client.ts` | Alleen Storefront: `storefront<T>()`, retry, timeout | 4-6/C2b |
 | `lib/commerce/shopify/queries.ts` | GraphQL-fragmenten en queries | 4-6/C2b |
 | `lib/commerce/shopify/mutations.ts` | Cart-mutaties | 4-6/C2b |
 | `lib/commerce/shopify/mappers.ts` (+ test) | Shopify → domein, puur | 4-6/C2b |
 | `lib/commerce/shopify/catalog.ts` | Shopify-catalogusprovider | 4-6/C2b |
 | `lib/commerce/shopify/cart.ts` | Cart-operaties voor `/api/cart` | 4-6/C2b |
-| `lib/commerce/shopify/admin.ts` (+ test) | Admin API alleen voor `/api/subscribe` en `/api/subscribe/confirm`; `getAdminToken()` (client credentials) | 4-6/C1 |
+| `lib/commerce/shopify/admin.ts` (+ test) | Admin API alleen voor `/api/subscribe` en `/api/subscribe/confirm`; `getAdminToken()` (client credentials) en de enige Admin-client `adminGraphql<T>()` (§16.2) | 4-6/C1 |
 | `lib/commerce/shopify/webhooks.ts` (+ test) | HMAC-controle, topic → tags | 4-6/C2b |
 | `lib/commerce/commerce.test.ts` | Providerkeuze, lokale provider, collectieregels | 4-6/C2a |
 | `lib/early-access.ts` (+ test) | Token maken en controleren (Web Crypto) | 4-6/C1 |
@@ -382,7 +385,8 @@ Twee soorten bestanden. **Data en config** (de lijst uit brief §7 plus `assets.
 | `tests/unit/api-forms.test.ts` | Formulierroutes, incl. `/api/subscribe/confirm` | 4-6/C1 |
 | `tests/unit/contrast.test.ts` | WCAG-ratio's van §4.10 | 3b/B2 |
 | `tests/e2e/fixtures.ts` en specs | Playwright (§19.2) | 10-11/E2 |
-| `tests/unit/og.test.ts`, `tests/fixtures/og-photo.jpg` | OG rendert een JPEG-foto niet transparant; `ogPhotoUrl()` zet `format=jpg` (§17.3) | 10-11/E1 |
+| `tests/unit/og.test.ts`, `tests/fixtures/og-photo.jpg` | OG rendert een JPEG-foto niet transparant; `ogPhotoUrl()` zet `format=jpg` en geeft `null` bij WebP (§17.3) | 10-11/E1 |
+| `tests/unit/robots.test.ts` | `robots()` volgens §18.1 | 10-11/E1 |
 | `docs/PLAN.md`, `docs/DECISIONS.md` | Dit plan en beslissingen | fase 2 |
 | `docs/METAFIELDS.md`, `docs/ASSETS.md` | Shopify-inrichting (metafields uit §6.4, tags, collecties, kortingen en hun combinaties uit §16.6) en de shotlist voor Linde (uit §17.2 en `content/assets.ts`, met bestandsnamen en maten). Al met de wachtlijst, zodat Tristan en Linde vanaf 30 oktober kunnen werken (beslissing 122) | 4-6/C4; 12/F1 werkt bij |
 | `docs/COMPLIANCE.md`, `docs/TODO-LAUNCH.md` | Oplevering (TODO-LAUNCH volgens §16.9) | 12/F1 |
@@ -732,7 +736,7 @@ Alle tekst die bezoekers zien staat in `content/`. Componenten importeren copy, 
 | --- | --- | --- | --- |
 | `content/site.ts` | `site` | `SiteConfig` | Merk, `launchAt`, contact, bedrijfsgegevens (placeholders), socials, betaalmethoden, btw-teksten, drempels, badges, USP's, consenttekst, Club-belofte, hygiëneregel, e-mailpopup-config, analytics-config |
 | `content/navigation.ts` | `mainNav`, `mobileNav`, `footerNav`, `legalNav` | `NavItem[]`, `MobileNavConfig`, `FooterColumn[]`, `NavLink[]` | §2.5 |
-| `content/products.ts` | `products` | `LocalProductInput[]` | 24 testproducten plus `cadeauverpakking` en `cadeaukaart` (§5.4). Alleen `lib/commerce/local.ts` en tests importeren dit bestand |
+| `content/products.ts` | `products` | `LocalProductInput[]` | 24 testproducten plus `cadeauverpakking` en `cadeaukaart` (§5.4). Alleen `lib/commerce/local-data.ts` en tests importeren dit bestand |
 | `content/collections.ts` | `collections` | `CollectionDefinition[]` | §2.3, met titel, intro, SEO, optionele stylingtegel |
 | `content/stacks.ts` | `stacks` | `Stack[]` | Lindes stacks van 3 (§5.5) |
 | `content/offers.ts` | `welcomeCode`, `stackDiscount`, `giftWrap`, `giftCards`, `campaigns` | `WelcomeCodeOffer`, `StackDiscountOffer`, `GiftWrapOffer`, `GiftCardOffer`, `Campaign[]` | §12.2 |
@@ -744,15 +748,15 @@ Alle tekst die bezoekers zien staat in `content/`. Componenten importeren copy, 
 | `content/quiz.ts` | `quiz` | `QuizConfig` | §5.7 |
 | `content/home.ts` | `home` | `HomeContent` | Copy van de homesecties (§5.8) |
 | `content/assets.ts` | `assets`, `SUPPLIED` | `AssetManifest`, `ReadonlySet<AssetKey>` | Beeldplekken (§17.2) |
-| `content/legal.ts` | `legalPages`, `legalReviewNotice`, `LegalSlug` | `LegalPageMeta[]`, `string` | Index van `content/legal/*.md` (slug, titel, bestand, `updatedAt` als literal) |
+| `content/legal.ts` | `legalPages`, `legalReviewNotice`, `LegalSlug`, `cookieTable` | `LegalPageMeta[]`, `string`, `CookieTable` | Index van `content/legal/*.md` (slug, titel, bestand, `updatedAt` als literal); `cookieTable` (`{ caption; columns: { name; purpose; duration; when }; rows: CookieRow[]; settingsLabel: "Cookie-instellingen" }`) voor `/cookies` en het label van `CookieSettingsButton` (C1 in 4-6, beslissing 138) |
 | `content/copy/shared.ts` | `sharedCopy` | `SharedCopy` | §5.9 (volledig vastgelegd) |
 | `content/copy/forms.ts` | `formsCopy` | `FormsCopy` | Aanmelden, bevestigen, herroepen, contact, wachtlijst, validatie, status |
-| `content/copy/chrome.ts` | `chromeCopy` | `ChromeCopy` | Promobalk, header, zoeken, menu, footer, consent, cookietabel |
+| `content/copy/chrome.ts` | `chromeCopy` | `ChromeCopy` | Promobalk, header, zoeken, menu, footer, consentbanner |
 | `content/copy/cart.ts` | `cartCopy` | `CartCopy` | Drawer, regels, totalen, cadeauverpakking, boodschap, upsell, meldingen, fouten, lege staat, quick-add |
-| `content/copy/product-card.ts` | `cardCopy` | `CardCopy` | Sorteerlabels, gridlabels |
+| `content/copy/product-card.ts` | `cardCopy` | `CardCopy` | Gridlabels, kaart-aria (sorteerlabels: `sharedCopy.vocab.sort`) |
 | `content/copy/collection.ts` | `collectionCopy` | `CollectionCopy` | Filters, zoeken, drops, stacks, cadeaukaarten |
 | `content/copy/pdp.ts` | `pdpCopy` | `PdpCopy` | Productpagina, ringmaatgids, claims, GPSR, `care.default` |
-| `content/copy/pages.ts` | `pagesCopy` | `PagesCopy` | Over Sparkela, Club, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout, 404 |
+| `content/copy/pages.ts` | `pagesCopy` | `PagesCopy` | Over Sparkela, Club, FAQ-pagina, Spark Finder-pagina, popup, account, demo-checkout |
 
 Elk copytype staat in zijn eigen bestand (`export interface FormsCopy { … }` naast `export const formsCopy: FormsCopy = { … }`). De eigenaar van het bestand in die golf mag sleutels toevoegen; sleutels uit §5.2 en §5.9 hernoemt niemand.
 
@@ -827,7 +831,7 @@ export const site: SiteConfig = {
   club: { title: "Als eerste bij elke drop. Plus 10% op je eerste bestelling.", cta: "Ik doe mee", benefits: [/* 3 short lines */] },
   emailCapture: { enabled: true, delayMs: 8000, cooldownDays: 7, pillLabel: "Kies je spark", title: "Kies je spark.", intro: "Elke kaart geeft 10% op je eerste bestelling.", reveal: "WELKOM10 · 10% op je eerste bestelling" },
   analytics: { enabled: process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === "true", gtmId: process.env.NEXT_PUBLIC_GTM_ID ?? null },
-  flags: { realSalesData: false, showReviews: false },
+  flags: { realSalesData: false, showReviews: false, hideMissingOptionalMedia: process.env.VERCEL_ENV === "production" },   // last: PhotoStrip and VideoRow render nothing in production while none of their files is SUPPLIED (beslissing 127)
 };
 ```
 
@@ -1152,7 +1156,7 @@ export interface BadgeContext {
 - `uitverkocht` (status): `!availableForSale`.
 - `laatste-stuks`: `totalQuantityAvailable !== null && 0 < totalQuantityAvailable <= lowStockThreshold`.
 - `limited`: product heeft een `drop:`-tag en die drop is publiek live (`startsAt <= now < endsAt`).
-- `early-access` (status): drop in de early-access-fase (alleen op de droppagina en PDP; nooit in lijsten, want daar staat het product dan niet).
+- `early-access` (status): drop in de early-access-fase (alleen op de droppagina; nooit in lijsten, want daar staat het product dan niet). Op de PDP tonen `limited` en `early-access` alleen via `DropStatusLabel`; `getProductBadges` laat ze weg (beslissing 134).
 - `sale`: `priceDisplay(variant).showCompareAt` is waar (§8.6).
 - `nieuw`: tag `nieuw`.
 - `bestseller`: metafield `bestseller` en `realSalesData` (bij de start `false`, dus nooit).
@@ -1420,6 +1424,8 @@ export interface MobileNavConfig { primary: NavLink[]; groups: NavGroup[]; servi
 export interface FooterColumn { title: string; links: NavLink[] }
 export type MobileNavFeature = { kind: "drop"; drop: Drop } | { kind: "stack"; stack: Stack; products: CatalogProduct[] };
 export interface Crumb { label: string; href?: string }   // last crumb without href = current page
+/** Result of priceDisplay() in lib/pricing.ts; prop of Price (components/ui). Here so B2 and B3 can build in parallel (beslissing 137). */
+export interface PriceDisplay { price: Money; compareAt: Money | null; lowest30d: Money | null; showCompareAt: boolean }
 
 export type AssetKey = string;   // "hero.desktop", "momenten.festival", "fotostrook.01", "video.01", "stacks.<slug>", "drops.<slug>"
 export interface ImageAsset { key: AssetKey; src: string; aspect: "4:5" | "3:4" | "16:9" | "1:1" | "9:16"; width: number; height: number; alt: string; label: string; brief: string }
@@ -1552,14 +1558,14 @@ Elke functie is `'use cache'`, leest de tijd met `serverNow()` uit `lib/clock.ts
 ```ts
 export async function getShopProducts(): Promise<CatalogProduct[]>;         // listable, sorted uitgelicht, with badges
 export async function getShopProduct(handle: string): Promise<Product | null>; // any product incl. drop products (proxy gates)
-export async function getProductBadges(handle: string): Promise<BadgeId[]>;   // PDP labels (ProductInfo): deriveBadges incl. op-voorraad and early-access
+export async function getProductBadges(handle: string): Promise<BadgeId[]>;   // PDP labels (ProductInfo): deriveBadges incl. op-voorraad, WITHOUT limited and early-access (DropStatusLabel owns those, exact to the second; beslissing 134)
 export async function getShopCollection(handle: string): Promise<ShopCollection | null>; // definition + CatalogProduct[] + availableFacets
 export async function getCatalogProducts(): Promise<CatalogProduct[]>;      // listable + drop products in early access (listable: false) + cadeauverpakking + cadeaukaart
-export async function getFeaturedDrop(): Promise<{ drop: Drop; phase: DropPhase } | null>; // live drop, else next drop within 14 days of earlyAccessAt
+export async function getFeaturedDrop(): Promise<{ drop: Drop; phase: DropPhase } | null>; // drop live at the server clock, else the next drop whose startsAt is within 14 days (DropBanner keeps it hidden until startsAt, §12.4)
 export async function getDropData(slug: DropSlug): Promise<{ drop: Drop; phase: DropPhase; products: CatalogProduct[] } | null>; // every product of the drop, in any phase (the proxy gates the page)
 export async function getVisibleStacks(): Promise<Array<{ stack: Stack; products: CatalogProduct[] }>>;
 export async function getRecommendedFor(handle: string, limit: 2 | 3 | 4): Promise<CatalogProduct[]>; // "Maak de look af"
-export async function getStackOptionsFor(handle: string): Promise<{ candidates: CatalogProduct[]; defaultPicks: [string, string] | null }>; // StackPicker
+export async function getStackOptionsFor(handle: string): Promise<{ candidates: CatalogProduct[]; defaultPicks: [string, string] | null }>; // StackPicker; defaultPicks are VARIANT ids, null only with fewer than 2 candidates
 export async function getShipSchedule(): Promise<ShipLabelEntry[]>;           // §10.5, cacheLife("hours")
 export async function getSitemapProducts(): Promise<Array<{ handle: string }>>;
 export async function getShopProductsForParams(): Promise<Array<{ handle: string }>>; // every product except cadeauverpakking; empty catalog → [{ handle: NO_PRODUCTS_HANDLE }] (never [])
@@ -1568,7 +1574,7 @@ export const NO_PRODUCTS_HANDLE = "__geen-producten__";   // sentinel: getShopPr
 
 "Maak de look af" (`getRecommendedFor`): eerst de andere stukken uit een stack in `content/stacks.ts` die dit product bevat, dan producten met dezelfde vibe en een ander type, dan Lindes favorieten; alleen listable en beschikbaar, zonder het product zelf, zonder dubbelen.
 
-Stack-kiezer (`getStackOptionsFor`): `candidates` zijn de listable, beschikbare oorbellen en armbanden behalve het product zelf; `defaultPicks` zijn de andere twee stukken van de eerste stack in `content/stacks.ts` met dit product, anders `null`.
+Stack-kiezer (`getStackOptionsFor`, beslissing 129): `candidates` zijn de listable, beschikbare oorbellen en armbanden behalve het product zelf. `defaultPicks` zijn **variant-id's**: van de andere twee stukken van de eerste stack in `content/stacks.ts` met dit product, elk met `defaultVariant(p)` (eerste beschikbare variant), als beide stukken kandidaat zijn. Anders (geen stack, zoals bij `bo-statement-druppels`, `fenna-retro-schijfjes`, `jet-vonk-oorbellen`, `mae-mini-hoops` en `jade-stipjes`, of een stuk van de stack uitverkocht) de twee kandidaten met de laagste `featuredRank` van het andere stack-type (oorbel → armbanden, armband → oorbellen), aangevuld met het eigen type als het andere er minder dan twee heeft. `null` alleen bij minder dan twee kandidaten; dan toont `StackPicker` alleen "Los".
 
 **Dropproduct vóór de publieke start** (fase `verborgen` of `early-access` op de server-klok, beslissing 107): `getRecommendedFor` en `getStackOptionsFor` nemen alleen beschikbare stukken uit dezelfde drop, en `defaultPicks` komt uit de stack met die `dropSlug`. Tijdens early access op 26 november is het nog prelaunch en weigert de cart-gate gewone producten (§7.4); zo werken "Voeg de stack toe" en de quick-adds in "Maak de look af" op de PDP's van Holiday Sparkle.
 
@@ -1675,7 +1681,7 @@ export function canAddToCart(items: GateItem[], ctx: GateContext): { ok: true } 
 | Tag | Gezet door | Ververst door |
 | --- | --- | --- |
 | `catalog` | alle cataloguslezingen | handmatig (`/api/revalidate` met `REVALIDATE_SECRET`) |
-| `products` | `getProducts`, `getProduct`, alles in `lib/shop-data.ts` | webhooks `products/*`, `inventory_levels/update` en `collections/*` (de volgorde en het lidmaatschap van `alle` bepalen `getProducts()`) |
+| `products` | `getProducts`, `getProduct`, alles in `lib/shop-data.ts` | webhooks `products/*`, `inventory_levels/update` en `collections/*` (de volgorde en het lidmaatschap van `alle` bepalen `getProducts()`); bij `products/update` en voorraad met `"max"` (§7.6) |
 | `product:<handle>` | `getProduct(handle)` | webhook `products/update` en `products/delete` (handle uit de payload) |
 | `collections` | `getShopCollection`, `getCatalogProducts` | webhooks `collections/*` en `products/*` |
 | `klok` | `getServerNow`, alles in `lib/shop-data.ts` | `cacheLife(clockLife(now))` (§10.4) en handmatig |
@@ -1715,12 +1721,13 @@ export function tagsForWebhook(topic: string, payload: unknown): Array<{ tag: st
 | `X-Shopify-Topic` | Tags | Profiel |
 | --- | --- | --- |
 | `products/create` | `products`, `collections` | `{ expire: 0 }` |
-| `products/update` | `products`, `product:<payload.handle>`, `collections` | `{ expire: 0 }` |
+| `products/update` | `product:<payload.handle>` met `{ expire: 0 }`; `products` en `collections` met `"max"` | gemengd (beslissing 130) |
 | `products/delete` | `products`, `collections` (payload heeft alleen `id`) | `{ expire: 0 }` |
 | `inventory_levels/update` | `products` | `"max"` |
 | `collections/create`, `collections/update`, `collections/delete` | `collections`, `products` | `{ expire: 0 }` |
 
 - `{ expire: 0 }` zorgt dat het volgende verzoek blokkeert en verse data krijgt (gemeten, digest E6). Zo staat een wijziging van inhoud, prijs of volgorde binnen een minuut op de site.
+- **`products/update` komt ook bij elke voorraadwijziging**, vaak twee keer per wijziging (Shopify Community; `includeFields` voorkomt dat niet). Met `{ expire: 0 }` op `products` zou elke bestelling elke pagina laten blokkeren. Daarom: `product:<handle>` met `{ expire: 0 }` (de PDP van dat product is meteen vers; tags van binnenste caches gaan mee naar de buitenste) en `products`/`collections` met `"max"` (lijsten zijn één verzoek later vers). Een prijswijziging staat dus meteen op de PDP en na één extra verzoek in de lijsten (TODO-LAUNCH punt 9, beslissing 130). Create, delete, collectietopics en handmatige revalidatie houden `{ expire: 0 }`.
 - `inventory_levels/update` komt bij elke bestelling. Daarom `"max"` (stale-while-revalidate): het volgende verzoek krijgt nog de oude pagina en ververst op de achtergrond, het verzoek daarna is vers (beslissing 85). Zo blokkeert niet elke pagina op de lanceringsavond na elke bestelling. Voorraad in de cart en de checkout komt altijd vers uit Shopify; alleen het label "Laatste stuks" kan één verzoek achterlopen.
 - `updateTag` werkt niet in route handlers.
 
@@ -1779,7 +1786,7 @@ export function progressFromShopifyCart(cart: Omit<Cart, "progress">): CartProgr
 export function stackQuote(pieces: Array<{ price: Cents; type: ProductType | null }>, config?: PricingConfig):
   { subtotal: Cents; discount: Cents; total: Cents; eligibleUnits: number; active: boolean };   // PDP stack tile
 
-export interface PriceDisplay { price: Money; compareAt: Money | null; lowest30d: Money | null; showCompareAt: boolean }
+// PriceDisplay lives in lib/types.ts (§6.12, 3a/A1), so Price (3b/B2) can type against it before this file exists.
 export function priceDisplay(variant: Pick<Variant, "price" | "compareAtPrice">, laagstePrijs30d: Money | null): PriceDisplay;
 
 export function nextPricingBoundary(now: number, config?: PricingConfig): number | null;          // start/end of gift wrap windows
@@ -1899,10 +1906,9 @@ export function earlyAccessAt(drop: Drop): number;                              
 export function getDropPhase(drop: Drop, now: number): DropPhase;
 export function getActiveCampaign(now: number, campaigns?: Campaign[]): Campaign | null;      // first active by startsAt
 
-export interface CountdownParts { totalMs: number; days: number; hours: number; minutes: number; seconds: number }   // not "Countdown": that is the component
-export function getCountdown(now: number, target: IsoDateTime | number): CountdownParts;      // clamped at 0
-export function formatCountdown(c: CountdownParts): string;                                        // "2d 5u" (> 24 h) | "05:12:09" (≤ 24 h)
-export function formatCountdownSr(target: IsoDateTime): string;                               // "Eindigt op maandag 30 november om middernacht"
+// CountdownParts, getCountdown, formatCountdown and phaseIndex live in lib/schedule.ts (3a/A1, §10.7); lib/dates.ts re-exports them.
+export { type CountdownParts, getCountdown, formatCountdown, phaseIndex } from "@/lib/schedule";
+export function formatCountdownSr(target: IsoDateTime, kind: "start" | "end"): string;      // start: "Begint op vrijdag 27 november om 00.00 uur" · end: "Eindigt op maandag 30 november om middernacht"
 export function formatEndLabel(endsAt: IsoDateTime): string;                                  // 00:00 → "t/m 30 november"; else "tot 28 februari 23.59 uur"
 export function formatStartLabel(startsAt: IsoDateTime): string;                              // "vrijdag 5 februari om 19.00 uur"
 export function formatDateTimeNl(now: number): string;                                        // "26 november 2026 om 14.03 uur"
@@ -1922,7 +1928,6 @@ export function promoSchedule(from: number, days: number, input?: { campaigns: C
 
 export function timeBoundaries(): number[];       // sorted, unique: launchAt, vat.switchAt, every campaign start/end, every drop earlyAccessAt/startsAt/endsAt (+ PROMO_* offsets), gift wrap windows
 export function nextBoundary(now: number): number | null;
-export function phaseIndex(boundaries: number[], now: number): number;   // number of boundaries <= now
 ```
 
 ### 9.2 Regels
@@ -1996,6 +2001,8 @@ Beleid (beslissing 54): Goede Vrijdag is een werkdag. Bevrijdingsdag (5 mei) is 
 | 26 | `formatEndLabel("2026-12-01T00:00:00+01:00")` | "t/m 30 november" |
 | 27 | `buildShipSchedule` vanaf do 2026-12-24T09:00+01:00 | eerste entry "vandaag"; wissel op 2026-12-24T16:00+01:00 naar "maandag"; op 2026-12-27T00:00+01:00 naar "morgen" (zondag, verzenddag is morgen); op 2026-12-28T00:00+01:00 naar "vandaag"; op 2026-12-28T16:00+01:00 naar "morgen" |
 | 28 | `nextBoundary` 2026-11-20T12:00+01:00 | 2026-11-26T00:00:00+01:00 (early access Holiday Sparkle) |
+| 29 | `formatCountdownSr("2026-11-27T00:00:00+01:00", "start")` / `formatCountdownSr("2026-12-01T00:00:00+01:00", "end")` | "Begint op vrijdag 27 november om 00.00 uur" / "Eindigt op maandag 30 november om middernacht" |
+| 30 | `formatStartLabel("2027-02-05T19:00:00+01:00")` | "vrijdag 5 februari om 19.00 uur" |
 
 ### 9.5 Drops: fasen
 
@@ -2076,7 +2083,7 @@ export interface TimeSwitchProps {
   boundaries: number[];
   /** Length must be boundaries.length + 1. Rendered on the server; may contain server components passed as nodes. */
   variants: ReactNode[];
-  /** Index from the server clock; used for the static HTML. Defaults to phaseIndex(boundaries, useServerNow()). */
+  /** Index from the server clock; used for the static HTML. Defaults to phaseIndex(boundaries, useServerNow()) (phaseIndex from lib/schedule.ts). */
   serverIndex?: number;
   as?: "div" | "span";
   className?: string;   // must reserve the height of the tallest variant (min-h) to avoid CLS
@@ -2104,11 +2111,11 @@ Werking (volgt `node_modules/next/dist/docs/01-app/02-guides/preventing-flash-be
 | --- | --- | --- | --- |
 | Btw-regel (footer, cart, PDP) | `VatNotice` → `TimeGate at={site.vat.switchAt}` | 1 | `vat.before`, `vat.after` |
 | Promobalk | `AnnouncementBar` | uit `promoSchedule(serverNow, 60 dagen)` | per segment `CampaignMessage`, `DropMessage` of `UspBar` |
-| Dropbanner op home | `DropBanner` | `startsAt`, `endsAt` | countdown naar start / "Nu live" / niets |
+| Dropbanner op home | `DropBanner` | `startsAt`, `endsAt` | niets / "Nu live" + countdown naar `endsAt` / niets (§12.4) |
 | Label op PDP van dropproduct | `DropStatusLabel` | `startsAt`, `endsAt` | "Early access" / "Limited" / geen |
 | Verzenddag (leverbalk, PDP, cart) | `ShipLabel` | `getShipSchedule()` (14 dagen) | tekst per entry; na de laatste entry de altijd-ware tekst `sharedCopy.deliveryBar.fallback` (of `sharedCopy.deliveryEstimate.fallback` voor `estimateText`) |
 | Cadeauverpakking-prijs (PDP, cart) | `GiftWrapPrice` | `giftWrap.freeWindows` | "+€1,95" / "Gratis in december" |
-| Lanceringscadeau-regel in cart | `CampaignCartNote` | campagnevenster | niets / "Cadeautje bij je bestelling" |
+| Lanceringscadeau-regel in cart | `CampaignCartNote` | campagnevenster | niets / `cartCopy.campaignNote` ("Bij deze bestelling zit een cadeautje van ons.") / niets |
 
 `promoSchedule(from, days)` staat in `lib/dates.ts` (§9.1) en geeft `PromoEntry[]`; de server rendert per entry de variant. `AnnouncementBar` gebruikt `promoSchedule(await getServerNow(), 60)`.
 
@@ -2119,14 +2126,15 @@ Werking (volgt `node_modules/next/dist/docs/01-app/02-guides/preventing-flash-be
 export interface CountdownProps {
   target: IsoDateTime;                 // fixed date from content/drops.ts or content/offers.ts, never computed
   liveLabel?: string;                  // "Nu live"; without it the countdown renders nothing at 0
-  srLabel: string;                     // formatCountdownSr(target), visible to screen readers only
-  fallbackLabel: string;               // fixed text shown before mount, e.g. formatEndLabel(target)
+  srLabel: string;                     // formatCountdownSr(target, kind), visible to screen readers only
+  fallbackLabel: string;               // fixed text before mount: formatEndLabel(target) for an end, formatStartLabel(target) for a start
   tone?: "op-donker" | "op-roest" | "licht";
   showPause?: boolean;                 // default true; hidden with reduced motion (then the fixed label shows)
 }
 ```
 
 - Vóór mount: `fallbackLabel` in dezelfde vaste box (`tabular`, `min-w` per formaat).
+- **Start of einde.** Een countdown naar `startsAt` (promobalk `drop-upcoming`, `DropHero`, `DropTeaser`) krijgt `srLabel={formatCountdownSr(startsAt, "start")}` en `fallbackLabel={formatStartLabel(startsAt)}`. Een countdown naar `endsAt` (campagne, `DropBanner`) krijgt `formatCountdownSr(endsAt, "end")` en `formatEndLabel(endsAt)`. Zo zegt een timer naar een start nooit "Eindigt op" of "t/m".
 - Na mount: tikt elke seconde via `useNow(1000)`, cijfers `aria-hidden`, de `srLabel` als `VisuallyHidden`, geen live region.
 - Pauzeknop "Aftellen pauzeren" met `aria-pressed` en een vast label (WCAG 2.2.2). Gepauzeerd: de vaste eindtekst.
 - Bij 0: `liveLabel` of niets. Nooit negatief, nooit opnieuw beginnen.
@@ -2140,7 +2148,17 @@ Port van CORVANE `lib/hooks/useNow.ts` (gedeelde klok per interval, `null` op de
 export const MAX_TIMEOUT_STEP_MS = 24 * 60 * 60 * 1000;
 /** Calls cb once, at or just after `at` (epoch ms). Waits in steps of at most MAX_TIMEOUT_STEP_MS and re-checks now() each step. Returns a cancel function. */
 export function scheduleAt(at: number, cb: () => void, now?: () => number /* Date.now */): () => void;
+
+/** Number of boundaries <= now (TimeSwitch index). */
+export function phaseIndex(boundaries: number[], now: number): number;
+export interface CountdownParts { totalMs: number; days: number; hours: number; minutes: number; seconds: number }   // not "Countdown": that is the component
+/** Clamped at 0. A string target is an ISO literal with offset from content (validated by the content tests). */
+export function getCountdown(now: number, target: string | number): CountdownParts;
+/** "2d 5u" (> 24 h) | "05:12:09" (≤ 24 h). Units come from the caller (Countdown passes sharedCopy.countdown), so this module has no content import. */
+export function formatCountdown(c: CountdownParts, units: { days: string; hours: string }): string;
 ```
+
+Deze vier staan in golf 3a (beslissing 137), zodat `TimeSwitch` en `Countdown` (3b/B2) niet wachten op `lib/dates.ts` (3b/B3), dat ze opnieuw exporteert.
 
 `TimeSwitch`, `Countdown` (voor de eindgrens), de lokale cart-adapter en elke andere timer naar een tijdstip gebruiken `scheduleAt`. `lib/schedule.test.ts` (fake timers): een grens over 40 dagen roept `cb` niet binnen 1 s aan, wel precies op de grens; een grens in het verleden roept `cb` direct aan; annuleren werkt.
 
@@ -2216,13 +2234,14 @@ Elke response krijgt `x-sparkela-gate: open | wachtlijst | preview | early-acces
 - Playwright start één productieserver met `SPARKELA_TEST_CLOCK=1` en `SPARKELA_TEST_NOW=2026-11-27T12:00:00+01:00` (vrijdag van de lancering, shop open, Holiday Sparkle live, lanceringscadeau actief). Dezelfde variabelen staan aan tijdens `next build`, zodat de server-klok in de statische pagina's ook die tijd heeft.
 - Prelaunch- en early-access-tests sturen de header `x-sparkela-test-now: 2026-11-20T12:00:00+01:00` (of `2026-11-26T12:00:00+01:00`) mee met `test.use({ extraHTTPHeaders })`. Alleen de proxy leest die header.
 - **Browserklok standaard op `TEST_NOW`.** De basis-`test` in `tests/e2e/fixtures.ts` heeft de optie `clockAt` (standaard `TEST_NOW`). Vóór elke `goto` doet de fixture `page.clock.install({ time: clockAt })` en daarna `page.clock.resume()`, zodat de browser dezelfde tijd heeft als de statische HTML en de tijd gewoon doorloopt. Specs die de tijd zelf sturen (popup, promobalk, cadeauverpakking, drops, prelaunch, early access) zetten `test.use({ clockAt: "…" })` of `clockAt: null` en installeren de klok zelf. Zonder dit zou de browser (echte tijd, vóór de lancering) na hydration andere varianten tonen dan de server.
-- **Wat E2E niet dekt.** De testbuild staat op `TEST_NOW` (drop live). Wat de server-klok op 26 november doet (dropproducten in `getCatalogProducts` met `listable: false`, `getStackOptionsFor` en `getRecommendedFor` uit de drop, `getDropData` met fase `early-access`), dekt `lib/commerce/commerce.test.ts` met `serverNow()` gemockt op `2026-11-26T12:00:00+01:00`, plus een test van de lokale cart-adapter die een dropvariant met `listable: false` houdt. `early-access.spec.ts` dekt proxy, cart-gate en browser.
+- **Wat E2E niet dekt.** De testbuild staat op `TEST_NOW` (drop live). Wat de server-klok op 26 november doet (dropproducten in `getCatalogProducts` met `listable: false`, `getStackOptionsFor` en `getRecommendedFor` uit de drop, `getDropData` met fase `early-access`), dekt `lib/commerce/commerce.test.ts` met `serverNow()` gemockt op `2026-11-26T12:00:00+01:00`, plus een test van de lokale cart-adapter die een dropvariant met `listable: false` houdt. De cart-gate draait alleen in `/api/cart` (Shopify-provider); de E2E-build gebruikt de lokale provider, waar de adapter geen gate kent. Weigeringen dekken `lib/commerce/cart-gate.test.ts` en `tests/unit/api-cart.test.ts`; `early-access.spec.ts` dekt de proxy, de browser en lokaal toevoegen, met alleen positieve stappen (geen weigering verwachten).
 - Unit: `tests/unit/proxy.test.ts` roept `proxy()` aan met `new NextRequest(url, { headers })` en controleert rewrite (`x-middleware-rewrite`), redirects en cookies; matcher via `unstable_doesProxyMatch` uit `next/experimental/testing/server`.
 
 ### 11.8 Launch-dag
 
 - Om 00.00 uur stopt de proxy met herschrijven. De shoppagina's zijn al gebouwd en gecachet, dus er is geen deploy nodig en de shop flitst nooit vóór de wachtlijst (en andersom).
-- Wie de wachtlijst open had: één klik of herlaad geeft de shop. De wachtlijstpagina toont een `TimeGate at={site.launchAt}` met na de grens de regel "We zijn live." en een knop "Naar de shop" in dezelfde hoogte, zonder layout shift.
+- Wie de wachtlijst open had: één klik of herlaad geeft de shop. De wachtlijstpagina toont een `TimeGate at={site.launchAt}` met na de grens de regel "We zijn live." en een knop "Naar de shop" in dezelfde hoogte, zonder layout shift. Die knop is een gewone `<a href="/">` (met `buttonClasses({ variant: "primair" })`, geen `next/link`), zodat hij altijd een volledige pagina laadt.
+- **Client router cache** (beslissing 136). Juridische pagina's en de teaser tonen tijdens prelaunch de shop-chrome, en hun `<Link>`s prefetchen shoproutes. De proxy beantwoordt die prefetches met de wachtlijst, en de browser bewaart die per URL tot 5 minuten (digest A3, E2). Wie om 23.58 uur `/privacy` open heeft en net na 00.00 uur op "Oorbellen" klikt, kan dus nog tot 5 minuten de wachtlijst zien; herladen lost het op. `router.refresh()` helpt niet: dat wist alleen de cache van de huidige route. Dit accepteren we: het gaat om een paar bezoekers op een juridische pagina rond middernacht, en de wachtlijst zelf (de pagina waar bijna iedereen op staat) gebruikt een gewone link.
 - Holiday Sparkle start op hetzelfde moment (`startsAt = launchAt`); de lijsten met dropproducten verversen via `clockLife` binnen enkele minuten, de banner en labels exact.
 - Checklist (komt in `docs/TODO-LAUNCH.md`, §16.9): preview-link vooraf getest; alle producten actief en gepubliceerd, collectie `alle` gevuld, ook met de dropproducten (de shop toont anders een lege catalogus); `EARLY_ACCESS_SECRET` gezet; dropproducten uiterlijk 24 november gepubliceerd en `products` ververst; early-access-link verstuurd op 25 november; op 26 november 00.05 uur de early-access-link, een dropproduct in de cart en de checkout getest; op 27 november 00.05 uur `/`, een collectie, een PDP, de cart en de checkout-redirect gecontroleerd; zo nodig `klok` handmatig verversen.
 
@@ -2330,10 +2349,13 @@ De server rendert alle segmenten van `promoSchedule(serverNow, 60)`; `TimeSwitch
 
 ### 12.4 Dropbanner (home, sectie 7)
 
-- Server: `getFeaturedDrop()` kiest de drop die live is, anders de eerstvolgende drop waarvan `earlyAccessAt` binnen 14 dagen ligt. Geen drop → geen sectie.
-- Vlak `bg-roest` met `data-vlak="roest"`: naam als H2 (`drop.banner.title`), korte zin (`drop.banner.text`), `Countdown` naar `startsAt` met `liveLabel="Nu live"`, en een bot-witte knop (`Button variant="op-roest"`) met `drop.banner.cta` naar `/drops/<slug>`.
-- Vóór de start zegt de knop "Meld je aan voor early access" en linkt naar `/sparkela-club` (via `TimeGate at={startsAt}`).
-- Na `endsAt` verbergt een `TimeGate` de hele banner. De hoogte wordt dan 0; dat is een verandering na een grens, niet tijdens het laden (geen CLS-meting).
+Brief §7: "Na de start verschijnen de banner en het label Limited". De banner bestaat dus alleen tussen `startsAt` en `endsAt` (beslissing 128). Vóór de start kondigen alleen de promobalk (§12.3, regel 2) en de teaser op `/drops/[slug]/binnenkort` de drop aan.
+
+- Server: `getFeaturedDrop()` geeft de drop die op de server-klok live is, anders de eerstvolgende drop waarvan `startsAt` binnen 14 dagen ligt. Die tweede rendert de server mee, maar verborgen, zodat de banner precies op `startsAt` verschijnt, ook in een open tabblad. Geen drop → geen sectie.
+- `DropBanner` is een `TimeSwitch` met grenzen `[startsAt, endsAt]` en varianten `[niets, banner, niets]`.
+- Banner: vlak `bg-roest` met `data-vlak="roest"`: `Pill tone="outline-op-donker"` met `sharedCopy.countdown.live` ("Nu live"), naam als H2 (`drop.banner.title`), korte zin (`drop.banner.text`), de echte aftelklok (brief §6, blok 7): `Countdown` naar `endsAt` zonder `liveLabel`, met `srLabel={formatCountdownSr(endsAt, "end")}` en `fallbackLabel={formatEndLabel(endsAt)}` (bij Holiday Sparkle "t/m 31 december"), en een bot-witte knop (`Button variant="op-roest"`) met `drop.banner.cta` naar `/drops/<slug>`.
+- De variant "niets" heeft hoogte 0. De banner verschijnt op `startsAt` en verdwijnt op `endsAt`; dat zijn veranderingen na een grens, niet tijdens het laden (geen CLS-meting).
+- `drops.spec.ts` controleert dit (§19.2): op `TEST_NOW` staat de banner met "Nu live" en een timer; op 2026-12-31T23:59:55+01:00 en `runFor(10000)` is hij weg.
 
 ### 12.5 Limited en early access voor de Club
 
@@ -2399,7 +2421,13 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 
 ### 13.3 Tijd (`components/time/`, 3b/B2)
 
-`TimeSwitch`, `TimeGate`, `ClockProvider`/`useServerNow`, `Countdown` en `timeSwitchScript`: zie §10.5 en §10.6. `VatNotice` en `ShipLabel` staan in §13.5 (`components/layout/`, C3), `GiftWrapPrice` en `CampaignCartNote` in §13.7 (`components/cart/`, C3).
+`TimeSwitch`, `TimeGate`, `ClockProvider`/`useServerNow`, `Countdown` en `timeSwitchScript`: zie §10.5 en §10.6.
+
+| Component | S/C | Props | Rendert |
+| --- | --- | --- | --- |
+| `VatNotice` (`components/time/VatNotice.tsx`, 3b/B2) | C | `{ className?: string; tone?: "licht" \| "donker" }` | `TimeGate at={site.vat.switchAt}` met `site.vat.before`/`after`; gebruikt door `MiniFooter` (C1), `Footer`, `CartTotals` (C3) en `ProductInfo` (D2) |
+
+`ShipLabel` staat in §13.5 (`components/layout/`, C3), `GiftWrapPrice` en `CampaignCartNote` in §13.7 (`components/cart/`, C3).
 
 ### 13.4 Media (`components/media/`, 3b/B2)
 
@@ -2418,9 +2446,9 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | `RouteFocus` | C | `{ targetId?: string }` | Focus naar `<main>` na navigatie als focus op body of onzichtbaar is; `usePathname` binnen eigen `<Suspense fallback={null}>` (3a/A2) | `RouteFocus.tsx` |
 | `AnnouncementBar` | S (async) | geen | `data-vlak="donker"`, `bg-donker text-tekst-op-donker`, `min-h-promo`; `TimeSwitch` over het promoschema (§12.3); `print:hidden` | `PromoBar.tsx`, `promo/*` |
 | `UspBar` | C | `{ usps: string[] }` | Mobiel roterend (4 s, pauzeknop, pauze bij hover/focus), vanaf `lg` drie naast elkaar | `promo/UspBar.tsx` |
-| `CampaignMessage` | S | `{ campaign: Campaign }` | Bericht, `Countdown` naar `endsAt` (fallback "t/m 30 november"), link | `promo/CampaignMessage.tsx` |
-| `DropMessage` | S | `{ drop: Drop; state: "upcoming" \| "live" }` | "Nieuwe drop: …" met timer, of "Nu live: …" | nieuw |
-| `Header` | S | geen | Sticky `top-0 z-30 h-header bg-pagina border-b border-rand`; mobiel grid `1fr auto 1fr`: [`MobileNav` + `SearchButton`] [`Logo variant="header"` 120 px, 104 px onder `xs`] [`AccountLink` (vanaf `xs`) + `CartButton`]; vanaf `xl`: [`Logo` 150 px] [`DesktopNav`] [zoeken, account, `CartButton`]. Compacte staat via `HeaderCompactSentinel` (`data-compact` op de header: logo 120 → 104 px, kleinere padding), buitenhoogte blijft gelijk (beslissing 40) | `Header.tsx` |
+| `CampaignMessage` | S | `{ campaign: Campaign }` | Bericht, `Countdown` naar `endsAt` (eind-labels, §10.6: fallback "t/m 30 november"), link | `promo/CampaignMessage.tsx` |
+| `DropMessage` | S | `{ drop: Drop; state: "upcoming" \| "live" }` | "Nieuwe drop: …" met timer naar `startsAt` (start-labels, §10.6), of "Nu live: …" | nieuw |
+| `Header` | S (async) | geen | Haalt `getFeaturedDrop()` en `getVisibleStacks()` voor de `MobileNavFeature` (§2.5): de drop alleen bij `phase === "live"`, anders de eerste stack. Sticky `top-0 z-30 h-header bg-pagina border-b border-rand`; mobiel grid `1fr auto 1fr`: [`MobileNav` + `SearchButton`] [`Logo variant="header"` 120 px, 104 px onder `xs`] [`AccountLink` (vanaf `xs`) + `CartButton`]; vanaf `xl`: [`Logo` 150 px] [`DesktopNav`] [zoeken, account, `CartButton`]. Compacte staat via `HeaderCompactSentinel` (`data-compact` op de header: logo 120 → 104 px, kleinere padding), buitenhoogte blijft gelijk (beslissing 40) | `Header.tsx` |
 | `header/DesktopNav` | C | `{ items: NavItem[] }` | Links met onderstreeplijn (300 ms, `aria-current`), twee `NavDisclosure`-groepen | `header/DesktopNav.tsx` |
 | `header/NavDisclosure` | C | `{ group: NavGroup; images?: Partial<Record<string, AssetKey>> }` | Knop met `aria-expanded`/`aria-controls`, paneel over containerbreedte, z-30, `shadow-zwevend`; Esc sluit en zet focus terug; sluit bij klik buiten, focus buiten en `onNavigate` | nieuw |
 | `header/CartButton` | C | geen | "Tas" + `(n)` in vaste box (`min-w-[4.5ch] tabular`); vóór hydration "Tas" met gereserveerde ruimte; naam "Tas, {n} artikelen"; `aria-haspopup="dialog"`, `aria-expanded` | `header/CartButton.tsx` |
@@ -2433,7 +2461,6 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | `Footer` | S | geen | Bestand `components/layout/Footer.tsx` (subcomponenten in hetzelfde bestand of in `components/layout/footer/`, C3). `data-vlak="donker"`; bovenaan Club-aanmelding (`SubscribeForm source="footer"` met `site.club.title`), kolommen (§2.5), `PaymentBadges tone="donker"`, socials (↗, `rel="noopener"`), bedrijfsgegevens, `VatNotice`, de link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` ("Hier de overeenkomst herroepen", exact dit label en dit doel), © met jaar als literal in content | `Footer.tsx` |
 | `prelaunch/MiniFooter` | S | geen | Voor de `(kaal)`-layout: juridische links (`legalNav`), dezelfde link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` als de footer, bedrijfsgegevens en `VatNotice`. `layout.spec.ts` controleert de link op elke route (§19.2). Bestand `components/prelaunch/MiniFooter.tsx` (4-6/C1); er is geen `components/layout/footer/MiniFooter.tsx` | nieuw |
 | `PaymentBadges` | S | `{ tone?: "licht" \| "donker"; size?: "sm" \| "md" }` | Neutrale tekstbadges uit `site.paymentMethods`, geen merklogo's (beslissing 93) | `PaymentIcons.tsx` |
-| `VatNotice` | C | `{ className?: string; tone?: "licht" \| "donker" }` | `TimeGate` met `site.vat.before`/`after` | nieuw |
 | `ShipLabel` | C | `{ schedule: ShipLabelEntry[]; field: "barText" \| "estimateText" \| "dispatchLabel"; className?: string }` | `TimeSwitch` over het schema; na de laatste entry de fallback uit `sharedCopy` | nieuw |
 
 ### 13.6 Consent en analytics (`components/consent/`, 4-6/C3)
@@ -2442,9 +2469,9 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | --- | --- | --- | --- | --- |
 | `ConsentBanner` | C | geen | Alleen gerenderd als `site.analytics.enabled`. Niet-modale kaart onderaan, z-50, "Akkoord" en "Weigeren" even groot, link naar `/cookies`; zet `body[data-consent-open]` en `scroll-padding-bottom` | `ConsentBanner.tsx` |
 | `AnalyticsLoader` | C | geen | GTM alleen na `granted` en geldig ID; Consent Mode-volgorde zoals CORVANE | `AnalyticsLoader.tsx` |
-| `CookieSettingsButton` | C | geen | Opent de banner opnieuw (`sparkela:open-consent`) | `footer/CookieSettingsButton.tsx` |
+| `CookieSettingsButton` | C | `{ className?: string; tone?: "licht" \| "donker" }` | Knop met `cookieTable.settingsLabel`; dispatcht `OPEN_CONSENT_EVENT` (`"sparkela:open-consent"`, uit `lib/analytics.ts`); rendert niets zonder `site.analytics.enabled`. Eigenaar 4-6/C1 (paar 1), de footer van C3 gebruikt hem | `footer/CookieSettingsButton.tsx` |
 
-`lib/analytics.ts` (port, 3b/B1, `sparkela:`-sleutels, client-veilig): `track(event: AnalyticsEvent)`, `productToItem(p, variant, qty)`, `cartToItems(cart)`, `getConsent()`, `setConsent(v)`, `subscribeConsent(cb)`, `shouldShowConsentBanner()`, `shouldLoadAnalytics()`, `isValidGtmId(id)`. `track` pusht altijd naar `window.dataLayer` (ook zonder consent: dat is een lokale array zonder netwerk); GTM leest hem pas na toestemming. Op de server doet `track` niets.
+`lib/analytics.ts` (port, 3b/B1, `sparkela:`-sleutels, client-veilig): `OPEN_CONSENT_EVENT = "sparkela:open-consent"`, `track(event: AnalyticsEvent)`, `productToItem(p, variant, qty)`, `cartToItems(cart)`, `getConsent()`, `setConsent(v)`, `subscribeConsent(cb)`, `shouldShowConsentBanner()`, `shouldLoadAnalytics()`, `isValidGtmId(id)`. `track` pusht altijd naar `window.dataLayer` (ook zonder consent: dat is een lokale array zonder netwerk); GTM leest hem pas na toestemming. Op de server doet `track` niets.
 
 `lib/subscription.ts` (3b/B1, client-veilig): `markSubscribed(): void`, `hasSubscribed(): boolean`, `useSubscribed(): boolean` (`useSyncExternalStore`, `false` op de server), op `storageKeys.emailCaptureSubscribed` via `lib/storage.ts`. `SubscribeForm` (C1) en de popup (D4) gebruiken dit; zo hoeft niemand in 4-6 te wachten op `components/email/state.ts`.
 
@@ -2484,20 +2511,20 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | `FilterSheet` | C | zelfde + `open`, `onOpenChange` | `Sheet side="left"` met per facet een `fieldset` van checkboxen; knoppen "Wis alles" en "Toon {n} producten" (beslissing 36) | nieuw | 7-9/D3 |
 | `StylingTile` | S | `{ title: string; text: string; image: AssetKey; href: string }` | Tegel in het grid (zelfde maat als een kaart), link naar een stack of de Spark Finder | nieuw | 7-9/D3 |
 
-**Gedeelde componenten** (beslissing 112). `ProductCard` en `ProductGrid` zijn synchroon, zonder hooks, zonder `server-only`- of `next/cache`-import en zonder data op te halen. Daardoor werken ze als server component én binnen een `"use client"`-bestand (hun kinderen `QuickAdd`, `ProductPhoto`, `Price` en `StatusLabel` mogen dat ook). `FinderResult` en `SearchView` gebruiken ze direct; er is geen tweede kaart. `ProductCard.test.tsx` rendert de kaart ook in een client-wrapper. FilterBar en FilterSheet nemen hun facetlabels uit `sharedCopy.vocab`.
+**Gedeelde componenten** (beslissing 112). `ProductCard` en `ProductGrid` zijn synchroon, zonder hooks, zonder `server-only`- of `next/cache`-import en zonder data op te halen. Daardoor werken ze als server component én binnen een `"use client"`-bestand (hun kinderen `QuickAdd`, `ProductPhoto`, `Price` en `StatusLabel` mogen dat ook). `FinderResult` en `SearchView` gebruiken ze direct; er is geen tweede kaart. `ProductCard.test.tsx` rendert de kaart ook in een client-wrapper. Omdat `"use client"` in Vitest niets doet en `server-only` daar een stub is, controleert dezelfde test ook statisch de imports (§19.1): geen `server-only`, `next/cache`, `lib/shop-data`, `lib/commerce/index`, `lib/commerce/local` of `lib/server-clock` in de importboom van `ProductCard.tsx` en `ProductGrid.tsx`, en geen async componentfunctie. FilterBar en FilterSheet nemen hun facetlabels uit `sharedCopy.vocab`.
 
 ### 13.9 Productpagina (`components/pdp/`, 7-9/D2)
 
 | Component | S/C | Props | Rendert | Bron |
 | --- | --- | --- | --- | --- |
-| `ProductDetail` | S | `{ product: Product; badges: BadgeId[]; stacks: Array<{ stack: Stack; products: CatalogProduct[] }>; stackOptions: { candidates: CatalogProduct[]; defaultPicks: [string, string] \| null }; lookProducts: CatalogProduct[]; faq: FaqItem[]; claims: VerifiedClaim[]; schedule: ShipLabelEntry[] }` (alles uit `lib/shop-data.ts`, §14.2) | Grid uit §14.2 | `app/products/[slug]/page.tsx` |
+| `ProductDetail` | S | `{ product: Product; badges: BadgeId[]; stacks: Array<{ stack: Stack; products: CatalogProduct[] }>; stackOptions: { candidates: CatalogProduct[]; defaultPicks: [string, string] \| null /* variant ids */ }; lookProducts: CatalogProduct[]; faq: FaqItem[]; claims: VerifiedClaim[]; schedule: ShipLabelEntry[] }` (alles uit `lib/shop-data.ts`, §14.2) | Grid uit §14.2 | `app/products/[slug]/page.tsx` |
 | `ProductGallery` | C | `{ images: ProductImage[]; title: string }` | Mobiel: scroll-snap 4:5 met puntknoppen 44×44; vanaf `lg`: thumbnails links ("Toon afbeelding 2 van 5"), groot beeld, vorige/volgende; zoom: klik/Enter opent `Modal size="lg"` met het beeld op 2× breedte en pinch-zoom via native scroll; zonder beelden 5 placeholders (packshot, draagfoto, detail, schaal, stack). Eerste dia in de statische HTML met `preload` | `ProductGallery.tsx` |
-| `ProductInfo` | S | `{ product: Product; badges: BadgeId[] }` (`badges` uit `getProductBadges`) | `StatusLabel`(s), H1, `Price` + `VatNotice`, korte stylingtekst, `ProductChips` | `ProductInfo.tsx` |
+| `ProductInfo` | S | `{ product: Product; badges: BadgeId[] }` (`badges` uit `getProductBadges`, zonder `limited` en `early-access`) | `StatusLabel`(s), `DropStatusLabel` voor dropproducten (het enige "Limited"/"Early access" op de PDP), H1, `Price` + `VatNotice`, korte stylingtekst, `ProductChips` | `ProductInfo.tsx` |
 | `ProductChips` | S | `{ product: Product }` | Chips (links) voor type, vibe(s), moment(en) naar de collecties, labels uit `sharedCopy.vocab` | `NotesChips.tsx` |
-| `BuyBox` | C | `{ product: Product; stackCandidates: CatalogProduct[]; defaultStack: [string, string] \| null }` | `VariantPicker`, `StackPicker` (alleen bij oorbellen en armbanden), `GiftWrapCheckbox`, `AddToCart`, `StickyAddToCart`; vuurt `view_item` | `ProductConfigurator.tsx` |
+| `BuyBox` | C | `{ product: Product; stackCandidates: CatalogProduct[]; defaultStack: [string, string] \| null /* variant ids */ }` | `VariantPicker`, `StackPicker` (alleen bij oorbellen en armbanden), `GiftWrapCheckbox`, `AddToCart`, `StickyAddToCart`; vuurt `view_item` | `ProductConfigurator.tsx` |
 | `VariantPicker` | C | `{ product: Product; value: string; onChange(variantId: string): void }` | Kleur: radiogroep met swatches 44 px (goud/zilver als vlakken met tokens `--swatch-goud`, `--swatch-zilver`) plus naam; maat: radiotegels "16" tot "19" met link "Welke maat heb ik?" → `RingSizeGuide`. Uitverkocht: doorgestreept + "uitverkocht" in de naam. Voorraad ≤ 3: "Nog {n}" | `ScentSwatches.tsx` |
 | `RingSizeGuide` | C | `{ open; onOpenChange }` | `Modal`: tabel maat → binnendiameter en omtrek, uitleg meten met een touwtje, tip "Twijfel je? Kies de grotere maat." | nieuw |
-| `StackPicker` | C | `{ product: Product; candidates: CatalogProduct[]; defaultPicks: [string, string] \| null; value: StackChoice; onChange(v: StackChoice): void }` met `StackChoice = { mode: "los" } \| { mode: "stack"; picks: [string, string] }` | Twee radiotegels: "Los" (prijs) en "Stack van 3 (−15%)" (totaal, "Je bespaart €X" via `stackQuote`). Bij stack: twee `Select`s "Stuk 2" en "Stuk 3" met andere oorbellen/armbanden (prijs in label), standaard Lindes stack. Echte stukprijzen zichtbaar | `BundlePicker.tsx`, `MixAndMatch.tsx` |
+| `StackPicker` | C | `{ product: Product; candidates: CatalogProduct[]; defaultPicks: [string, string] \| null; value: StackChoice; onChange(v: StackChoice): void }` met `StackChoice = { mode: "los" } \| { mode: "stack"; picks: [string, string] /* variant ids */ }` | Twee radiotegels: "Los" (prijs) en "Stack van 3 (−15%)" (totaal, "Je bespaart €X" via `stackQuote`). Bij stack: twee `Select`s "Stuk 2" en "Stuk 3" met **één optie per beschikbare variant** van de kandidaten, label `pdpCopy.stack.option(title, variantLabel \| null, price)` ("Lola chunky hoops, Zilver · €19,95"; bij één variant "Jade stipjes · €12,95"). Standaard `defaultPicks` (Lindes stack, anders de terugval uit §7.2), nooit leeg. Het eerste stuk is de variant uit `VariantPicker`. "Voeg de stack toe" voegt precies die drie variant-id's toe. Bij `defaultPicks === null` alleen "Los". Echte stukprijzen zichtbaar | `BundlePicker.tsx`, `MixAndMatch.tsx` |
 | `GiftWrapCheckbox` | C | `{ value: boolean; onChange(v: boolean): void }` | "Cadeauverpakking" + `GiftWrapPrice`; voegt bij toevoegen `setGiftWrap(true)` toe | nieuw |
 | `AddToCart` | C | `{ disabled: boolean; label: string; onAdd(): Promise<void>; buttonRef: RefObject<HTMLButtonElement \| null> }` (React 19: `useRef<HTMLButtonElement>(null)` geeft `RefObject<HTMLButtonElement \| null>`) | "In winkelwagen · €X" (`primair` lg, vol breed), stack: "Voeg de stack toe · €X" | `ProductConfigurator.tsx` |
 | `StickyAddToCart` | C | `{ targetRef: RefObject<HTMLButtonElement \| null>; title: string; summary: string; price: string; onAdd(): void }` | Onder `lg`, z-40, verschijnt als de hoofdknop uit beeld is (D46), `inert` als verborgen, body-padding en `sparkela:sticky-atc` event | `StickyAddToCart.tsx` |
@@ -2525,8 +2552,8 @@ Kleurversies (`Logo variant`): `header` inkt woord, roest vonk · `op-donker` bo
 | 10 | `StatementVsSubtle` | S | `{ content: HomeContent["statementVsSubtle"] }` | `SolidVsSpray.tsx` |
 | 11 | `MomentTiles` | S | `{ content: HomeContent["moments"] }` | nieuw |
 | 13 | `ReviewsCarousel` | S | `{ reviews: Review[]; variant?: "home" \| "footer" }` → `null` zonder reviews of als `site.flags.showReviews` uit staat; `footer` is het blok boven de footer (§2.5) | `ReviewsSection.tsx` |
-| 13 | `VideoRow` | S | `{ content: HomeContent["videos"] }` | `VideoRow.tsx` |
-| 14 | `PhotoStrip` | S | `{ content: HomeContent["photoStrip"] }` | nieuw |
+| 13 | `VideoRow` | S | `{ content: HomeContent["videos"] }`; rendert niets als `site.flags.hideMissingOptionalMedia` aan staat en geen enkele `video.*` in `SUPPLIED` staat (beslissing 127) | `VideoRow.tsx` |
+| 14 | `PhotoStrip` | S | `{ content: HomeContent["photoStrip"] }`; zelfde regel met `fotostrook.*` (beslissing 127) | nieuw |
 | 15 | `GuaranteeBlock` | S | `{ content: HomeContent["guarantee"] }` | `GuaranteeBlock.tsx` |
 | 15 | `FaqSection` | S | `{ items: FaqItem[]; content: HomeContent["faq"] }`; gebruikt `FaqList` van D3 | `FaqSection.tsx` |
 | 15 | `AboutLindeTeaser` | S | `{ content: HomeContent["aboutLinde"] }` | `StoryTeaser.tsx` |
@@ -2562,11 +2589,11 @@ Secties 1, 2 en 16 zijn chrome (§13.5); 6 is de popup (§13.11); 7 is `DropBann
 | Component | S/C | Props | Rendert |
 | --- | --- | --- | --- |
 | `DropBanner` | S | `{ drop: Drop }` | §12.4 |
-| `DropHero` | S | `{ drop: Drop }` | Op `bg-roest`: naam (H1), tagline, `Countdown` naar `startsAt` met "Nu live", beeld (`PhotoSlot` 16:9 desktop, 4:5 mobiel) |
-| `DropTeaser` | S | `{ drop: Drop }` | Teaser: naam, `formatStartLabel(startsAt)`, `Countdown` naar `startsAt`, Club-aanmelding (`SubscribeForm source="club"`) |
+| `DropHero` | S | `{ drop: Drop }` | Op `bg-roest`: naam (H1), tagline, `Countdown` naar `startsAt` met `liveLabel` "Nu live", `srLabel={formatCountdownSr(startsAt, "start")}`, `fallbackLabel={formatStartLabel(startsAt)}` (§10.6), beeld (`PhotoSlot` 16:9 desktop, 4:5 mobiel) |
+| `DropTeaser` | S | `{ drop: Drop }` | Teaser: naam, `formatStartLabel(startsAt)`, `Countdown` naar `startsAt` (start-labels, §10.6), Club-aanmelding (`SubscribeForm source="club"`) |
 | `EarlyAccessNote` | C | `{ drop: Drop }` | `TimeGate at={startsAt}`: vóór de start de early-access-regel, daarna niets |
-| `StackCard` | S | `{ stack: Stack; products: CatalogProduct[] }` (uit `getVisibleStacks`) | Beeld (`PhotoSlot` 4:5), naam, beschrijving, de drie stukken met prijs, totaal met stack-korting ("€X in plaats van €Y", berekend met `stackQuote`), `AddStackButton` |
-| `AddStackButton` | C | `{ variantIds: [string, string, string]; label: string }` | "Voeg de stack toe": `addToCart` met drie regels; uitverkocht stuk → `aria-disabled` met uitleg |
+| `StackCard` | S | `{ stack: Stack; products: CatalogProduct[] }` (uit `getVisibleStacks`) | Beeld (`PhotoSlot` 4:5), naam, beschrijving, de drie stukken met prijs, totaal met stack-korting ("€X in plaats van €Y", berekend met `stackQuote`), `AddStackButton products={products}` |
+| `AddStackButton` | C | `{ products: [CatalogProduct, CatalogProduct, CatalogProduct]; label: string }` | Per stuk met meer dan één variant een `Select` (label `collectionCopy.stacks.variantLabel(title)`, "Kleur van Noor dikke ringetjes", opties per beschikbare variant), standaard `defaultVariant(p)`; stukken met één variant zonder keuze. "Voeg de stack toe": `addToCart` met de drie gekozen variant-id's (`source: "stack"`); uitverkocht stuk → `aria-disabled` met uitleg |
 | `SearchView` | C | geen | Leest `q` met `useSearchParams` (binnen Suspense), zoekveld, resultaten als `ProductGrid` (gedeelde component, §13.8), lege staat met suggesties (collecties) |
 | `HowToStack` | S | `{ content: HomeContent["howToStack"]; headingLevel?: 2 \| 3 }` | `components/sections/HowToStack.tsx`: `<ol>` met drie stappen; home (H2) en `/stacks` (H2 onder de H1) |
 | `FaqList` | S | `{ items: FaqItem[]; headingLevel?: 2 \| 3 \| 4; tone?: "licht" \| "donker" }` | `components/sections/FaqList.tsx`: `Accordion type="multiple"` met vraag en antwoord (link uit `FaqItem.link`); gebruikt door `/stacks`, `/cadeaukaarten` en de home (`FaqSection`) |
@@ -2589,14 +2616,15 @@ Secties 1, 2 en 16 zijn chrome (§13.5); 6 is de popup (§13.11); 7 is `DropBann
 | `UpcomingHolidays` | S | geen | Lijst van de komende feestdagen uit `shipping.holidays` (op verzenden-en-retourneren); toont alle feestdagen van 2026 en 2027 (geen klok nodig) | 4-6/C1 |
 | `WaitlistHero` | S | geen | §14.20 | 4-6/C1 |
 | `CheckoutView` | C | geen | Demo-checkout: besteloverzicht (regels, totalen), kortingscodeveld (`applyDiscountCode`), contact- en adresvelden (alleen vorm), `notice` "Demo-checkout: er wordt niet betaald", knop "Bestelling plaatsen (demo)" → `CheckoutState placed` met `DEMO-XXXXXX`, cart leeg | 7-9/D4 |
-| `NotFoundView` | S (async) | geen | Copy uit `sharedCopy.notFound`: "Deze pagina bestaat niet (meer)", link naar `/zoeken`, knoppen "Naar de shop" en "Spark Finder", 4 Lindes favorieten (`homeFavorites(await getShopProducts(), false)`, `ProductCard`). De enige 404-weergave: globale 404, `(shop)`-404 en de fallback van het 404-patroon op PDP, collectie en drop (beslissing 124) | 4-6/C4 |
+| `NotFoundView` | S (async) | geen | Dunne wrapper: `<NotFoundContent favorites={homeFavorites(await getShopProducts(), false).products.slice(0, 4)} />`. De enige 404-weergave: globale 404, `(shop)`-404 en de fallback van het 404-patroon op PDP, collectie en drop (beslissing 124) | 4-6/C4 |
+| `NotFoundContent` | S (sync) | `{ favorites: CatalogProduct[] }` | Copy uit `sharedCopy.notFound`: "Deze pagina bestaat niet (meer)", link naar `/zoeken`, knoppen "Naar de shop" en "Spark Finder", de favorieten als `ProductCard`s (titel `sharedCopy.notFound.favoritesTitle`). In hetzelfde bestand `components/pages/NotFoundView.tsx`; dit is de geteste eenheid (beslissing 139) | 4-6/C4 |
 
 ### 13.14 SEO (`components/seo/`)
 
 | Component | S/C | Props | Rendert | Golf |
 | --- | --- | --- | --- | --- |
 | `JsonLd` | S | `{ data: object \| object[] }` | `<script type="application/ld+json">` met `JSON.stringify(data).replace(/</g, "\\u003c")` | 3b/B3 |
-| `OgImage` | S | `{ kind: "merk" \| "product" \| "drop"; title: string; subtitle?: string; imageUrl?: string }` | Satori-tekening 1200×630 op `--donker` of `--roest`, Unbounded 800 WOFF, Inter WOFF; productfoto alleen als JPEG via `ogPhotoUrl(url)` (Shopify-URL met `width=1200&format=jpg`, §17.3). De drop-OG heeft geen foto | 10-11/E1 |
+| `OgImage` | S | `{ kind: "merk" \| "product" \| "drop"; title: string; subtitle?: string; imageUrl?: string }` | Satori-tekening 1200×630 op `--donker` of `--roest`, Unbounded 800 WOFF, Inter WOFF; productfoto alleen als JPEG via `ogPhotoUrl(url)` (alleen bij een `.jpg`/`.jpeg`/`.png`-origineel, met `width=1200&format=jpg`; anders `null` en geen foto, §17.3). De drop-OG heeft geen foto | 10-11/E1 |
 
 ---
 
@@ -2688,7 +2716,7 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.6 Drop (`/drops/[slug]`)
 
-- `generateStaticParams`: alle acht slugs. `ensureStatic = "navigation"`, `instant = false` (zoals de PDP).
+- `generateStaticParams`: alle acht slugs. `ensureStatic = "navigation"`, `instant = false` (zoals de PDP). **Ook `/drops/[slug]/binnenkort/page.tsx`** exporteert `ensureStatic = "navigation"`, `instant = false` en `generateStaticParams` met alle acht slugs. Zonder `ensureStatic` geeft het 404-patroon bij het eerste verzoek 200 met `private, no-store` (gemeten met Next 16.4.3: `/drops/iets/binnenkort` eerst 200, pas daarna 404; met `ensureStatic` meteen 404; beslissing 133). Elke route met het 404-patroon exporteert beide.
 - **Onbekende slug**: `isDropSlug(slug)` uit `content/drops.ts` versmalt de string param tot `DropSlug`. Onbekend → `<Suspense fallback={<NotFoundView />}><Missing /></Suspense>` met `notFound()` in `Missing`, op `/drops/[slug]` én `/drops/[slug]/binnenkort` (anders geeft `/drops/iets` een pagina met status 200, een zachte 404; beslissing 103). `getDropData` krijgt alleen een `DropSlug`.
 - Opbouw: `DropHero` · `EarlyAccessNote` · H2 "De drop" + `ProductGrid` met `getDropData(slug).products` (`CatalogProduct[]`, ook in de fase `early-access`; lege lijst: "De stukken zie je hier vanaf {datum}.") · Holiday stack (als die bestaat) · Club-aanmelding · `afgelopen`-melding via `TimeGate at={endsAt}` ("Deze drop is voorbij. In de Club hoor je als eerste van de volgende.").
 - Teaser `/drops/[slug]/binnenkort`: `DropTeaser`, `robots: noindex`, canonical `/drops/[slug]`.
@@ -2731,7 +2759,7 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.16 Juridische pagina's
 
-`/algemene-voorwaarden`, `/privacy`, `/cookies`: `LegalPage`, inhoud uit `content/legal/*.md`, bovenaan `LegalNotice` ("TODO: laten controleren"). `/cookies` heeft daarnaast een tabel met alle cookies en opslagsleutels (`sparkela_cart`, `sparkela_preview`, `sparkela_ea_<slug>`, `sparkela:*` in localStorage, en GTM-cookies alleen na toestemming) en de `CookieSettingsButton` als analytics aan staat.
+`/algemene-voorwaarden`, `/privacy`, `/cookies`: `LegalPage`, inhoud uit `content/legal/*.md`, bovenaan `LegalNotice` ("TODO: laten controleren"). `/cookies` heeft daarnaast een tabel met alle cookies en opslagsleutels (`sparkela_cart`, `sparkela_preview`, `sparkela_ea_<slug>`, `sparkela:*` in localStorage, en GTM-cookies alleen na toestemming), met copy uit `cookieTable` in `content/legal.ts`, en de `CookieSettingsButton` (die zelf niets rendert zonder analytics). Alles op deze pagina is van C1; niets wacht op C3 (beslissing 138).
 
 ### 14.17 Account (`/account`)
 
@@ -2753,7 +2781,7 @@ Normaal stuurt de proxy door naar Shopify. Terugval: `PageHeader` (H1 "Account")
 2. H1 "Sparkela komt eraan" (`formsCopy.waitlist.title`), belofte in één zin: `formsCopy.waitlist.promise(launchLabel)` = `` `Chunky sieraden met een spark. Vanaf ${launchLabel} online.` `` met `launchLabel = formatDayMonth(site.launchAt)` ("27 november"). Nooit de datum opnieuw typen.
 3. Foto van Linde (`linde.wachtlijst`, 4:5, `preload`), alleen als het bestand in `SUPPLIED` staat. Zonder bestand valt het fotoblok weg (één kolom, gecentreerd) in plaats van een grijze placeholder op de enige openbare pagina (beslissing 119). Het bestand aanleveren is stap 7 van §11.9.
 4. Aanmelding: H2 "Als eerste shoppen, plus 10% op je eerste bestelling", `SubscribeForm source="wachtlijst" tone="donker"`.
-5. `TimeGate at={site.launchAt}` met na de grens "We zijn live." en knop "Naar de shop" (zelfde hoogte als de regel ervoor).
+5. `TimeGate at={site.launchAt}` met na de grens "We zijn live." en knop "Naar de shop" (zelfde hoogte als de regel ervoor), een gewone `<a href="/">` zonder `next/link` (§11.8, beslissing 136).
 6. Socials.
 
 Vanaf `lg`: twee kolommen (tekst en formulier links, foto rechts; zonder foto één kolom), alles boven de vouw op 1440×900. `MiniFooter` met de herroepingslink staat eronder (§13.5). Metadata: title "Sparkela | Binnenkort online", canonical `/`, index.
@@ -2866,6 +2894,7 @@ export function getShopifyConfig(env = process.env): {
   storefrontToken: string; tokenType: "private" | "public";
 };
 export class ShopifyNotConfiguredError extends Error {}
+// ShopifyError (shared by client.ts and admin.ts) is defined here too, see §16.2.
 /** Admin side only (/api/subscribe, /confirm). null when the domain or both credential forms are missing. Does not need the Storefront token. */
 export function getShopifyAdminConfig(env = process.env): {
   domain: string; adminUrl: string; tokenUrl: string;   // tokenUrl: https://{domain}/admin/oauth/access_token
@@ -2881,8 +2910,25 @@ export function getShopifyAdminConfig(env = process.env): {
 
 ```ts
 export async function storefront<T>(query: string, variables?: Record<string, unknown>, opts?: { buyerIp?: string }): Promise<T>;
-export async function admin<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
-export class ShopifyError extends Error { constructor(public code: "network" | "http" | "graphql" | "throttled" | "timeout", message: string) }
+// ShopifyError comes from config.ts (3a/A1), shared with admin.ts.
+```
+
+`client.ts` is alleen de Storefront-client. De Admin-client staat in `lib/commerce/shopify/admin.ts` (4-6/C1, beslissing 132):
+
+```ts
+// lib/commerce/shopify/admin.ts: import "server-only"
+export async function getAdminToken(): Promise<string>;                                  // §15.2
+export async function adminGraphql<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
+// X-Shopify-Access-Token from getAdminToken(); AbortSignal.timeout(8000); one retry after 500 ms on 429/5xx/THROTTLED;
+// on 401 fetch a new token once and repeat; GraphQL error code ACCESS_DENIED → ShopifyError("access-denied") (logcode admin-pii-denied).
+```
+
+In `lib/commerce/shopify/config.ts` (3a/A1), zodat beide clients dezelfde fout gebruiken:
+
+```ts
+export class ShopifyError extends Error {
+  constructor(public code: "network" | "http" | "graphql" | "throttled" | "timeout" | "unauthorized" | "access-denied", message: string);
+}
 ```
 
 Gewone `fetch` (geen Next-cache-opties; caching zit in de `'use cache'`-functies), `AbortSignal.timeout(8000)`, één herhaling na 500 ms bij HTTP 429/5xx of GraphQL-fout `THROTTLED`. GraphQL `errors` → `ShopifyError("graphql")`.
@@ -2936,7 +2982,7 @@ query PredictiveSearch($q: String!) @inContext(country: NL, language: NL) {
 }
 ```
 
-- `getProducts()` (Shopify) = alle pagina's van `CatalogProducts` (index = `featuredRank`) plus `ProductByHandle` voor `cadeauverpakking` en `cadeaukaart` (die staan niet in "alle"). Een product dat niet in "alle" staat, ontbreekt in lijsten; zo bepaalt Tristan de volgorde in Shopify. `collection: null` (collectie bestaat nog niet) → `[]` met één `console.warn`, geen fout (§7.7).
+- `getProducts()` (Shopify) = alle pagina's van `CatalogProducts` (index = `featuredRank`) plus `ProductByHandle` voor `cadeauverpakking` en `cadeaukaart` (die staan niet in "alle"), en voor elke handle uit `drops[].productHandles` van een drop die nog niet voorbij is maar niet in "alle" staat (achteraan, met `console.warn`, §7.7, beslissing 114). Elk ander product dat niet in "alle" staat, ontbreekt in lijsten; zo bepaalt Tristan de volgorde in Shopify. `collection: null` (collectie bestaat nog niet) → `[]` met één `console.warn`, geen fout (§7.7).
 - **Querykosten.** Geneste `first:`-waarden vermenigvuldigen de kosten. Daarom 50 producten per pagina, 10 varianten (de producten hebben er hooguit 4) en 6 beelden. `npm run test:shopify` draait de echte `CatalogProducts`-query vóór de lancering en logt `extensions.cost` (beslissing 98).
 - Geen menu-query: de navigatie staat in `content/navigation.ts`.
 
@@ -3046,7 +3092,7 @@ Gemaakt in de vorm van de echte API (versie 2026-10), met verzonnen ids. Elke ma
 | `catalog-no-collection.json` | `{ "data": { "collection": null } }`: lege catalogus vóór de import (§7.7) |
 | `variant-gate.json` | `VariantGate` met een gewoon product en een dropproduct |
 
-Met sleutels in `.env.local` draait `npm run test:shopify` (script `vitest run tests/unit/shopify-live.test.ts`, alleen met `SHOPIFY_LIVE_TEST=1`) een leesquery tegen de echte winkel. Die test is standaard overgeslagen. Hij controleert ook: elke handle van een drop die nog niet voorbij is, staat in `alle` (anders een waarschuwing); een Shopify-beeld-URL met `format=jpg` geeft `image/jpeg` (§17.3). Met `SHOPIFY_LIVE_ADMIN=1` erbij voert hij de Admin-test uit §11.9 stap 3 uit (`customerByIdentifier` en `customerCreate` met een testadres).
+Met sleutels in `.env.local` draait `npm run test:shopify` (script `vitest run tests/unit/shopify-live.test.ts`, alleen met `SHOPIFY_LIVE_TEST=1`) een leesquery tegen de echte winkel. Die test is standaard overgeslagen. Hij controleert ook: elke handle van een drop die nog niet voorbij is, staat in `alle` (anders een waarschuwing); van elk product heeft het eerste beeld de extensie `.jpg`, `.jpeg` of `.png`, en die URL met `format=jpg` geeft `Content-Type: image/jpeg` (§17.3, beslissing 131; anders faalt de test met de handle). Met `SHOPIFY_LIVE_ADMIN=1` erbij voert hij de Admin-test uit §11.9 stap 3 uit (`customerByIdentifier` en `customerCreate` met een testadres).
 
 ---
 
@@ -3055,17 +3101,17 @@ Met sleutels in `.env.local` draait `npm run test:shopify` (script `vitest run t
 Elke regel uit brief §11 plus de stappen die dit plan toevoegt, in deze volgorde:
 
 1. **Nu, voor de wachtlijst** (§11.9, dit is de livegang): Vercel Pro (Hobby is alleen voor niet-commercieel gebruik); Shopify Basic (het Headless-kanaal werkt niet op Starter); Headless-kanaal installeren en Storefront-token maken; Dev Dashboard-app met `read_customers`/`write_customers` (client-id en -secret) en de blokkerende Admin-test (§11.9 stap 3: werkt `customerByIdentifier` en `customerCreate` op dit plan? Zo niet: Partner-app met custom distribution en offline token, of het Grow-plan); Resend met geverifieerd afzenderdomein; geheimen van minstens 32 tekens; Vercel (Root Directory `sparkela`, alle variabelen uit §3.9); sparkela.nl naar Vercel; de foto van Linde voor de wachtlijst (`linde.wachtlijst`); de curl-controle en één echte aanmelding met bevestigingsmail. Dubbele opt-in: test dat de klant pas na de klik op `SUBSCRIBED` staat.
-2. **Producten** (`docs/METAFIELDS.md`): `data/shopify-products.csv` importeren (status `draft`), productfoto's toevoegen (volgorde uit §17.2), metafield-definities met Storefront-toegang (§6.4), GPSR-gegevens per product invullen (geen `[`-placeholders meer), claims alleen als ze kloppen, tag `piercing` waar nodig; producten actief zetten en alleen in het Headless-kanaal publiceren; handmatige collectie `alle` met de volgorde voor "uitgelicht"; de automatische collecties per tag (§2.3).
+2. **Producten** (`docs/METAFIELDS.md`), in deze volgorde (beslissing 122): eerst alle metafield-definities uit §6.4 aanmaken, met het Shopify-type en Storefront-toegang aan; pas dan `data/shopify-products.csv` importeren (status `draft`; zonder definities negeert of weigert Shopify de metafield-kolommen); controle na de import: open één product en kijk of `spec_regel` en `gpsr_fabrikant` gevuld zijn; daarna productfoto's toevoegen (JPEG of PNG, volgorde uit §17.2), GPSR-gegevens per product invullen (geen `[`-placeholders meer), claims alleen als ze kloppen, tag `piercing` waar nodig; producten actief zetten en alleen in het Headless-kanaal publiceren; handmatige collectie `alle` met de volgorde voor "uitgelicht"; de automatische collecties per tag (§2.3).
 3. **Dropproducten** van Holiday Sparkle: tags `drop:holiday-sparkle`, in de collectie `alle` (positie = volgorde in de drop), gepubliceerd uiterlijk 24 november, daarna `products` verversen (README-curl) en `npm run test:shopify` (waarschuwt voor een drophandle die niet in `alle` staat).
-4. **Beeld** (`docs/ASSETS.md`): vóór de lancering de sitebeelden voor de hero (desktop en mobiel), het portret van Linde, de vijf momenttegels en Statement/subtiel; de fotostrook en de video's mogen na de lancering. Elk bestand onder de vaste naam in `public/images/` en de sleutel in `SUPPLIED` (`content/assets.ts`).
+4. **Beeld** (`docs/ASSETS.md`): vóór de lancering de sitebeelden voor de hero (desktop en mobiel), het portret van Linde, de vijf momenttegels en Statement/subtiel; de fotostrook en de video's mogen na de lancering (in productie zijn die secties verborgen zolang er geen enkel bestand is, beslissing 127). Elk bestand onder de vaste naam in `public/images/` en de sleutel in `SUPPLIED` (`content/assets.ts`).
 5. **Verzending**: €3,95, gratis vanaf €35, alleen Nederland. Daarna testen of een cadeaukaart meetelt voor de gratis-verzendgrens (carts H en L uit §8.4) en de uitkomst in DECISIONS zetten.
 6. **Kortingen** volgens §16.6, met de combinatiematrix daar: automatisch "Stack-korting" (product, combineert niet met orderkortingen), automatisch "Cadeauverpakking december" (product, combineert met product- en orderkortingen) en `WELKOM10` (code, orderkorting, eenmaal per klant). De titels moeten exact zo heten (de mapper herkent ze). Zo gaat de welkomstcode niet samen met de stack-korting (advies brief §11) en is de cadeauverpakking in december met allebei gratis.
-7. **Betalen en checkout**: Shopify Payments met iDEAL | Wero, Bancontact, creditcard en Apple Pay; de checkout in de huisstijl (logo, kleuren); de cookiebanner van de checkout.
+7. **Betalen en checkout**: Shopify Payments met iDEAL | Wero, Bancontact, creditcard en Apple Pay; Klarna is optioneel (brief §4): beslissen, en als hij aan gaat in Shopify Payments ook `"Klarna"` toevoegen aan `site.paymentMethods` (beslissing 142); de checkout in de huisstijl (logo, kleuren); de cookiebanner van de checkout.
 8. **Domein en Online Store**: subdomein (bijvoorbeeld `shop.sparkela.nl`) naar Shopify voor de checkout. De standaard Online Store laten doorsturen naar `https://sparkela.nl` (doorstuurthema of -snippet), **niet** afschermen met een wachtwoord: dat blokkeert ook de checkout van de headless shop (§16.6, beslissing 109). Controle: Online Store › Voorkeuren › "Toegang beperken tot bezoekers met het wachtwoord" staat uit, en geen product is in het kanaal Online Store gepubliceerd.
-9. **Webhooks** (§16.6) naar `/api/revalidate` met `SHOPIFY_WEBHOOK_SECRET`; `REVALIDATE_SECRET` voor de handmatige curl.
+9. **Webhooks** (§16.6) naar `/api/revalidate` met `SHOPIFY_WEBHOOK_SECRET`; `REVALIDATE_SECRET` voor de handmatige curl. Goed om te weten: een prijs- of tekstwijziging staat meteen op de productpagina en na één extra bezoek ook in de lijsten (beslissing 130); wie het meteen overal wil, ververst `products` met de README-curl.
 10. **Account**: Customer accounts aanzetten en `SHOPIFY_CUSTOMER_ACCOUNT_URL` zetten.
 11. **Mail en juridisch**: de link "Hier de overeenkomst herroepen" ook in de orderbevestiging van Shopify; Shopify Email voor de nieuwsbrief met dubbele opt-in aan; juridische teksten laten controleren; KvK-nummer, btw-id, adres en het echte e-mailadres invullen; socials bevestigen (`confirmed: true`).
-12. **Review-app**: een review-app kiezen en koppelen (bijvoorbeeld Judge.me); pas met echte reviews `content/reviews.ts` vullen en `site.flags.showReviews` aanzetten (§22.1). Niet nodig voor de lancering zelf; tot dan tonen reviewblokken en sterren niets.
+12. **Review-app**: vóór de lancering een review-app kiezen en installeren (bijvoorbeeld Judge.me), zodat de eerste kopers een reviewverzoek krijgen; pas met echte reviews `content/reviews.ts` vullen en `site.flags.showReviews` aanzetten (§22.1). Tot dan tonen reviewblokken en sterren niets, dus de site zelf wacht er niet op.
 13. **Early access**: `EARLY_ACCESS_SECRET` gezet; `npm run early-access-link -- holiday-sparkle` en de link op 25 november in de Club-mail; op 26 november 00.05 uur testen (droppagina, een dropproduct en de Holiday stack in de tas, checkout).
 14. **Lanceringscadeau** en de einddatum bevestigen (beslissing 57).
 15. **Eind-tot-eindtest** in de echte winkel uiterlijk 24 november: bestellen en betalen, mails, herroepen, retour; de cart met stack-korting, `WELKOM10` en cadeauverpakking, met de carts N (`WELKOM10` + cadeauverpakking), O (stack + cadeauverpakking) en P (`WELKOM10` + cadeauverpakking, gratis) uit §8.4; voor O en P zet Tristan de startdatum van "Cadeauverpakking december" tijdelijk op vandaag en daarna terug op 1 december 00.00; checkout-redirect.
@@ -3108,13 +3154,13 @@ Elke plek heeft een vaste sleutel, bestandsnaam, verhouding en pixelmaat. Zolang
 | `video.01` tot `.04` | `/videos/sparkela-01.mp4` + `/videos/sparkela-01-poster.webp` | 9:16 | 1080×1920 (H.264) | Videorij |
 | `collecties.<handle>` | `/images/collecties/<handle>.webp` | 4:5 | 1200×1500 | Optioneel in de collectiebanner |
 
-**Productfoto's in Shopify** (per model, in deze volgorde, 4:5, 1600×2000): 1 packshot, 2 draagfoto (oor, pols, hals of hand), 3 detail, 4 schaalfoto (in de hand of naast een liniaal), 5 stackfoto. `imageKindForIndex` volgt die volgorde. De alt-tekst komt uit Shopify; leeg → "{titel}, {soort foto}".
+**Productfoto's in Shopify** (per model, in deze volgorde, 4:5, 1600×2000, **als JPEG of PNG**, nooit WebP of AVIF: Shopify zet alleen PNG en JPEG om naar JPEG, en de product-OG heeft JPEG nodig, §17.3 en beslissing 131; de CDN geeft browsers zelf WebP of AVIF): 1 packshot, 2 draagfoto (oor, pols, hals of hand), 3 detail, 4 schaalfoto (in de hand of naast een liniaal), 5 stackfoto. `imageKindForIndex` volgt die volgorde. De alt-tekst komt uit Shopify; leeg → "{titel}, {soort foto}".
 
 ### 17.3 OG-afbeeldingen
 
 - `app/opengraph-image.tsx`, `app/(shop)/products/[handle]/opengraph-image.tsx` (met eigen `generateStaticParams`), `app/(shop)/drops/[slug]/opengraph-image.tsx`.
 - Exports `alt`, `size = { width: 1200, height: 630 }`, `contentType = "image/png"`. Renderen in een `'use cache'` + `cacheLife("max")`-functie die een `Uint8Array` teruggeeft (CORVANE D53.2); de product-OG gebruikt `cacheTag("products", "product:<handle>")`.
-- **Alleen JPEG of PNG in een OG-afbeelding** (beslissing 113). `next/og` (Satori/resvg) decodeert geen WebP: een WebP-foto wordt zonder foutmelding volledig transparant (gemeten in fase 2 met Next 16.4.3: JPEG-pixel `[200,50,51,255]`, dezelfde foto als WebP `[0,0,0,0]`). Daarom: de product-OG gebruikt `ogPhotoUrl(url)` uit `components/seo/OgImage.tsx`, dat bij een Shopify-URL `width=1200&format=jpg` zet; de drop-OG en de merk-OG hebben geen foto (merkkleur, logo, naam). Sitebeeld (`.webp`) komt nooit in een OG. `tests/unit/og.test.ts` rendert een OG met `tests/fixtures/og-photo.jpg` en controleert dat het fotovlak niet transparant is, en dat `ogPhotoUrl` `format=jpg` zet.
+- **Alleen JPEG of PNG in een OG-afbeelding** (beslissing 113). `next/og` (Satori/resvg) decodeert geen WebP: een WebP-foto wordt zonder foutmelding volledig transparant (gemeten in fase 2 met Next 16.4.3: JPEG-pixel `[200,50,51,255]`, dezelfde foto als WebP `[0,0,0,0]`). Daarom: de product-OG gebruikt `ogPhotoUrl(url): string | null` uit `components/seo/OgImage.tsx`. Dat geeft alleen een URL als het pad van het origineel eindigt op `.jpg`, `.jpeg` of `.png` (hoofdletters genegeerd, query niet meegeteld), en zet dan `width=1200&format=jpg`. Shopify zet alleen PNG en JPEG om naar JPEG; een WebP-origineel blijft WebP (beslissing 131). Anders `null`: de product-OG rendert dan zonder foto, net als de drop-OG en de merk-OG (merkkleur, logo, naam). Sitebeeld (`.webp`) komt nooit in een OG. `tests/unit/og.test.ts` rendert een OG met `tests/fixtures/og-photo.jpg` en controleert dat het fotovlak niet transparant is, dat `ogPhotoUrl` bij een `.jpg`- en `.png`-URL `format=jpg` zet, en dat een `.webp`-URL van Shopify `null` geeft (OG zonder foto).
 - Satori leest geen WOFF2: fonts als WOFF uit `assets/fonts/` (gekopieerd uit `@fontsource/unbounded` en `@fontsource/inter`, met de OFL-licentie erbij), gelezen met `readFile(join(process.cwd(), "assets/fonts/…"))` op moduleniveau.
 - Alleen flexbox, geen grid. Logo als SVG-data-URI uit `logo-paths.ts` (geen `<text>`).
 - Onbekende handle: `notFound()`.
@@ -3212,24 +3258,26 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>): 
 
 Omgeving `node`. Componenten alleen met `renderToStaticMarkup`. Modules met `next/cache` → `vi.mock("next/cache", …)`. Geen netwerk: `fetch` wordt gemockt.
 
+**Async servercomponenten** (beslissing 139). `renderToStaticMarkup` kan geen async component renderen (React 19.3 gooit "A component suspended while responding to synchronous input"). Patroon: mock de data (`vi.mock("@/lib/shop-data", …)` en `vi.mock("next/cache", …)`) en render het resultaat van de functie: `renderToStaticMarkup(await Component(props))`. Dat werkt als elk kind synchroon is. Daarom: async zijn alleen pagina's en de dunne data-wrappers (`NotFoundView`, `ShopChrome`, `Header`, `AnnouncementBar`); alles wat zij renderen is synchroon en krijgt zijn data als props. De homesecties zijn allemaal synchroon (§13.10), zodat D1 `await Page()` met gemockte `lib/shop-data` kan renderen. Client-kinderen renderen gewoon mee (hooks werken in SSR).
+
 | Suite | Eigenaar | Gevallen |
 | --- | --- | --- |
 | `lib/money.test.ts` | A1 | §8.5-tabel; geen `Intl`-afhankelijkheid |
-| `lib/schedule.test.ts` | A1 | Fake timers: grens over 40 dagen → geen callback binnen 1 s en geen `setTimeout` boven `MAX_TIMEOUT_STEP_MS`, wel precies op de grens; grens in het verleden → direct; annuleren werkt (§10.7) |
+| `lib/schedule.test.ts` | A1 | Fake timers: grens over 40 dagen → geen callback binnen 1 s en geen `setTimeout` boven `MAX_TIMEOUT_STEP_MS`, wel precies op de grens; grens in het verleden → direct; annuleren werkt (§10.7); `phaseIndex` (voor, op en na een grens); `getCountdown` (nooit negatief); §9.4 geval 25 met `units = { days: "d", hours: "u" }` |
 | `lib/pricing.test.ts` | B3 | §8.4-tabel A tot P met de stukken uit `tests/fixtures/catalog.ts` (niet uit `content/products.ts`); `percentOf` half naar boven; onbekende variant valt weg; aantal begrensd; cadeauverpakking alleen met fysiek product; code onbekend; code + stack (hoogste wint, notice); cadeaukaart telt nergens mee; `stackQuote`; `priceDisplay` (geen compare-at zonder `laagstePrijs30d`); `progressTexts` voor 0/1/2/3 stuks; `nextPricingBoundary` |
-| `lib/dates.test.ts` | B3 | §9.4 (28 gevallen); `timeBoundaries` gesorteerd en uniek; `promoSchedule` |
+| `lib/dates.test.ts` | B3 | §9.4 (gevallen 1 tot 24 en 26 tot 30; 25 staat in `lib/schedule.test.ts`); `timeBoundaries` gesorteerd en uniek; `promoSchedule` |
 | `lib/holidays.test.ts` | B3 | `easterSunday` 2024 tot 2030; afgeleide feestdagen gelijk aan `shipping.holidays` |
 | `lib/clock.test.ts` | B3 | `clockLife` (min 60, max 3600, expire > revalidate); testklok aan alleen met beide variabelen en niet met `VERCEL_ENV=production` |
 | `lib/claims.test.ts` | B3 | Niets zonder `verified`; metafield `nikkelvrij: true` geeft de claim; `verified` zonder `source` telt niet |
 | `lib/seo.test.ts` | B3 | `productJsonLd` zonder `aggregateRating`; offers per variant; `pageMetadata` heeft altijd OG-afbeelding; noindex-pagina's niet in `STATIC_ROUTES` |
 | `lib/catalog.test.ts` | C2a | `parseTags` (onbekende waarden genegeerd, `piercing`); `deriveBadges` (laatste stuks bij 3, niet bij 4 of 0; limited alleen live; bestseller uit zonder `realSalesData`; een badge buiten `enabled` komt nooit mee); `needsHygieneSeal` (oorbellen ja, ketting nee, ketting met tag `piercing` ja); `materialForVariant` (Zilver nooit "goudlaag", Goud altijd); `homeFavorites` (met `realSalesData` alleen `bestseller`-producten, zonder alleen `lindesFavoriet`); `cardBadge`-volgorde; alle `CollectionRule`s; sorteren (uitverkocht achteraan); filters (EN/OF); prijsbuckets; `searchProducts` (accenten); `isListable` (drop vóór start niet) |
-| `lib/commerce/commerce.test.ts` | C2a | Providerkeuze; productie zonder shopify gooit; lokale provider levert 26 producten; `getCollection` per handle; lege catalogus → `getShopProductsForParams()` geeft `NO_PRODUCTS_HANDLE`; `lib/shop-data.ts` geeft overal `CatalogProduct[]` met badges; met `serverNow()` gemockt op `2026-11-26T12:00:00+01:00`: `getCatalogProducts` bevat de vier Holiday-producten met `listable: false`, `getShopProducts` niet, `getDropData("holiday-sparkle")` heeft fase `early-access` en vier producten, `getStackOptionsFor("holiday-ster-oorbellen")` en `getRecommendedFor` geven alleen Holiday-stukken; de lokale cart-adapter houdt een dropvariant met `listable: false` (beslissing 107) |
+| `lib/commerce/commerce.test.ts` | C2a | Providerkeuze; productie zonder shopify gooit; lokale provider levert 26 producten; `getCollection` per handle; lege catalogus → `getShopProductsForParams()` geeft `NO_PRODUCTS_HANDLE`; `lib/shop-data.ts` geeft overal `CatalogProduct[]` met badges; met `serverNow()` gemockt op `2026-11-26T12:00:00+01:00`: `getCatalogProducts` bevat de vier Holiday-producten met `listable: false`, `getShopProducts` niet, `getDropData("holiday-sparkle")` heeft fase `early-access` en vier producten, `getStackOptionsFor("holiday-ster-oorbellen")` en `getRecommendedFor` geven alleen Holiday-stukken; `getStackOptionsFor` op `TEST_NOW`: `lola-chunky-hoops` krijgt de Goud-varianten van Tess en Roos (stack `goud-en-gedurfd`), `bo-statement-druppels` (geen stack) twee armband-variant-id's en nooit `null`, `noor-dikke-ringetjes` een variant-id van Ivy (twee kleuren) en niet een product-handle; de lokale cart-adapter houdt een dropvariant met `listable: false` (beslissing 107) |
 | `lib/commerce/shopify/mappers.test.ts` | C2b | Elke fixture uit §16.8 (ook `catalog-no-collection.json` → `[]`); metafield-typen; ongeldige waarden → `null`; `featuredRank`; cart-totalen en `progressFromShopifyCart`; cadeauverpakking uit `lines` gehaald; korting-bronnen |
-| `lib/commerce/shopify/webhooks.test.ts` | C2b | HMAC goed, fout, ontbrekend, afgekapt en onzin-base64 (allemaal `false`, nooit een exception); bearer in constante tijd; topic → tags en profiel (`collections/update` → `collections` + `products`; `inventory_levels/update` → `"max"`) |
+| `lib/commerce/shopify/webhooks.test.ts` | C2b | HMAC goed, fout, ontbrekend, afgekapt en onzin-base64 (allemaal `false`, nooit een exception); bearer in constante tijd; topic → tags en profiel (`collections/update` → `collections` + `products` met `{ expire: 0 }`; `inventory_levels/update` → `"max"`; `products/update` → `product:<handle>` met `{ expire: 0 }` en `products` en `collections` met `"max"`) |
 | `lib/commerce/cart-gate.test.ts` | C2b | Preview altijd ok; drop `verborgen` geweigerd; `early-access` alleen met EA-cookie van die drop; prelaunch: gewoon product geweigerd, dropproduct met EA-cookie ok, mix geweigerd; na launch gewoon product ok |
 | `tests/unit/api-cart.test.ts` | C2b | Validatie; cookie zetten en lezen; `VariantGate` wordt vóór elke `add` aangeroepen (geen gecachete catalogus); onbekende variant → `invalid`; `not-yet-available` voor dropvariant zonder cookie en wel met cookie; prelaunch-tijd: gewoon product → `not-yet-available`; cadeauverpakking weg als laatste fysiek product weg is; `Cache-Control: private, no-store` |
-| `tests/unit/api-revalidate.test.ts` | C2b | 401 bij foute of ontbrekende HMAC (geen 500); `revalidateTag` met `{ expire: 0 }` voor producten en collecties en `"max"` voor voorraad; handmatige bearer |
-| `lib/commerce/shopify/admin.test.ts` | C1 | `getAdminToken` (client credentials als `application/x-www-form-urlencoded` met de body `grant_type=client_credentials&client_id=…&client_secret=…`, cache tot `expires_in` − 5 min, één retry na 401, override-variabele); de queries vragen geen `email` en geen `emailMarketingConsent`; `admin-access-denied.json` → `upstream` met logcode `admin-pii-denied`; e-mail gaat als GraphQL-variabele mee, nooit in de querytekst; nieuwe klant op `PENDING`; bestaande `SUBSCRIBED` → geen mutatie; `userErrors` |
+| `tests/unit/api-revalidate.test.ts` | C2b | 401 bij foute of ontbrekende HMAC (geen 500); `revalidateTag` volgens de tabel in §7.6 (`products/update`: `product:x` met `{ expire: 0 }`, `products` met `"max"`; voorraad `"max"`; collecties `{ expire: 0 }`); handmatige bearer |
+| `lib/commerce/shopify/admin.test.ts` | C1 | `adminGraphql` (timeout, één retry bij 429/`THROTTLED`, 401 → nieuw token en één herhaling, `ACCESS_DENIED` → `ShopifyError("access-denied")`); `getAdminToken` (client credentials als `application/x-www-form-urlencoded` met de body `grant_type=client_credentials&client_id=…&client_secret=…`, cache tot `expires_in` − 5 min, één retry na 401, override-variabele); de queries vragen geen `email` en geen `emailMarketingConsent`; `admin-access-denied.json` → `upstream` met logcode `admin-pii-denied`; e-mail gaat als GraphQL-variabele mee, nooit in de querytekst; nieuwe klant op `PENDING`; bestaande `SUBSCRIBED` → geen mutatie; `userErrors` |
 | `lib/forms/confirm-token.test.ts` | C1 | Token geldig, verlopen na 7 dagen, vervalste handtekening, ander geheim; het gedecodeerde token bevat een klant-id en geen `@` |
 | `lib/forms/validation.test.ts`, `rate-limit.test.ts`, `lib/mail.test.ts` | C1 | §15.1-tabel (e-mail met `*`, `"`, `\` of `:` → fout); venster en reset; Resend-payload met exact de sleutels `from`, `to`, `subject`, `text`, `html`, `reply_to` en de header `Idempotency-Key` (subscribe: `subscribe-<sha256(token)>`, twee aanmeldingen op dezelfde dag geven twee sleutels; Resend 409 `invalid_idempotent_request` en `concurrent_idempotent_requests` → verstuurd); `escapeHtml`; `sanitizeForCustomerMail` haalt URL's en tags weg |
 | `lib/early-access.test.ts`, `lib/preview.test.ts` | C1 | Token stabiel per slug, anders per slug en per secret; hash vergelijkt correct |
@@ -3242,17 +3290,18 @@ Omgeving `node`. Componenten alleen met `renderToStaticMarkup`. Modules met `nex
 | `components/ui/Price.test.tsx` | B2 | Geen `<s>` zonder `showCompareAt`; met `showCompareAt` altijd de laagste-prijsregel, voor elke `size` en `tone` |
 | `components/ui/Button.test.tsx` | B2 | `buttonClasses` voor elke variant: alleen `primair` heeft een vulling (`bg-primair`) of `op-roest` (`bg-bot-wit`); nooit `bg-donker`, `bg-inkt`, `bg-steen`, `bg-olijf` of `bg-leisteen` |
 | `components/brand/logo.test.ts` | B1 | `logo-paths.ts` heeft niet-lege paden en viewboxen; `SPARK_TRANSFORM` bevat geen `skew` |
-| `components/product/ProductCard.test.tsx` | C4 | Eén badge volgens `CARD_BADGE_ORDER`; uitverkocht; meerdere prijzen → "Vanaf"; van-prijs altijd met laagste-prijsregel; naam staat vóór de media in de DOM; `ProductCard` en `ProductGrid` renderen ook binnen een `"use client"`-wrapper (gedeeld, §13.8); `NotFoundView` toont `sharedCopy.notFound.title` en vier favorieten |
+| `components/product/ProductCard.test.tsx` | C4 | Eén badge volgens `CARD_BADGE_ORDER`; uitverkocht; meerdere prijzen → "Vanaf"; van-prijs altijd met laagste-prijsregel; naam staat vóór de media in de DOM; `ProductCard` en `ProductGrid` renderen ook binnen een `"use client"`-wrapper (gedeeld, §13.8); `NotFoundContent` toont `sharedCopy.notFound.title` en vier favorieten; `NotFoundView` met gemockte `lib/shop-data` via `renderToStaticMarkup(await NotFoundView())`; statische importcheck (§13.8): `ProductCard.tsx` en `ProductGrid.tsx` (en hun relatieve en `@/`-imports, recursief binnen het project) importeren geen `server-only`, `next/cache`, `lib/shop-data`, `lib/commerce/index`, `lib/commerce/local` of `lib/server-clock`, en `ProductCard`/`ProductGrid` zijn geen async functies |
 | `components/cart/*.test.tsx` | C3 | `CartProgressBars` voor 0/1/2/3 stackstukken; `CartLineItem` met stack-korting toont de regel "Stack-korting −€2,24" en geen `<s>`; `CartUpsell` rendert niets vóór `launchAt`; `QuickAdd` (één variant, meerdere, cadeaukaart, uitverkocht) binnen `CartProvider` en `CatalogProvider`; `CartTotals` met "Berekend bij afrekenen" bij `shopify` |
-| `components/collection/filterParams.test.ts` | D3 | `parseFilterParams`/`toFilterParams` in `filterParams.ts`: URL ↔ filters (komma-gescheiden, onbekende waarden genegeerd); `StackCard`-totaal met `stackQuote` |
-| `components/pdp/*.test.tsx` | D2 | `ProductSpecs` (Zilver zonder "goudlaag", claimtekst "bevestigd door de leverancier"); `ProductAccordions` (hygiëneregel bij oorbellen en `piercing`, niet bij een ketting; GPSR altijd aanwezig, ook bij de cadeaukaart met `pdpCopy.gpsr.digital`) |
+| `components/collection/filterParams.test.ts` | D3 | `parseFilterParams`/`toFilterParams` in `filterParams.ts`: URL ↔ filters (komma-gescheiden, onbekende waarden genegeerd); `StackCard`-totaal met `stackQuote`; `AddStackButton` van `kantoor-maar-niet-saai` toont een kleurkeuze voor Noor en Ivy en niet voor Tess |
+| `components/pdp/*.test.tsx` | D2 | `ProductSpecs` (Zilver zonder "goudlaag", claimtekst "bevestigd door de leverancier"); `ProductAccordions` (hygiëneregel bij oorbellen en `piercing`, niet bij een ketting; GPSR altijd aanwezig, ook bij de cadeaukaart met `pdpCopy.gpsr.digital`); `StackPicker` voor een product zonder stack heeft twee gevulde `Select`s, en bij een stuk met Goud en Zilver een optie per kleur ("…, Zilver · €14,95"); `ProductInfo` van een live dropproduct bevat precies één keer "Limited" (beslissing 134) |
 | `components/checkout/CheckoutView.test.tsx` | D4 | Demo-melding zichtbaar; staat `placed` met `DEMO-` en lege cart |
-| `tests/unit/sitemap.test.ts` | E1 | Geen noindex-pagina's; geen dropproducten of drops vóór de start; collecties en zichtbare producten aanwezig; de routes in de sitemap zijn gelijk aan de vaste lijst die de E2E-specs gebruiken (`STATIC_ROUTES` + collecties + listable producten) |
-| `tests/unit/og.test.ts` | E1 | OG met `tests/fixtures/og-photo.jpg`: het fotovlak is niet transparant; `ogPhotoUrl` zet `format=jpg`; drop-OG zonder foto (§17.3) |
+| `tests/unit/sitemap.test.ts` | E1 | Geen noindex-pagina's; geen dropproducten of drops vóór de start; collecties en zichtbare producten aanwezig; de paden in de sitemap zijn gelijk aan `localShopRoutes(TEST_NOW)` uit `tests/fixtures/local-catalog.ts`, dezelfde functie waar E2 `SHOP_ROUTES` uit haalt |
+| `tests/unit/og.test.ts` | E1 | OG met `tests/fixtures/og-photo.jpg`: het fotovlak is niet transparant; `ogPhotoUrl` zet `format=jpg` bij `.jpg` en `.png`; een `.webp`-URL van Shopify geeft `null` en een OG zonder foto; drop-OG zonder foto (§17.3) |
+| `tests/unit/robots.test.ts` | E1 | `robots()` geeft `allow: "/"`, `disallow: ["/api/"]` en `sitemap` met de absolute URL `${siteUrl}/sitemap.xml`; geen noindex-pagina in `disallow` (§18.1, D53.4) |
 | `components/email/state.test.ts` | D4 | Cooldown 7 dagen; niet na aanmelding; opslag kapot → nooit |
-| `components/finder/finderState.test.ts` | D4 | Met `localCatalogProducts(TEST_NOW)` uit `tests/fixtures/local-catalog.ts`: alle 4 × 5 × 5 paden geven 3 tot 6 producten, alleen listable en beschikbaar |
+| `components/finder/finderState.test.ts` | D4 | Met `localCatalogProducts(TEST_NOW)` uit `tests/fixtures/local-catalog.ts` (`TEST_NOW` uit `tests/test-env.mjs`): alle 4 × 5 × 5 paden geven 3 tot 6 producten, alleen listable en beschikbaar |
 | `components/home/ReviewsCarousel.test.tsx` | D1 | Rendert niets zonder reviews of met `showReviews: false`, in beide varianten (`home`, `footer`) |
-| `content/offers.test.ts`, `drops.test.ts`, `shipping.test.ts`, `quiz.test.ts` | B4 | Literals met offset; geen `Date.now(`/`new Date(` in de bronbestanden; FAQ-bedragen gelijk aan config; drophandles gelijk aan tags; stacks geldig; quizlabels en navigatielabels gelijk aan `sharedCopy.vocab` |
+| `content/offers.test.ts`, `drops.test.ts`, `shipping.test.ts`, `quiz.test.ts` | B4 | Literals met offset; geen `Date.now(`/`new Date(` in de bronbestanden; FAQ-bedragen gelijk aan config; beloning gelijk aan config (brief §2.8): elk percentage in `site.club`, `site.emailCapture`, `quiz.result` en (zodra ze bestaan) `formsCopy.waitlist`, `formsCopy.subscribe` en `pagesCopy.popup`/`pagesCopy.club` is `${welcomeCode.percent}%`, en elke kortingscode daarin is `welcomeCode.code` (de verbatim brief-zinnen blijven zoals ze zijn; de test faalt pas als config en copy uit elkaar lopen); drophandles gelijk aan tags; stacks geldig; quizlabels en navigatielabels gelijk aan `sharedCopy.vocab` |
 | `content/content-guard.test.ts` | B4 | Zie hieronder |
 
 **Content-guard (brief §2 als test).** Loopt over alle exports van alle `content/*.ts` (strings, ook uit functies met voorbeeldargumenten) en over `content/legal/*.md`:
@@ -3268,12 +3317,12 @@ Omgeving `node`. Componenten alleen met `renderToStaticMarkup`. Modules met `nex
 9. **Juridisch**: elk `content/legal/*.md`-bestand begint met `TODO: laten controleren`.
 10. **GPSR**: elk sieraad heeft `gpsrFabrikant`, `gpsrVerantwoordelijkeEu` en `gpsrWaarschuwingen`. Placeholders staan altijd tussen `[` en `]`; een waarschuwingstekst zonder haken in een lokaal product faalt (geen verzonnen veiligheidsinformatie). Met `COMMERCE_PROVIDER=shopify` waarschuwt de Shopify-catalogusprovider in de build voor elk GPSR-veld dat nog `[` bevat.
 11. **Verbatim copy**: alle sleutels uit §5.2 hebben exact hun tekst.
-12. **Geen referentietekst** (brief §10): een overlapcontrole op reeksen van 5 woorden (genormaliseerd: kleine letters, zonder leestekens) van alle strings in `content/` en `content/copy/` en alle string-literals in `components/` tegen (a) de strings in CORVANE's `content/` (pad uit `CORVANE_CONTENT_DIR`, anders `../../trissiewissie2024/corvane/corvane/content` als die bestaat; ontbreekt hij, dan wordt dit deel overgeslagen met een melding) en (b) de labels in `reference/*/structure.json` (overgeslagen als de map ontbreekt). Plus een woordcontrole op CORVANE-woorden in `components/` en `content/`: "scent", "spray", "geur", "parfum", "vane", "corvane" (beslissing 99).
+12. **Geen referentietekst** (brief §10): een overlapcontrole op reeksen van 5 woorden (genormaliseerd: kleine letters, zonder leestekens) van alle strings in `content/` en `content/copy/` en alle string-literals in `components/` tegen (a) de strings in CORVANE's `content/` (pad uit `CORVANE_CONTENT_DIR`, anders `../../trissiewissie2024/corvane/corvane/content` als die bestaat; ontbreekt hij, dan wordt dit deel overgeslagen met een melding) en (b) de labels in `reference/**/*.structure.json` (nu `reference/corvane/desktop/*.structure.json` en `reference/corvane/mobile/*.structure.json`). Bestaat `reference/` maar vindt de glob niets, dan faalt de guard met een melding (nooit stil slagen). Een overgeslagen deel print een zichtbare regel `SKIPPED: <naam>` (`console.warn`): altijd `SKIPPED: lashthing`, want lashthing.nl is nooit opgehaald (REFERENCE §1.1) en er is dus geen tekst om mee te vergelijken; de guard draait opnieuw na de opname uit REFERENCE §6 (§22 punt 15). Plus een woordcontrole op CORVANE-woorden in `components/` en `content/`: "scent", "spray", "geur", "parfum", "vane", "corvane" (beslissing 99).
 13. **Specregel per materiaal**: een product met een Zilver-variant heeft geen "Verguld", "verguld" of "goudlaag" in `specRegel` (beslissing 115).
 
 ### 19.2 Playwright (`npm run test:e2e`)
 
-Tegen de productiebuild met `COMMERCE_PROVIDER=local`. Selectors op rol en label (Activity laat verborgen routes in de DOM, digest A8). `tests/e2e/fixtures.ts`: `test` met de optie `clockAt` (standaard `TEST_NOW`; vóór elke `goto` `page.clock.install({ time: clockAt })` en `page.clock.resume()`, zie §11.7; `null` = de spec regelt de klok zelf), automatische `suppressEmailPopup` (zet `sparkela:email-capture:last-shown` op 2100-01-01 via `addInitScript`), `gotoHydrated(page, path)`, `settleAnimations(page)`, `collectConsoleProblems(page)`, `addProduct(page, handle, options?)`, `SHOP_ROUTES` (vaste routelijst: `STATIC_ROUTES` uit `lib/seo.ts`, alle handles uit `content/collections.ts` en de listable handles uit `content/products.ts` op `TEST_NOW`; de specs lezen nooit `/sitemap.xml`, zodat E2 ook draait zonder `app/sitemap.ts`), locators `cartButton` (rol button, naam begint met "Tas"), `cartDrawer` (dialog "Je tas"), `totalsRow(label)`, constanten `TEST_NOW`, `PRELAUNCH_NOW`, `EARLY_ACCESS_NOW`, `PREVIEW_TOKEN`, `earlyAccessToken(slug)`.
+Tegen de productiebuild met `COMMERCE_PROVIDER=local`. Selectors op rol en label (Activity laat verborgen routes in de DOM, digest A8). `tests/e2e/fixtures.ts`: `test` met de optie `clockAt` (standaard `TEST_NOW`; vóór elke `goto` `page.clock.install({ time: clockAt })` en `page.clock.resume()`, zie §11.7; `null` = de spec regelt de klok zelf), automatische `suppressEmailPopup` (zet `sparkela:email-capture:last-shown` op 2100-01-01 via `addInitScript`), `gotoHydrated(page, path)`, `settleAnimations(page)`, `collectConsoleProblems(page)`, `addProduct(page, handle, options?)`, `SHOP_ROUTES = localShopRoutes(TEST_NOW)` (uit `tests/fixtures/local-catalog.ts`, C2a; dezelfde lijst als E1's `sitemap.test.ts`; de specs lezen nooit `/sitemap.xml`, zodat E2 ook draait zonder `app/sitemap.ts`), locators `cartButton` (rol button, naam begint met "Tas"), `cartDrawer` (dialog "Je tas"), `totalsRow(label)`, constanten `TEST_NOW` (opnieuw geëxporteerd uit `tests/test-env.mjs`), `PRELAUNCH_NOW`, `EARLY_ACCESS_NOW`, `PREVIEW_TOKEN`, `earlyAccessToken(slug)`.
 
 | Spec | Brief §7-geval | Stappen en verwachting |
 | --- | --- | --- |
@@ -3286,12 +3335,12 @@ Tegen de productiebuild met `COMMERCE_PROVIDER=local`. Selectors op rol en label
 | `popup.spec.ts` | Popup maximaal één keer | Gewone `test` (geen onderdrukking), `clockAt: null`, eigen `clock.install`; `runFor(8000)` → pill "Kies je spark"; klik → modal met de belofte vóór de kaarten; een kaart omdraaien toont "WELKOM10"; sluiten; herladen + `runFor(9000)` → geen pill; nieuwe context met `last-shown` 8 dagen terug → pill; opslag geblokkeerd → nooit; exit-intent op desktop (`mouse.move(700, -20)`) |
 | `finder.spec.ts` | Spark Finder geeft een aanbeveling | Chunky en bold → Date night → Oorbellen → minstens 3 kaarten, "Lola chunky hoops" erbij; dezelfde flow alleen met toetsenbord; e-mailstap zichtbaar met de consenttekst |
 | `withdrawal.spec.ts` | Herroepformulier valideert | Leeg verzenden → drie veldfouten; fout bestelnummer → fout; geldig → terugval (geen mailsleutels) met `mailto:`-link; precies één knop "Herroeping bevestigen" |
-| `prelaunch.spec.ts` | Prelaunch toont de wachtlijst en de preview-link werkt | Header `x-sparkela-test-now: 2026-11-20T12:00:00+01:00` en `page.clock` op dezelfde tijd (de `TimeGate` op de wachtlijst volgt de browserklok): `/` en `/collections/oorbellen` tonen H1 "Sparkela komt eraan"; `/privacy` toont de privacypagina; `/nieuwsbrief/bevestigen` is open; `/opengraph-image` geeft `image/png`; `/?preview=<token>` → URL zonder `preview`, cookie gezet, `/` toont de shop; fout token → wachtlijst |
+| `prelaunch.spec.ts` | Prelaunch toont de wachtlijst en de preview-link werkt | Header `x-sparkela-test-now: 2026-11-20T12:00:00+01:00` en `page.clock` op dezelfde tijd (de `TimeGate` op de wachtlijst volgt de browserklok): `/` en `/collections/oorbellen` tonen H1 "Sparkela komt eraan"; `/privacy` toont de privacypagina; `/nieuwsbrief/bevestigen` is open; `/icon.svg` geeft 200 met `image/svg+xml` (META-route langs de proxy; `/opengraph-image` bestaat pas na E1 en controleert integrator 10); `/?preview=<token>` → URL zonder `preview`, cookie gezet, `/` toont de shop; fout token → wachtlijst |
 | `early-access.spec.ts` | (drops) | Header en `page.clock` op `2026-11-26T12:00:00+01:00`: `/drops/holiday-sparkle` zonder token → teaser; met `?toegang=<token>` → droppagina met 4 producten, PDP `holiday-ster-oorbellen` bereikbaar, toevoegen werkt, de Holiday stack via "Voeg de stack toe" ook (drie regels in de tas), "Maak de look af" in de drawer is leeg; `/collections/oorbellen` → wachtlijst. Let op: de server-klok van de build staat op `TEST_NOW`; de 26-novemberstand van de server dekt `commerce.test.ts` (§11.7) |
-| `drops.spec.ts` | Drop vlak voor en na de start (UI) | `page.clock` 2027-02-05T18:59:55+01:00 op `/drops/love-club` met preview-cookie: timer; `runFor(10000)` → "Nu live" |
-| `layout.spec.ts` | Strakke layout en herroepingslink | Op elke route uit `SHOP_ROUTES`, plus `/wachtlijst` (prelaunch-header), `/nieuwsbrief/bevestigen` en de 404: `getByRole("link", { name: "Hier de overeenkomst herroepen" })` is zichtbaar en wijst naar `/herroepen` (brief §2.10). Geen horizontale scroll op dezelfde routes; 404 heeft status 404 en noindex; pill en sticky koopbalk overlappen niet (390×844); in de mobiele header (390 px) zijn menu, zoeken, logo, account en "Tas (n)" zichtbaar; op 320 px geen horizontale scroll |
+| `drops.spec.ts` | Drop vlak voor en na de start (UI) | `page.clock` 2027-02-05T18:59:55+01:00 op `/drops/love-club` met preview-cookie: timer; `runFor(10000)` → "Nu live". Home op `TEST_NOW`: dropbanner "Holiday Sparkle." met "Nu live" en een timer (verborgen label "Eindigt op donderdag 31 december om middernacht"); `clock.install` op 2026-12-31T23:59:55+01:00, `runFor(10000)` → banner weg (§12.4) |
+| `layout.spec.ts` | Strakke layout en herroepingslink | Op elke route uit `SHOP_ROUTES`, plus `/wachtlijst` (prelaunch-header), `/nieuwsbrief/bevestigen` en de 404: `getByRole("link", { name: "Hier de overeenkomst herroepen" })` is zichtbaar en wijst naar `/herroepen` (brief §2.10). Geen horizontale scroll op dezelfde routes; 404 heeft status 404 en noindex (ook `/drops/iets/binnenkort`, eerste verzoek); pill en sticky koopbalk overlappen niet (390×844); in de mobiele header (390 px) zijn menu, zoeken, logo, account en "Tas (n)" zichtbaar; op 320 px geen horizontale scroll |
 | `a11y.spec.ts` | WCAG AA | `@axe-core/playwright` met tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` na `settleAnimations` op home, collectie, PDP, cart open, cart leeg, menu open, popup open, finder, herroepen, wachtlijst → nul overtredingen |
-| `seo.spec.ts` | SEO | Zonder JavaScript: één zichtbare H1 en JSON-LD `Product` op elke PDP uit `SHOP_ROUTES`; onbekende handle → 404 met noindex (ook met Bingbot-user-agent) |
+| `seo.spec.ts` | SEO | Zonder JavaScript: één zichtbare H1 en JSON-LD `Product` op elke PDP uit `SHOP_ROUTES`; onbekende handle → 404 met noindex (ook met Bingbot-user-agent); `/products/zzz`, `/collections/zzz`, `/drops/iets` en `/drops/iets/binnenkort` geven al bij het **eerste** verzoek status 404 (`request.get`, niet via de browser) |
 | `screenshots.spec.ts` | Screenshots | Alleen met `SCREENSHOTS=1`: home, `/collections/oorbellen`, `/products/lola-chunky-hoops`, open cart drawer met 3 stuks, popup open, mobiel menu open (desktop: megamenu Shop per moment open), wachtlijst (prelaunch-header); `fullPage`, `animations: "disabled"`, na `document.fonts.ready`; opslag in `screenshots/<naam>-<project>.png` |
 
 ### 19.3 `playwright.config.ts`
@@ -3303,6 +3352,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
 // tests/test-env.mjs (plain JS, also imported by scripts/with-test-env.mjs):
 // export const TEST_PORT = 3200;
+// export const TEST_NOW = Date.parse("2026-11-27T12:00:00+01:00");   // same instant as TEST_ENV.SPARKELA_TEST_NOW; Vitest (D4) and E2E import it from here
 // export const TEST_ENV = {
 //   COMMERCE_PROVIDER: "local", SPARKELA_TEST_CLOCK: "1", SPARKELA_TEST_NOW: "2026-11-27T12:00:00+01:00",
 //   PRELAUNCH_BYPASS_TOKEN: "test-preview-token-0123456789abcdefghij",   // ≥ 32 characters, obviously fake
@@ -3341,7 +3391,7 @@ export default defineConfig({
 2. `npm run test:e2e` slaagt op beide projecten.
 3. De site werkt volledig met `COMMERCE_PROVIDER=local` zonder sleutels. De Shopify-provider is getest met de fixtures (en met `npm run test:shopify` als `.env.local` sleutels heeft).
 4. Screenshots van home, collectie, PDP, open cart drawer, popup, mobiel menu en wachtlijst op 390×844 en 1440×900 zijn gemaakt, bekeken naast `reference/corvane/`, en alles wat niet strak is (overlap, afgekapte tekst, horizontale scroll, rommelige afstanden) is opgelost.
-5. `docs/COMPLIANCE.md` beschrijft per regel van brief §2 waar die in de code en tests wordt afgedwongen, en de content-guard bevestigt dat er geen referentietekst in de site staat.
+5. `docs/COMPLIANCE.md` beschrijft per regel van brief §2 waar die in de code en tests wordt afgedwongen, en de content-guard bevestigt dat er geen referentietekst van CORVANE in de site staat. Voor Lashthing zegt COMPLIANCE eerlijk dat de vergelijking beperkt is: lashthing.nl is nooit opgehaald, er was geen tekst om over te nemen, en de guard meldt `SKIPPED: lashthing` tot de opname uit REFERENCE §6 er is (§22 punt 15).
 6. Lighthouse mobiel 90+ op home, collectie en PDP, met de scores in COMPLIANCE.
 
 ---
@@ -3379,11 +3429,11 @@ export default defineConfig({
 | elk ander bestand, na de golf die het maakte | maker | integrator | integrator | integrator | integrator | F1 |
 
 - "integrator" = alleen de integratie-agent van die golf, na de bouwagents. Een bestand dat in een golf niet in iemands lijst staat, is van de integrator van die golf; wie er iets in nodig heeft, vraagt het in zijn rapport (D3 bijvoorbeeld een `collecties.<handle>`-sleutel in `content/assets.ts`, E2 een wijziging in `playwright.config.ts` buiten zijn golf).
-- **Klaar voor een bouwagent is mechanisch** (beslissing 96): zijn eigen Vitest-bestanden en de content-guard zijn groen (`npx vitest run <eigen paden> content/content-guard.test.ts`, vanaf golf 3b; een fout van de guard in het bestand van een ander noteert hij); componenten met `renderToStaticMarkup`, providers in de test zelf om de component heen), `npx eslint <zijn bestanden>` is schoon, en `npx tsc --noEmit --incremental false -p tsconfig.json` geeft nul fouten in zijn bestanden. Fouten in bestanden van de parallelle agent of in `.next/types` noteert hij, hij lost ze niet op.
+- **Klaar voor een bouwagent is mechanisch** (beslissing 96): zijn eigen Vitest-bestanden en de content-guard zijn groen (`npx vitest run <eigen paden> content/content-guard.test.ts`, vanaf golf 3b paar 2: in paar 1 schrijft B4 de guard nog, dus B1 draait alleen zijn eigen tests en integrator 3b draait de guard ook over B1's `components/brand`-literals; een fout van de guard in het bestand van een ander noteert hij); componenten met `renderToStaticMarkup`, providers in de test zelf om de component heen), `npx eslint <zijn bestanden>` is schoon, en `npx tsc --noEmit --incremental false -p tsconfig.json` geeft nul fouten in zijn bestanden. Fouten in bestanden van de parallelle agent of in `.next/types` noteert hij, hij lost ze niet op.
 - **Geen `next build` en geen `next dev` door bouwagents.** Next staat maar één `next dev` of `next build` per project toe (lockfile), en pagina's bekijken kan niet tegelijk. Alles wat een draaiende app nodig heeft (CLS, 404-patroon, filters in de URL, demo-checkout, drawer, buildmarkers) controleert de integrator met `npm run start:test` (§19.3). Geen tijdelijke pagina's of scratch-routes.
 - **Typegen.** De orchestrator draait `npx next typegen` vóór elk paar. Dat kan vanaf golf 3a, omdat A1 `lib/image-loader.ts` samen met `next.config.ts` maakt (Next weigert de config als `images.loaderFile` niet bestaat, bij `next build` én `next typegen`). Een agent die een routebestand toevoegt, mag daarna één keer `npx next typegen` draaien voor `PageProps`; geeft dat een fout in `.next/types` door de andere agent, dan één keer opnieuw, verder negeren. `npm run typecheck` (met `incremental`) is alleen voor de integrator.
 - Elke agent sluit af met een kort rapport: bestanden, wat getest is, open verzoeken, afwijkingen van het plan (die gaan via de integrator naar `docs/DECISIONS.md`).
-- **Commits per fase** (brief §0, beslissing 86). Agents committen niet. Na een groene integratie commit de orchestrator per fase uit brief §9, in volgorde, met de bestandslijsten uit §20.2: na 3a en 3b "Phase 3"; na 4-6 eerst "Phase 4: waitlist" (C1), dan "Phase 5: commerce" (C2a, C2b), dan "Phase 6: layout" (C3, C4 en de fixes van de integrator); na 7-9 "Phase 7: home" (D1), "Phase 8: product card, collection, product page" (D2 en de collectiebestanden van D3), "Phase 9: popup, finder, drops, stacks, pages" (D4, de rest van D3, `ShopChrome`); na 10-11 "Phase 10" (E1) en "Phase 11" (E2, E3, integrator); "Phase 12" (F1). Alleen de laatste commit van een golf hoeft los te bouwen.
+- **Commits per fase** (brief §0, beslissing 86). Agents committen niet. Na een groene integratie commit de orchestrator per fase uit brief §9, in volgorde, met de bestandslijsten uit §20.2: na 3a en 3b "Phase 3"; na 4-6 eerst "Phase 4: waitlist" (C1, plus `docs/ASSETS.md` en `docs/METAFIELDS.md` van C4, die met de wachtlijst live gaan), dan "Phase 5: commerce" (C2a, C2b), dan "Phase 6: layout and product card" (C3, de kaart-, grid- en 404-bestanden van C4 en de fixes van de integrator; de kaart is uit fase 8 naar voren gehaald omdat QuickAdd in de chrome en de 404 hem nodig hebben, beslissing 141); na 7-9 "Phase 7: home" (D1), "Phase 8: collection, product page" (D2 en de collectiebestanden van D3; de productkaart zit al in fase 6), "Phase 9: popup, finder, drops, stacks, pages" (D4, de rest van D3, `ShopChrome`); na 10-11 "Phase 10" (E1) en "Phase 11" (E2, E3, integrator); "Phase 12" (F1). Alleen de laatste commit van een golf hoeft los te bouwen.
 
 ### 20.2 Golven
 
@@ -3406,7 +3456,7 @@ B4 vult de data vóór B3 en B2 starten, zodat de logica en de primitives tegen 
 | --- | --- | --- | --- |
 | **B1 merk** (paar 1) | `scripts/build-logo.mjs`, `components/brand/*` (incl. `logo-paths.ts`), `public/brand/*`, `app/icon.svg`, `app/apple-icon.png`, `app/favicon.ico`, `app/layout.tsx` (alleen `LogoDefs` toevoegen), `lib/analytics.ts` + test, `lib/subscription.ts` + test (§13.6) | brief §3, §13.1, §13.6, §18.2, `lib/brand-colors.ts`, `lib/storage.ts` | `npm run logo` maakt alle bestanden; een Vitest controleert dat `logo-paths.ts` niet-lege paden en viewboxen heeft en dat het SVG-bestand van de vonk geen `skewX` bevat; analytics- en subscription-tests groen |
 | **B4 data** (paar 1) | `content/products.ts`, `collections.ts`, `stacks.ts`, `faq.ts`, `claims.ts`, `reviews.ts`, `quiz.ts`, `home.ts`, `assets.ts`, `navigation.ts`, `legal.ts`, `content/copy/pdp.ts` (alleen `care.default`), `data/shopify-products.csv`, `public/images/**/.gitkeep`, `content/*.test.ts` (incl. `content-guard.test.ts`) | §5, §12, §17.2, §19.1 | 24 + 2 producten volgens §5.4; CSV met dezelfde handles en metafield-kolommen; content-guard en datatests groen |
-| **B2 ui** (paar 2) | `components/ui/*`, `components/time/*`, `components/media/*`, `components/pages/PageHeader.tsx`, `app/globals.css` (utilities `kop-*`, `sectie`, keyframes-hulpklassen), `app/layout.tsx` (alleen `MotionStyles` toevoegen), `content/copy/shared.ts` (alleen sleutels toevoegen), `tests/unit/contrast.test.ts`, `components/time/timeSwitchScript.test.ts`, `components/ui/Price.test.tsx`, `components/ui/Button.test.tsx` | §4, §10.5 tot §10.7, §13.2 tot §13.4 | tests groen; eslint en tsc schoon |
+| **B2 ui** (paar 2) | `components/ui/*`, `components/time/*` (incl. `VatNotice.tsx`), `components/media/*`, `components/pages/PageHeader.tsx`, `app/globals.css` (utilities `kop-*`, `sectie`, keyframes-hulpklassen), `app/layout.tsx` (alleen `MotionStyles` toevoegen), `content/copy/shared.ts` (alleen sleutels toevoegen), `tests/unit/contrast.test.ts`, `components/time/timeSwitchScript.test.ts`, `components/ui/Price.test.tsx`, `components/ui/Button.test.tsx` | §4, §10.5 tot §10.7, §13.2 tot §13.4; uit 3a: `lib/types.ts` (`PriceDisplay`, `Money`, `BadgeId`), `lib/schedule.ts` (`scheduleAt`, `phaseIndex`, `getCountdown`, `formatCountdown`), `lib/hooks/useNow.ts`, `content/site.ts` (`site.vat`), `content/copy/shared.ts`. Nooit `lib/dates.ts` of `lib/pricing.ts` (die schrijft B3 tegelijk) | tests groen; eslint en tsc schoon |
 | **B3 logica** (paar 2) | `lib/dates.ts`, `lib/holidays.ts`, `lib/pricing.ts`, `lib/clock.ts`, `lib/server-clock.ts`, `lib/claims.ts`, `lib/reviews.ts`, `lib/seo.ts`, `components/seo/JsonLd.tsx`, en hun tests (§19.1) | §6, §8, §9, §10.3, §18.1, `content/*`, `content/copy/shared.ts`, `tests/fixtures/catalog.ts` | alle B3-suites groen (pricing met `tests/fixtures/catalog.ts`); geen `Date.now()` buiten `serverNow` en de event-plekken |
 
 **Integratie 3b**: §20.3. Met `npm run start:test`: de HTML van `/` bevat `LogoDefs` (`#sparkela-wordmark`) en `/icon.svg` geeft 200.
@@ -3417,11 +3467,11 @@ C1 is fase 4 en is na deze golf live te zetten (§11.9). C2 is gesplitst (beslis
 
 | Agent | Bestanden (exclusief) | Consumeert | Klaar als |
 | --- | --- | --- | --- |
-| **C1 wachtlijst-formulieren** (paar 1) | `proxy.ts`, `lib/early-access.ts`, `lib/preview.ts` + tests, `scripts/early-access-link.mjs`, `lib/forms/{validation,rate-limit,responses,confirm-token}.ts` + tests, `lib/mail.ts` + test, `lib/commerce/shopify/admin.ts` + test, `tests/fixtures/shopify/admin-*.json`, `app/api/subscribe/route.ts`, `app/api/subscribe/confirm/route.ts`, `app/api/{herroepen,contact}/route.ts`, `tests/unit/proxy.test.ts`, `tests/unit/api-forms.test.ts`, `components/forms/*`, `components/legal/*`, `components/prelaunch/*`, `app/(kaal)/layout.tsx`, `app/(kaal)/wachtlijst/page.tsx`, `app/(kaal)/nieuwsbrief/bevestigen/page.tsx`, `app/(shop)/{verzenden-en-retourneren,herroepen,contact,algemene-voorwaarden,privacy,cookies}/page.tsx`, `content/legal/*.md`, `content/legal.ts`, `content/copy/forms.ts`, `README.md` (starten en "Wachtlijst live zetten", §11.9) | §11, §14.13 tot §14.16, §14.20, §14.21, §15, `content/*`, `lib/analytics.ts`, `lib/subscription.ts` | suites groen; formulieren geven zonder sleutels de terugval; README-sectie compleet (met Vercel Pro en de Admin-test, §11.9) |
-| **C2a commerce-lokaal** (paar 1) | `lib/catalog.ts` + test, `lib/shop-data.ts`, `lib/commerce/index.ts`, `local.ts`, `collections.ts`, `commerce.test.ts`, `lib/commerce/cart/local-adapter.ts`, stubs van `lib/commerce/shopify/catalog.ts` en `lib/commerce/cart/shopify-adapter.ts` (gooien "not implemented"), `tests/fixtures/local-catalog.ts`, `components/catalog/CatalogProvider.tsx`, `components/cart/{CartProvider.tsx,useCart.ts,CartAnnouncer.tsx}` | §6, §7.1 tot §7.5, §8, `lib/analytics.ts`, `lib/schedule.ts`, `sharedCopy.announce` | suites groen (ook de early-access-gevallen van §19.1); lokale provider levert alles; `lib/shop-data.ts` geeft alleen `CatalogProduct[]` aan lijsten; geen `cookies()` buiten route handlers |
+| **C1 wachtlijst-formulieren** (paar 1) | `proxy.ts`, `lib/early-access.ts`, `lib/preview.ts` + tests, `scripts/early-access-link.mjs`, `lib/forms/{validation,rate-limit,responses,confirm-token}.ts` + tests, `lib/mail.ts` + test, `lib/commerce/shopify/admin.ts` + test, `tests/fixtures/shopify/admin-*.json`, `app/api/subscribe/route.ts`, `app/api/subscribe/confirm/route.ts`, `app/api/{herroepen,contact}/route.ts`, `tests/unit/proxy.test.ts`, `tests/unit/api-forms.test.ts`, `components/forms/*`, `components/legal/*`, `components/prelaunch/*`, `components/consent/CookieSettingsButton.tsx`, `app/(kaal)/layout.tsx`, `app/(kaal)/wachtlijst/page.tsx`, `app/(kaal)/nieuwsbrief/bevestigen/page.tsx`, `app/(shop)/{verzenden-en-retourneren,herroepen,contact,algemene-voorwaarden,privacy,cookies}/page.tsx`, `content/legal/*.md`, `content/legal.ts`, `content/copy/forms.ts`, `README.md` (starten en "Wachtlijst live zetten", §11.9) | §11, §14.13 tot §14.16, §14.20, §14.21, §15, `content/*`, `lib/analytics.ts` (`OPEN_CONSENT_EVENT`, `track`), `lib/subscription.ts`, `components/time/VatNotice.tsx` (3b/B2) | suites groen; formulieren geven zonder sleutels de terugval; README-sectie compleet (met Vercel Pro en de Admin-test, §11.9) |
+| **C2a commerce-lokaal** (paar 1) | `lib/catalog.ts` + test, `lib/shop-data.ts`, `lib/commerce/index.ts`, `local.ts`, `local-data.ts`, `collections.ts`, `commerce.test.ts`, `lib/commerce/cart/local-adapter.ts`, stubs van `lib/commerce/shopify/catalog.ts` en `lib/commerce/cart/shopify-adapter.ts` (gooien "not implemented"), `tests/fixtures/local-catalog.ts`, `components/catalog/CatalogProvider.tsx`, `components/cart/{CartProvider.tsx,useCart.ts,CartAnnouncer.tsx}` | §6, §7.1 tot §7.5, §8, `lib/analytics.ts`, `lib/schedule.ts`, `sharedCopy.announce` | suites groen (ook de early-access-gevallen van §19.1); lokale provider levert alles; `tests/fixtures/local-catalog.ts` laadt zonder `server-only` (ook buiten Vitest); `lib/shop-data.ts` geeft alleen `CatalogProduct[]` aan lijsten; geen `cookies()` buiten route handlers |
 | **C2b commerce-shopify** (paar 2) | `lib/commerce/shopify/{client,queries,mutations,mappers,catalog,cart,webhooks}.ts` + tests, `lib/commerce/cart/shopify-adapter.ts`, `lib/commerce/cart-gate.ts` + test, `app/api/cart/route.ts`, `app/api/revalidate/route.ts`, `tests/fixtures/shopify/*` (behalve `admin-*`), `tests/unit/api-cart.test.ts`, `tests/unit/api-revalidate.test.ts`, `tests/unit/shopify-live.test.ts` | §7, §16 | suites groen; geen import van `server-only`-modules in de adapter |
-| **C3 chrome** (paar 2) | `components/layout/*` (behalve `SkipLink`, `RouteFocus`), `components/consent/*`, `components/cart/*` (behalve de C2a-bestanden), `components/product/QuickAdd.tsx`, `components/consent/ConsentBanner.test.tsx`, `app/(shop)/layout.tsx`, `app/layout.tsx`, `app/globals.css`, `content/navigation.ts`, `content/copy/chrome.ts`, `content/copy/cart.ts` | §2.5, §4, §10.5, §12.3, §13.5 tot §13.7, §18.2, `useCart`, `useCatalog` | tests groen (o.a. `CartProgressBars`, `QuickAdd` binnen `CartProvider` en `CatalogProvider` met `renderToStaticMarkup`) |
-| **C4 productkaart, 404, docs** (paar 3) | `components/product/{ProductCard,ProductGrid,SortSelect,ProductCardSkeleton}.tsx` + `ProductCard.test.tsx`, `components/pages/NotFoundView.tsx`, `content/copy/product-card.ts`, `docs/ASSETS.md`, `docs/METAFIELDS.md` | §6.4, §13.8, §13.13, §16.6, §17.2, `QuickAdd`, `lib/catalog.ts`, `lib/shop-data.ts`, `content/assets.ts` | test met alle staten (badge, uitverkocht, varianten, cadeaukaart, van-prijs met laagste prijs, client-wrapper) groen; ASSETS.md noemt elke sleutel uit `content/assets.ts` met bestand, verhouding en maat; METAFIELDS.md dekt §6.4 en §16.6 (tags incl. `piercing`, collectie `alle`, kortingsmatrix) |
+| **C3 chrome** (paar 2) | `components/layout/*` (behalve `SkipLink`, `RouteFocus`), `components/consent/*` (behalve `CookieSettingsButton.tsx`), `components/cart/*` (behalve de C2a-bestanden), `components/product/QuickAdd.tsx`, `components/consent/ConsentBanner.test.tsx`, `app/(shop)/layout.tsx`, `app/layout.tsx`, `app/globals.css`, `content/navigation.ts`, `content/copy/chrome.ts`, `content/copy/cart.ts` | §2.5, §4, §10.5, §12.3, §13.5 tot §13.7, §18.2, `useCart`, `useCatalog` | tests groen (o.a. `CartProgressBars`, `QuickAdd` binnen `CartProvider` en `CatalogProvider` met `renderToStaticMarkup`) |
+| **C4 productkaart, 404, docs** (paar 3) | `components/product/{ProductCard,ProductGrid,SortSelect,ProductCardSkeleton}.tsx` + `ProductCard.test.tsx`, `components/pages/NotFoundView.tsx`, `content/copy/product-card.ts`, `docs/ASSETS.md`, `docs/METAFIELDS.md` | §6.4, §13.8, §13.13, §16.6, §17.2, `QuickAdd`, `lib/catalog.ts`, `lib/shop-data.ts`, `content/assets.ts` | test met alle staten (badge, uitverkocht, varianten, cadeaukaart, van-prijs met laagste prijs, client-wrapper) groen; ASSETS.md noemt elke sleutel uit `content/assets.ts` met bestand, verhouding en maat; METAFIELDS.md dekt §6.4 en §16.6 (tags incl. `piercing`, collectie `alle`, kortingsmatrix) en zet de stappen in de volgorde van §16.9 punt 2: definities vóór de CSV-import, dan de controle op `spec_regel` en `gpsr_fabrikant`; ASSETS.md zegt dat productfoto's in Shopify JPEG of PNG zijn, nooit WebP of AVIF (§17.2) |
 
 **Integratie 4-6**: §20.3. Buildoutput: `ƒ Proxy`, `ƒ /api/*`, `○ /wachtlijst`, `○ /nieuwsbrief/bevestigen`, `○` juridische pagina's. Met `npm run build:test` en `npm run start:test`: met een prelaunch-tijd (`x-sparkela-test-now`) `curl` op de rewrite, de preview-link, `/icon.svg` (gaat langs de proxy) en `/privacy`; zonder header (testklok 27 november) header, menu, footer met herroepingslink en drawer op de tijdelijke home; geen CLS in de chrome. De consentbanner is gedekt door `ConsentBanner.test.tsx` (geen aparte build met analytics aan). De lege catalogus is gedekt door unit-tests (`mappers.test.ts` met `catalog-no-collection.json`, `commerce.test.ts` met `NO_PRODUCTS_HANDLE`); geen aparte build tegen Shopify.
 
@@ -3431,7 +3481,7 @@ C1 is fase 4 en is na deze golf live te zetten (§11.9). C2 is gesplitst (beslis
 | --- | --- | --- | --- |
 | **D3 collectie-drops** (paar 1) | `components/collection/*`, `components/drops/*`, `components/stacks/*`, `components/search/*`, `components/sections/*`, `components/giftcards/*`, `app/(shop)/collections/[handle]/page.tsx`, `app/(shop)/drops/[slug]/page.tsx`, `app/(shop)/drops/[slug]/binnenkort/page.tsx`, `app/(shop)/stacks/page.tsx`, `app/(shop)/cadeaukaarten/page.tsx`, `app/(shop)/zoeken/page.tsx`, `content/collections.ts`, `content/copy/collection.ts` | §12, §13.8, §13.12, §14.3, §14.6 tot §14.10 | tests voor filter-URL-parsing en `StackCard`-totalen groen |
 | **D4 finder-popup-pagina's** (paar 1) | `components/finder/*` + test, `components/email/*` + test, `components/checkout/*`, `app/not-found.tsx`, `app/(shop)/not-found.tsx`, `app/(shop)/{spark-finder,sparkela-club,over-sparkela,veelgestelde-vragen,account,checkout}/page.tsx`, `content/copy/pages.ts` | §5.7, §13.11, §13.13, §14.5, §14.9, §14.11, §14.12, §14.17 tot §14.19 | finder-paden en popupregels getest; `CheckoutView` getest op de staten `review` en `placed` |
-| **D1 home** (paar 2) | `components/home/*` + test, `app/(shop)/page.tsx`, `content/home.ts` | §14.1, §13.10, `DropBanner`, `HowToStack`, `FaqList`, `SparkFinder` | `ReviewsCarousel`-test groen; secties in volgorde (test op de volgorde van de koppen) |
+| **D1 home** (paar 2) | `components/home/*` + test, `app/(shop)/page.tsx`, `content/home.ts` | §14.1, §13.10, `DropBanner`, `HowToStack`, `FaqList`, `SparkFinder` | `ReviewsCarousel`-test groen; secties in volgorde (test op de volgorde van de koppen met `renderToStaticMarkup(await Page())` en gemockte `lib/shop-data`, §19.1) |
 | **D2 pdp** (paar 2) | `components/pdp/*` + tests, `app/(shop)/products/[handle]/page.tsx`, `app/(shop)/products/layout.tsx`, `content/copy/pdp.ts` | §14.2, §13.9 | tests voor `ProductSpecs` (materiaal per variant, claimtekst) en `ProductAccordions` (hygiëneregel) groen |
 
 **Integratie 7-9**: §20.3, plus: `ShopChrome` krijgt `ReviewsCarousel variant="footer"` en `EmailCaptureLoader` (§13.5). Build met `npm run build:test` en laat `.next` staan voor E2. Buildmarkers: per bekend product, collectie en drop een `○`-regel onder de route, `◐` alleen de shells, `●` alleen bij `opengraph-image`. Met `npm run start:test`: elke route één keer, CLS 0 op de home, het 404-patroon (PDP, collectie, drop), filters in de URL, de demo-checkout.
@@ -3440,14 +3490,14 @@ C1 is fase 4 en is na deze golf live te zetten (§11.9). C2 is gesplitst (beslis
 
 | Agent | Bestanden (exclusief) | Consumeert | Klaar als |
 | --- | --- | --- | --- |
-| **E1 seo-perf** | `app/sitemap.ts`, `tests/unit/sitemap.test.ts`, `app/robots.ts`, `app/manifest.ts`, `app/opengraph-image.tsx`, `app/(shop)/products/[handle]/opengraph-image.tsx`, `app/(shop)/drops/[slug]/opengraph-image.tsx`, `components/seo/OgImage.tsx`, `assets/fonts/*`, `app/layout.tsx`, `app/globals.css`, `next.config.ts`; metadata-correcties in pagina's via verzoeken aan de integrator | §17.3, §18 | tests voor sitemap (geen noindex-pagina's, geen drops vóór de start) en robots groen |
+| **E1 seo-perf** | `app/sitemap.ts`, `tests/unit/sitemap.test.ts`, `app/robots.ts`, `tests/unit/robots.test.ts`, `tests/unit/og.test.ts`, `tests/fixtures/og-photo.jpg`, `app/manifest.ts`, `app/opengraph-image.tsx`, `app/(shop)/products/[handle]/opengraph-image.tsx`, `app/(shop)/drops/[slug]/opengraph-image.tsx`, `components/seo/OgImage.tsx`, `assets/fonts/*`, `app/layout.tsx`, `app/globals.css`, `next.config.ts`; metadata-correcties in pagina's via verzoeken aan de integrator | §17.3, §18 | tests voor sitemap (geen noindex-pagina's, geen drops vóór de start) en robots groen |
 | **E2 e2e** | `tests/e2e/*` | §19.2, §19.3 | Draait zijn specs met `PLAYWRIGHT_BASE_URL=http://localhost:3200` tegen `npm run start:test` op de build van integratie 7-9 (niet opnieuw bouwen; server na afloop stoppen). Routes uit `SHOP_ROUTES`, niet uit de sitemap (E1 bouwt die tegelijk). Klaar = specs groen, of per falende spec de oorzaak (spec of app) in het rapport |
-| **Integrator 10** | alles (alleen) | | build, `npm run test:e2e`, axe, Lighthouse; fixt falende specs of code; schrijft de metingen in `docs/QA-NOTES.md` |
+| **Integrator 10** | alles (alleen) | | build, `npm run test:e2e`, controle dat `/opengraph-image` `image/png` geeft (ook tijdens prelaunch, langs de proxy), axe, Lighthouse; fixt falende specs of code; schrijft de metingen in `docs/QA-NOTES.md` |
 | **E3 visuele QA** (alleen) | alles (alleen, mag bouwen) | brief §10, `reference/corvane/` | `npm run screenshots`; elke screenshot bekeken naast de referentie; overlap, afgekapte tekst, horizontale scroll en rommelige afstanden opgelost; opnieuw alle checks groen; bevindingen in `docs/QA-NOTES.md` |
 
 #### Golf 12: oplevering (F1 alleen)
 
-`README.md` (aanvullen), `docs/METAFIELDS.md` en `docs/ASSETS.md` (bijwerken; ze bestaan sinds golf 4-6), `docs/COMPLIANCE.md` (met de metingen uit `docs/QA-NOTES.md`), `docs/TODO-LAUNCH.md` (volledig volgens §16.9), laatste update van `docs/DECISIONS.md` en `docs/PLAN.md` (alleen correcties), eindcontrole (lint, typecheck, test, build, e2e) en het eindbericht (wat gebouwd is, aannames, vijf belangrijkste open punten).
+`README.md` (aanvullen), `docs/METAFIELDS.md` en `docs/ASSETS.md` (bijwerken; ze bestaan sinds golf 4-6), `docs/COMPLIANCE.md` (met de metingen uit `docs/QA-NOTES.md`; de Lashthing-vergelijking als beperkt beschreven, §19.4 punt 5), `docs/TODO-LAUNCH.md` (volledig volgens §16.9), laatste update van `docs/DECISIONS.md` en `docs/PLAN.md` (alleen correcties), eindcontrole (lint, typecheck, test, build, e2e) en het eindbericht (wat gebouwd is, aannames, vijf belangrijkste open punten).
 
 ### 20.3 Integratiestap (elke golf)
 
@@ -3470,13 +3520,14 @@ C1 is fase 4 en is na deze golf live te zetten (§11.9). C2 is gesplitst (beslis
 | Golf 10-11 | vr 13 november | ja |
 | Golf 12 (docs) | ma 16 november | ja |
 | Producten, productfoto's, sitebeeld voor hero, Linde, momenttegels en Statement/subtiel, kortingen en verzending (TODO-LAUNCH 2 tot 8) | vr 20 november | ja |
+| Review-app gekozen en geïnstalleerd (TODO-LAUNCH 12) | vr 20 november | nee (de site toont pas reviews als ze er echt zijn) |
 | Eind-tot-eindtest in de echte winkel, early-access-test met de preview, dropproducten gepubliceerd | di 24 november | ja |
 | Early-access-mail aan de Club | wo 25 november | ja |
 | Early access open | do 26 november 00.00 | ja |
 | Lancering | vr 27 november 00.00 | ja |
-| Fotostrook, video's, review-app (TODO-LAUNCH 12), België, Spark Guide, voorraadmelding | na de lancering (§22) | nee |
+| Fotostrook en video's (zonder bestanden in productie verborgen, beslissing 127), België, Spark Guide, voorraadmelding | na de lancering (§22) | nee |
 
-Buffer: van 16 tot 24 november voor fixes uit de echte winkel. Schuift een golf meer dan twee dagen op, dan gaan eerst de niet-kritieke onderdelen naar "Na de lancering": de videorij en de fotostrook blijven placeholders, de zoekpagina krijgt alleen de header-zoekdialoog, de stylingtegel in collecties vervalt.
+Buffer: van 16 tot 24 november voor fixes uit de echte winkel. Schuift een golf meer dan twee dagen op, dan gaan eerst de niet-kritieke onderdelen naar "Na de lancering": de videorij en de fotostrook komen later (in productie verborgen zonder bestanden, beslissing 127), de zoekpagina krijgt alleen de header-zoekdialoog, de stylingtegel in collecties vervalt.
 
 ---
 
@@ -3531,7 +3582,7 @@ Buffer: van 16 tot 24 november voor fixes uit de echte winkel. Schuift een golf 
 
 ## 22. Open punten en aannames
 
-Alle aannames staan ook genummerd in `docs/DECISIONS.md` (15 tot en met 126). Deze punten moeten Linde en Tristan nog bevestigen of met de echte winkel worden getest:
+Alle aannames staan ook genummerd in `docs/DECISIONS.md` (15 tot en met 142). Deze punten moeten Linde en Tristan nog bevestigen of met de echte winkel worden getest:
 
 1. **Dropdata 2027** (beslissing 22): de start- en einddata van Love Club tot en met Spark Friday zijn voorstellen.
 2. **Einde lanceringscadeau**: 30 november 23.59 uur aangenomen; wat het cadeautje is, beslissen Linde en Tristan.
@@ -3548,7 +3599,7 @@ Alle aannames staan ook genummerd in `docs/DECISIONS.md` (15 tot en met 126). De
 11. **E-mailadres, bedrijfsgegevens, socials**: placeholders (`hallo@sparkela.nl`, `[KvK-nummer]`, accounts `confirmed: false`).
 12. **Juridische teksten**: placeholders met "TODO: laten controleren"; herroepingsmodelformulier en retouradres invullen.
 13. **GPSR**: alle velden zijn `[…]`-placeholders tot de leverancier de gegevens levert (beslissing 100).
-14. **Foto's en video's**: alle plekken zijn placeholders tot Linde levert (`docs/ASSETS.md`).
+14. **Foto's en video's**: alle plekken zijn placeholders tot Linde levert (`docs/ASSETS.md`). In productie zijn de fotostrook en de videorij verborgen zolang er geen enkel bestand is; de wachtlijst toont zonder foto geen fotoblok (beslissingen 119 en 127).
 15. **Lashthing opnieuw bekijken** zodra de netwerkpolicy het toestaat (`docs/REFERENCE.md` §6); daarna eventueel sectievolgorde en megamenu bijstellen.
 16. **Rate limit op serverless** (beslissing 48): per instance; een gedeelde store na de lancering als er misbruik is (ook voor herroepen, §15.4).
 17. **Vercel-plan**: Pro vóór de wachtlijst live gaat, want dat is de livegang (brief §11, beslissing 105); er is geen cron nodig (beslissing 52).

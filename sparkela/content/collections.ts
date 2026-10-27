@@ -1,11 +1,13 @@
 import { formatMoneyShort } from "@/lib/money";
 import type { CollectionDefinition } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
+import { stackDiscount } from "@/content/offers";
 
 /**
  * Collections (docs/PLAN.md §2.3, decision 26). Membership follows the product tags through the rule, the same
  * for both providers; Shopify gets the same automatic collections. "Stacks" and "Cadeaukaarten" are pages, not
- * collections. bannerImage and stylingTile are optional (collecties.<handle> in content/assets.ts).
+ * collections. bannerImage and stylingTile are optional; they use the site photos of content/assets.ts that launch
+ * needs anyway (moment tiles, Statement/subtiel, Linde, stacks), so no collection waits for an extra shot.
  */
 
 const { type, vibe, moment } = sharedCopy.vocab;
@@ -13,6 +15,13 @@ const { type, vibe, moment } = sharedCopy.vocab;
 /** Rule of "Cadeaus onder €25": minimum variant price below this (plan §2.3). */
 const GIFT_LIMIT_CENTS = 2500;
 const giftLimit = formatMoneyShort(GIFT_LIMIT_CENTS);
+
+/**
+ * Where a styling tile goes: after this many products. CollectionView snaps it to a multiple of 12 (a row start in 2, 3
+ * and 4 columns) or to the end of a shorter grid, and lets it span the cells the last row would leave empty, so the
+ * unfiltered grid has no ragged rows (components/collection/filterParams.ts, stylingTilePlacement).
+ */
+const STYLING_TILE_AFTER = 12;
 
 export const collections: CollectionDefinition[] = [
   {
@@ -25,7 +34,13 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "all" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: {
+      afterIndex: STYLING_TILE_AFTER,
+      title: "Twijfel je nog?",
+      text: "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.",
+      image: "linde.portret",
+      href: "/spark-finder",
+    },
   },
   {
     handle: "nieuw",
@@ -49,7 +64,13 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "type", type: "oorbellen" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: {
+      afterIndex: STYLING_TILE_AFTER,
+      title: "Maak er een stack van",
+      text: `Combineer je oorbellen met twee armbanden of nog een paar. Vanaf ${stackDiscount.minUnits} stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+      image: "stacks.goud-en-gedurfd",
+      href: "/stacks",
+    },
   },
   {
     handle: "armbanden",
@@ -61,7 +82,13 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "type", type: "armbanden" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: {
+      afterIndex: STYLING_TILE_AFTER,
+      title: "Stacks van Linde",
+      text: `Drie stuks die samen kloppen, met één knop in je tas. De ${stackDiscount.percent}% stack-korting gaat er vanzelf af.`,
+      image: "stacks.kleur-op-je-pols",
+      href: "/stacks",
+    },
   },
   {
     handle: "kettingen",
@@ -96,7 +123,7 @@ export const collections: CollectionDefinition[] = [
       description: "Subtiele, klassieke sieraden van Sparkela: kleine hoops, fijne kettingen en dunne armbandjes.",
     },
     rule: { kind: "vibe", vibe: "clean-en-classy" },
-    bannerImage: null,
+    bannerImage: "home.subtiel",
     stylingTile: null,
   },
   {
@@ -120,7 +147,7 @@ export const collections: CollectionDefinition[] = [
       description: "Festivalsieraden van Sparkela: chunky en kleurige oorbellen en armbanden.",
     },
     rule: { kind: "moment", moment: "festival" },
-    bannerImage: null,
+    bannerImage: "momenten.festival",
     stylingTile: null,
   },
   {
@@ -132,7 +159,7 @@ export const collections: CollectionDefinition[] = [
       description: "Sieraden voor een avond uit: statement oorbellen en kettingen van Sparkela.",
     },
     rule: { kind: "moment", moment: "date-night" },
-    bannerImage: null,
+    bannerImage: "momenten.date-night",
     stylingTile: null,
   },
   {
@@ -144,7 +171,7 @@ export const collections: CollectionDefinition[] = [
       description: "Sieraden voor op kantoor die toch opvallen: ringetjes, schakels en munten van Sparkela.",
     },
     rule: { kind: "moment", moment: "kantoor-maar-niet-saai" },
-    bannerImage: null,
+    bannerImage: "momenten.kantoor-maar-niet-saai",
     stylingTile: null,
   },
   {
@@ -156,7 +183,7 @@ export const collections: CollectionDefinition[] = [
       description: "Zomerse sieraden van Sparkela: schelpen, kralen en kleurige oorbellen.",
     },
     rule: { kind: "moment", moment: "strand" },
-    bannerImage: null,
+    bannerImage: "momenten.strand",
     stylingTile: null,
   },
   {
@@ -168,7 +195,7 @@ export const collections: CollectionDefinition[] = [
       description: "Feestelijke sieraden van Sparkela voor kerst en oud en nieuw.",
     },
     rule: { kind: "moment", moment: "feestdagen" },
-    bannerImage: null,
+    bannerImage: "momenten.feestdagen",
     stylingTile: null,
   },
   {

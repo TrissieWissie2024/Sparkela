@@ -11,8 +11,8 @@ import type { Cart, CartLineInput, CommerceProviderName } from "@/lib/types";
  * latest announcement for CartAnnouncer.
  */
 
-/** Where an add came from (QuickAdd on a card or in the upsell, the buy box, a stack, the Spark Finder). */
-export type AddToCartSource = "pdp" | "card" | "stack" | "upsell" | "finder";
+/** Where an add came from (QuickAdd on a card or in the upsell, the buy box, a stack, the Spark Finder, the gift card tiles). */
+export type AddToCartSource = "pdp" | "card" | "stack" | "upsell" | "finder" | "giftcard";
 
 export interface AddToCartOptions {
   /** Open the drawer after the cart answered. Default true. */

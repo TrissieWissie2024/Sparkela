@@ -32,6 +32,8 @@ import { stacks } from "@/content/stacks";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawerLoader } from "@/components/cart/CartDrawerLoader";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
+import { EmailCaptureLoader } from "@/components/email/EmailCaptureLoader";
+import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
 import { AnnouncementBar, AnnouncementBarView, PROMO_SCHEDULE_DAYS } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header, HeaderView, mobileNavFeature } from "@/components/layout/Header";
@@ -297,7 +299,7 @@ describe("ShopChrome (plan §13.5)", () => {
     return Array.isArray(children) ? children : [children];
   }
 
-  it("nests ClockProvider › CatalogProvider › CartProvider around bar, header, <main>, footer and drawer", async () => {
+  it("nests ClockProvider › CatalogProvider › CartProvider around bar, header, <main>, reviews, footer, popup and drawer", async () => {
     vi.mocked(getCatalogProducts).mockResolvedValue(pieceList);
     const tree = (await ShopChrome({ children: <p>inhoud</p> })) as ReactElement<{ serverNow: number; children: ReactNode }>;
     expect(tree.type).toBe(ClockProvider);
@@ -313,7 +315,8 @@ describe("ShopChrome (plan §13.5)", () => {
 
     const parts = childrenOf(cart).filter(isValidElement) as ReactElement<Record<string, unknown>>[];
     const types = parts.map((part) => part.type);
-    expect(types).toEqual([AnnouncementBar, Header, "main", Footer, CartDrawerLoader]);
+    expect(types).toEqual([AnnouncementBar, Header, "main", ReviewsCarousel, Footer, EmailCaptureLoader, CartDrawerLoader]);
+    expect(parts[3].props.variant).toBe("footer");
     const main = parts[2];
     expect(main.props.id).toBe("main");
     expect(main.props.tabIndex).toBe(-1);

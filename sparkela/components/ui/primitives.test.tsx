@@ -93,7 +93,7 @@ describe("headings and page structure", () => {
 
   it("SectionHeading puts eyebrow, title and intro in order and the action after them", () => {
     const html = renderToStaticMarkup(
-      <SectionHeading eyebrow="Nieuw" title="De lanceringscollectie" intro="Kies je favoriet." action={<a href="/collections/alle">Bekijk alles</a>} tone="donker" />,
+      <SectionHeading eyebrow="Nieuw" title="De lanceringscollectie" intro="Kies je favoriet." action={<a href="#alle">Bekijk alles</a>} tone="donker" />,
     );
     expect(html.indexOf("Nieuw")).toBeLessThan(html.indexOf("De lanceringscollectie"));
     expect(html.indexOf("De lanceringscollectie")).toBeLessThan(html.indexOf("Kies je favoriet."));

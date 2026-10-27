@@ -14,7 +14,8 @@ import { Countdown } from "@/components/time/Countdown";
  * 30 november om middernacht". It never resets; at the end the bar's TimeSwitch shows the next segment.
  *
  * Below lg two lines: the short message with the link, then the timer (its 32 px pause button overlaps the line
- * box by a negative margin, so the bar stays 48 px); from lg one line with the full message and thin dividers.
+ * box by a negative margin, so the bar stays 48 px; with reduced motion there is no button and no negative margin, so
+ * the fixed end label does not overlap the first line); from lg one line with the full message and thin dividers.
  * Screen readers get the full message once (the short one is aria-hidden). Text wraps rather than clips
  * (WCAG 1.4.12). A server component without hooks: the bar renders it as a TimeSwitch variant.
  * Port of CORVANE components/layout/promo/CampaignMessage.tsx.
@@ -38,7 +39,7 @@ export function CampaignMessage({ campaign }: { campaign: Campaign }) {
       </Link>
     ) : null;
   const timer = campaign.showTimer ? (
-    <span className="-my-1.5 inline-flex items-center gap-1.5 lg:my-0">
+    <span className="-my-1.5 inline-flex items-center gap-1.5 motion-reduce:my-0 lg:my-0">
       <Timer aria-hidden="true" className="size-3.5 shrink-0 text-tekst-2-op-donker" strokeWidth={1.75} />
       <Countdown
         target={campaign.endsAt}

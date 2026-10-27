@@ -942,6 +942,8 @@ Scoring (puur, in `components/finder/finderState.ts` → `recommend(answers: Qui
 
 `home.meta` (title, description) · `home.hero` (eyebrow, title, subtitle, pills, guaranteeBadge, ctas, `imageDesktop: "hero.desktop"`, `imageMobile: "hero.mobiel"`) · `home.deliveryBar` (flagLabel "Verzonden vanuit Nederland", freeFrom(amount); de verzenddagteksten komen uit `sharedCopy.deliveryBar`) · `home.productGrid` (eyebrow, title "De lanceringscollectie", intro, tabs `[{ id: "alles", label: "Alles" }, { id: "oorbellen", … }, { id: "armbanden", … }, { id: "kettingen", … }, { id: "ringen", … }]`, sortLabel, viewAll "Bekijk alles") · `home.howToStack` (title, steps[3] met title en text, link) · `home.favorites` (eyebrow, title, titleWithSales, viewAll) · `home.statementVsSubtle` (title, intro, columns[2]: title, text, cta, image) · `home.moments` (title, intro, tiles[5]: moment, label, image) · `home.finder` (eyebrow, title, text) · `home.reviews` (title; geen lege-staat-tekst, sectie verborgen) · `home.videos` (eyebrow, title, intro, slots[4]: label) · `home.photoStrip` (title, intro, items[6 tot 8]: image, productHandle) · `home.guarantee` (title, text, points[3]) · `home.faq` (title, allLink) · `home.aboutLinde` (eyebrow, title, text, cta, image).
 
+In golf 7-9 (D1) kwamen er sleutels bij en is `home.guarantee` herschikt: points zijn `{ title, text }` met `note` en `seal`, zonder het punt over bedenktijd (beslissing 205a).
+
 ### 5.9 `content/copy/shared.ts` (volledig, 3a/A2)
 
 `lib/dates.ts`, `lib/pricing.ts` en de UI-primitives lezen deze sleutels. A2 schrijft ze in golf 3a volledig uit, zodat B2 en B3 niets hoeven te raden. Templated copy is een functie van al opgemaakte strings.
@@ -2574,7 +2576,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `StackPicker` | C | `{ product: Product; candidates: CatalogProduct[]; defaultPicks: [string, string] \| null; value: StackChoice; onChange(v: StackChoice): void }` met `StackChoice = { mode: "los" } \| { mode: "stack"; picks: [string, string] /* variant ids */ }` | Twee radiotegels: "Los" (prijs) en "Stack van 3 (−15%)" (totaal, "Je bespaart €X" via `stackQuote`). Bij stack: twee `Select`s "Stuk 2" en "Stuk 3" met **één optie per beschikbare variant** van de kandidaten, label `pdpCopy.stack.option(title, variantLabel \| null, price)` ("Lola chunky hoops, Zilver · €19,95"; bij één variant "Jade stipjes · €12,95"). Standaard `defaultPicks` (Lindes stack, anders de terugval uit §7.2), nooit leeg. Het eerste stuk is de variant uit `VariantPicker`. "Voeg de stack toe" voegt precies die drie variant-id's toe. Bij `defaultPicks === null` alleen "Los". Echte stukprijzen zichtbaar | `BundlePicker.tsx`, `MixAndMatch.tsx` |
 | `GiftWrapCheckbox` | C | `{ value: boolean; onChange(v: boolean): void }` | "Cadeauverpakking" + `GiftWrapPrice`; voegt bij toevoegen `setGiftWrap(true)` toe | nieuw |
 | `AddToCart` | C | `{ disabled: boolean; label: string; onAdd(): Promise<void>; buttonRef: RefObject<HTMLButtonElement \| null> }` (React 19: `useRef<HTMLButtonElement>(null)` geeft `RefObject<HTMLButtonElement \| null>`) | "In winkelwagen · €X" (`primair` lg, vol breed), stack: "Voeg de stack toe · €X" | `ProductConfigurator.tsx` |
-| `StickyAddToCart` | C | `{ targetRef: RefObject<HTMLButtonElement \| null>; title: string; summary: string; price: string; onAdd(): void }` | Onder `lg`, z-40, verschijnt als de hoofdknop uit beeld is (D46), `inert` als verborgen, body-padding en `sparkela:sticky-atc` event | `StickyAddToCart.tsx` |
+| `StickyAddToCart` | C | `{ targetRef: RefObject<HTMLButtonElement \| null>; title: string; summary: string; price: string; onAdd(): void }` | Onder `lg`, z-40, verschijnt als de hoofdknop uit beeld is (D46), `inert` als verborgen, body-padding, `--onderbalk` en `sparkela:sticky-atc` event; na mount via een portal in `<body>`, optionele `label` ("In tas · €X") (beslissing 206a-b) | `StickyAddToCart.tsx` |
 | `DeliveryEstimate` | C | `{ schedule: ShipLabelEntry[] }` | Kaart met `ShipLabel field="estimateText"`, vlag, "Bezorging met PostNL in je brievenbus" | `DeliveryEstimate.tsx` |
 | `TrustRow` | S | `{ variant?: "product" \| "giftcard" }` | Vier rijen: "Veilig betalen met iDEAL \| Wero", "Gratis verzending vanaf €35", "6 maanden garantie op verkleuring", "14 dagen bedenktijd". Cadeaukaart: alleen veilig betalen en "Direct in je mail" | `TrustRow.tsx` |
 | `ProductSpecs` | C | `{ product: Product; claims: VerifiedClaim[]; variantId: string }` | `dl`: Materiaal (`materialForVariant(product.metafields.materiaal, gekozen variant)`, dus Zilver nooit "met goudlaag"), Afmeting, Gewicht, Sluiting; elke geverifieerde claim als extra rij `pdpCopy.claims.confirmed(label)` = "Nikkelvrij (bevestigd door de leverancier)". Nooit "getest" (beslissing 82). Leest de gekozen variant uit `PdpStateProvider` | `ProductInfo.tsx` |
@@ -2606,6 +2608,8 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | 15 | `AboutLindeTeaser` | S | `{ content: HomeContent["aboutLinde"] }` | `StoryTeaser.tsx` |
 
 Secties 1, 2 en 16 zijn chrome (§13.5); 6 is de popup (§13.11); 7 is `DropBanner` (§13.12); 12 is `SparkFinder` (§13.11).
+
+Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-link, `heading`, `tile` en alleen de sorteervelden van de producten; één sortering voor alle tabs.
 
 ### 13.11 Spark Finder en popup (7-9/D4)
 
@@ -2685,9 +2689,9 @@ Elke pagina exporteert `metadata` of `generateMetadata` via `pageMetadata()` uit
 | --- | --- | --- | --- | --- |
 | 1 | Aankondigingsbalk | `AnnouncementBar` (chrome) | donker | `promoSchedule` |
 | 2 | Header | `Header` (chrome) | pagina | `navigation.ts` |
-| 3 | Hero | `Hero` | donker | `home.hero`; H1; mobiel tekst eerst, dan foto 4:5 (`hero.mobiel`, `preload`); vanaf `lg` 12 kolommen, foto 16:9 (`hero.desktop`) rechts in 7 kolommen; drie `Pill tone="outline-op-donker"`, garantiebadge (rond, bot-wit rand), knoppen `primair` "Shop oorbellen" en `outline-op-donker` "Shop armbanden"; ratingregel alleen met `getRatingSummary()` |
+| 3 | Hero | `Hero` | donker | `home.hero`; H1; mobiel tekst eerst, dan foto 4:5 (`hero.mobiel`; één art-directed `<picture>` met `fetchPriority="high"` in plaats van `preload`, beslissing 205d); vanaf `lg` 12 kolommen, foto 16:9 (`hero.desktop`) rechts in 7 kolommen; drie `Pill tone="outline-op-donker"`, garantiebadge (rond, bot-wit rand), knoppen `primair` "Shop oorbellen" en `outline-op-donker` "Shop armbanden"; ratingregel alleen met `getRatingSummary()` |
 | 4 | Leverbalk | `DeliveryBar` | pagina, rand onder | `getShipSchedule()`; mobiel drie regels (verzenddag, vlag + "Verzonden vanuit Nederland", "Gratis verzending vanaf €35"), vanaf `lg` één rij van 64 px |
-| 5 | De lanceringscollectie | `LaunchCollection` → `HomeProductTabs` | pagina | `getShopProducts()`; tabs Alles/Oorbellen/Armbanden/Kettingen/Ringen, elk max 8 op `featuredRank`; `SortSelect` per tab; knop "Bekijk alles" → `/collections/alle` |
+| 5 | De lanceringscollectie | `LaunchCollection` → `HomeProductTabs` | pagina | `getShopProducts()`; tabs Alles/Oorbellen/Armbanden/Kettingen/Ringen, elk max 8 op `featuredRank`; één `SortSelect` voor alle tabs; grid 2 kolommen, 4 vanaf `lg`, met `StylingTile` in het gat van een korte tab; per tab een knop naar zijn collectie ("Alles" → `/collections/alle`) (beslissing 205b-c) |
 | 6 | Pill "Kies je spark" | `EmailCapture` (chrome) | | §13.11.1 |
 | 7 | Dropbanner | `DropBanner` | roest | `getFeaturedDrop()`; ontbreekt zonder drop |
 | 8 | Zo stack je | `HowToStack` (D3, `components/sections/`) | pagina, haarlijn boven | `<ol>` met drie stappen; mobiel rijen met icoon, vanaf `md` drie kolommen; link naar `/stacks` |
@@ -2697,7 +2701,7 @@ Elke pagina exporteert `metadata` of `generateMetadata` via `pageMetadata()` uit
 | 12 | Spark Finder | `SparkFinder variant="blok"` | donker | `quiz` |
 | 13 | Reviews en video | `ReviewsCarousel` (verborgen zonder reviews), `VideoRow` | pagina | `reviews`, `home.videos` (4 × `VideoSlot`) |
 | 14 | Zo dragen jullie Sparkela | `PhotoStrip` | pagina, haarlijn boven | 6 tot 8 × `PhotoSlot` 1:1, elk een link naar het product (`aria-label` "Bekijk {product}") |
-| 15a | Garantie | `GuaranteeBlock` | olijf (`data-vlak="olijf"`) | `home.guarantee`; knop `outline-op-donker` naar `/verzenden-en-retourneren` |
+| 15a | Garantie | `GuaranteeBlock` | olijf paneel (`data-vlak="olijf"`, afgerond, in een paginasectie; beslissing 205f) | `home.guarantee`; knop `outline-op-donker` naar `/verzenden-en-retourneren` |
 | 15b | FAQ | `FaqSection` | pagina | `faq.filter(onHome)`; link "Alle vragen" |
 | 15c | Over Linde | `AboutLindeTeaser` | pagina, haarlijn boven | foto 4:5 (`linde.portret`), tekst met placeholder, knop naar `/over-sparkela` |
 | 16 | Footer | `Footer` (chrome) | donker | |

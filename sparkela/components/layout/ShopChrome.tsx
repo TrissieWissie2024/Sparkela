@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { resolveProviderName } from "@/lib/commerce";
+import { getReviews } from "@/lib/reviews";
 import { getServerNow } from "@/lib/server-clock";
 import { getCatalogProducts } from "@/lib/shop-data";
 import { site } from "@/content/site";
@@ -9,6 +10,8 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
 import { AnalyticsLoader } from "@/components/consent/AnalyticsLoader";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { EmailCaptureLoader } from "@/components/email/EmailCaptureLoader";
+import { ReviewsCarousel } from "@/components/home/ReviewsCarousel";
 import { ClockProvider } from "@/components/time/ClockProvider";
 
 import { AnnouncementBar } from "./AnnouncementBar";
@@ -30,8 +33,9 @@ import { Header } from "./Header";
  * (the drawer, lazily) · AnalyticsLoader (only with analytics on). Without analytics neither consent component is
  * rendered, so their code is not in the page. SkipLink, RouteFocus, LogoDefs and MotionStyles sit in app/layout.tsx.
  *
- * Wave 7-9 adds two lines here (integrator): <ReviewsCarousel variant="footer" /> directly above Footer and
- * <EmailCaptureLoader /> after it.
+ * Wave 7-9 (integrator, §13.5): <ReviewsCarousel variant="footer" /> directly above Footer (renders nothing until
+ * real reviews exist and site.flags.showReviews is on) and <EmailCaptureLoader /> after it (the popup; it skips
+ * /checkout and /wachtlijst and brings its own Suspense).
  */
 export async function ShopChrome({ children }: { children: ReactNode }) {
   const [products, serverNow] = await Promise.all([getCatalogProducts(), getServerNow()]);
@@ -49,7 +53,9 @@ export async function ShopChrome({ children }: { children: ReactNode }) {
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
             {children}
           </main>
+          <ReviewsCarousel reviews={getReviews()} variant="footer" />
           <Footer />
+          <EmailCaptureLoader />
           <CartDrawerLoader />
           {analytics ? <AnalyticsLoader /> : null}
         </CartProvider>

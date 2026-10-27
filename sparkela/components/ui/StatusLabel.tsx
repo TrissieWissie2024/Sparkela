@@ -10,13 +10,13 @@ import { sharedCopy } from "@/content/copy/shared";
  *
  * Colours per brief §5 (contrast in §4.10): Op voorraad olijf on succes-vlak (5,34), Laatste stuks and Sale roest on
  * fout-vlak (7,38), Nieuw leisteen on info-vlak (7,53), Limited and Early access bot-wit on roest (6,76), Uitverkocht
- * inkt on vlak (13,70), Bestseller bot-wit on donker (13,70). Forced colors draw a border. Port of CORVANE
+ * inkt on kaart with a rand-sterk hairline (it sits on vlak placeholders, fix 7-9), Bestseller bot-wit on donker (13,70). Forced colors draw a border. Port of CORVANE
  * components/ui/Badge.tsx.
  */
 
 export const STATUS_LABEL_CLASSES: Record<BadgeId, string> = {
   "op-voorraad": "bg-succes-vlak text-succes",
-  uitverkocht: "bg-vlak text-tekst",
+  uitverkocht: "bg-kaart text-tekst ring-1 ring-rand-sterk ring-inset",
   "early-access": "bg-roest text-bot-wit",
   "laatste-stuks": "bg-fout-vlak text-fout",
   sale: "bg-fout-vlak text-fout",

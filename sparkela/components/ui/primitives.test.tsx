@@ -38,7 +38,7 @@ const noop = () => {};
 describe("StatusLabel (plan §4.9)", () => {
   const expected: Record<BadgeId, string> = {
     "op-voorraad": "bg-succes-vlak text-succes",
-    uitverkocht: "bg-vlak text-tekst",
+    uitverkocht: "bg-kaart text-tekst ring-1 ring-rand-sterk ring-inset",
     "early-access": "bg-roest text-bot-wit",
     "laatste-stuks": "bg-fout-vlak text-fout",
     sale: "bg-fout-vlak text-fout",

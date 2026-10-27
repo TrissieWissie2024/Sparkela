@@ -1,5 +1,6 @@
 import type { BadgeId, Product } from "@/lib/types";
 import { defaultVariant, isJewelryType, keepUnitsTogether } from "@/lib/catalog";
+import { cn } from "@/lib/cn";
 import { priceDisplay } from "@/lib/pricing";
 import { drops } from "@/content/drops";
 import { sharedCopy } from "@/content/copy/shared";
@@ -45,7 +46,7 @@ export function ProductInfo({ product, badges, className }: ProductInfoProps) {
   const specLine = product.metafields.specRegel ? keepUnitsTogether(product.metafields.specRegel) : null;
 
   return (
-    <div className={className}>
+    <div className={cn("@container", className)}>
       {/* The row keeps its height with or without labels, so a label that appears by date shifts nothing. */}
       <div className="flex min-h-6 flex-wrap items-center justify-between gap-x-4 gap-y-2">
         {eyebrow ? <p className="label-caps text-tekst-2">{eyebrow}</p> : <span aria-hidden="true" />}
@@ -59,7 +60,10 @@ export function ProductInfo({ product, badges, className }: ProductInfoProps) {
         </p>
       </div>
 
-      <h1 className="kop-1 mt-3 text-tekst md:mt-4">{product.title}</h1>
+      {/* Sized to the buy column (container units), not the viewport: Unbounded is wide, and one long Dutch compound
+          ("schakelarmband", 10.8 em) must fit the column at every width. 9cqi keeps it inside with room to spare;
+          break-words is the safety net for a longer word from Shopify. */}
+      <h1 className="kop-1 mt-3 text-[length:clamp(1.5rem,9cqi,3rem)]! break-words text-tekst md:mt-4">{product.title}</h1>
       {specLine ? <p className="mt-3 text-tekst-2 md:text-[1.0625rem]">{specLine}</p> : null}
 
       <div className="mt-5 flex flex-col gap-1">

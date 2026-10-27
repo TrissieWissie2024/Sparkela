@@ -76,11 +76,11 @@ function DropContent({ drop, products }: { drop: Drop; products: CatalogProduct[
 
   return (
     <>
-      <DropHero drop={drop} />
+      <DropHero drop={drop} productsHref={products.length > 0 ? `#${productsId}` : undefined} />
       <Container className="pb-16 md:pb-24">
         <EarlyAccessNote drop={drop} className="pt-8 md:pt-10" />
 
-        <section aria-labelledby={productsId} className="pt-12 md:pt-16 lg:pt-20">
+        <section aria-labelledby={productsId} className="pt-12 md:pt-16 lg:pt-20 [&_h2]:scroll-mt-[calc(var(--header-hoogte)+2rem)]">
           <SectionHeading id={productsId} level={2} title={copy.productsTitle} intro={drop.description} />
           {products.length > 0 ? (
             <ProductGrid

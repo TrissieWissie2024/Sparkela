@@ -21,7 +21,8 @@ export function ProductThumb({
   className?: string;
 }) {
   return (
-    <div className={cn("shrink-0 overflow-hidden rounded-[10px]", className)}>
+    // self-start: in a stretching flex row the wrapper would grow past the 4:5 tile and lose its bottom corners.
+    <div className={cn("h-fit shrink-0 self-start overflow-hidden rounded-[10px]", className)}>
       {image ? (
         <ProductPhoto image={image} productTitle={title} sizes={sizes} />
       ) : (

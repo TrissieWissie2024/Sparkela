@@ -22,8 +22,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  * photo renders nothing (decision 127, site.flags.hideMissingOptionalMedia on the server only: decision 154).
  *
  * Phones and tablets: a scroll-snap row that bleeds to the screen edge (tiles 42% wide, 28% from md). From lg one
- * strip of equal squares across the frame, so it reads as a feed. Hover shows the product name on a pill. Server
- * component on --pagina.
+ * strip of equal squares across the frame, so it reads as a feed. Every tile shows its product's name under the photo
+ * (fix 7-9: the strip reads as shoppable before the real photos exist); the link's accessible name is its content,
+ * "Bekijk {product}" (the first word for screen readers only). Server component on --pagina.
  */
 
 export interface PhotoStripProps {
@@ -93,28 +94,25 @@ export function PhotoStrip({ content, products, divider = false, className }: Ph
           >
             {items.map((item) => (
               <li key={item.image} className="w-[42%] shrink-0 snap-start sm:w-[30%] md:w-[28%] lg:w-auto">
-                <Link
-                  href={productPath(item.handle)}
-                  aria-label={content.itemLabel(item.title)}
-                  className="group/foto relative block overflow-hidden rounded-kaart"
-                >
+                <Link href={productPath(item.handle)} className="group/foto relative block rounded-kaart">
                   <PhotoSlot
                     assetKey={item.image}
                     label={assets.images[item.image]?.label ?? item.title}
                     aspect="1:1"
                     alt=""
                     sizes="(min-width: 1280px) 150px, (min-width: 1024px) 12vw, (min-width: 768px) 28vw, 42vw"
+                    className="overflow-hidden rounded-kaart"
                   />
+                  {/* `relative` on the link keeps the sr-only span (position: absolute) inside the scroll row; without it
+                      the span escapes the row and the phone page scrolls sideways. The link's name comes from its content ("Bekijk Lola chunky hoops"), not from an aria-label that
+                      would differ from the visible text (WCAG 2.5.3); the caption shows which product the photo opens. */}
+                  <span className="sr-only">{content.itemLabel(item.title)}</span>
+                  {/* The name under the photo, as the video row above captions its clips. */}
                   <span
                     aria-hidden="true"
-                    className={cn(
-                      "pointer-events-none absolute inset-x-2 bottom-2 hidden justify-center opacity-0 lg:flex",
-                      "motion-safe:transition-opacity motion-safe:duration-200 group-hover/foto:opacity-100 group-focus-visible/foto:opacity-100",
-                    )}
+                    className="mt-2.5 line-clamp-2 block text-sm leading-snug font-semibold text-tekst decoration-1 underline-offset-4 group-hover/foto:underline"
                   >
-                    <span className="max-w-full rounded-full border border-rand bg-kaart px-3 py-1 text-center text-xs leading-tight font-semibold text-tekst">
-                      {item.title}
-                    </span>
+                    {item.title}
                   </span>
                 </Link>
               </li>

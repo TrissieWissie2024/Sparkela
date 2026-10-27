@@ -13,6 +13,7 @@ import {
   COLLECTION_QUERY_KEYS,
   DEFAULT_SORT,
   emptyFilters,
+  facetCounts,
   parseFilterParams,
   stylingTilePlacement,
   toFilterParams,
@@ -179,5 +180,19 @@ describe("collectionQueryScript", () => {
     expect(run("?q=%20")).toBe(false);
     expect(run("?utm_source=x")).toBe(false);
     expect(run("")).toBe(false);
+  });
+});
+
+describe("facetCounts (fix 7-9)", () => {
+  it("counts each option next to the other facets' choices", () => {
+    const products = localCatalogProducts(TEST_NOW).filter((product) => product.listable);
+    const facets = availableFacets(products);
+    const none = facetCounts(products, emptyFilters(), facets);
+    expect(none.types.ringen).toBe(products.filter((product) => product.type === "ringen").length);
+    // With "ringen" chosen, the type counts ignore the type choice itself, the other facets follow it.
+    const rings = facetCounts(products, { ...emptyFilters(), types: ["ringen"] }, facets);
+    expect(rings.types.oorbellen).toBe(none.types.oorbellen);
+    const ringCount = none.types.ringen;
+    expect(Object.values(rings.vibes).every((n) => n <= ringCount)).toBe(true);
   });
 });

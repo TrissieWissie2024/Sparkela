@@ -27,6 +27,8 @@ export interface CollectionCopy {
     label: string;
     /** The button that opens the sheet: "Filters", or "Filters (2)" with active filters. */
     open: (activeCount: number) => string;
+    /** From lg, the button that opens the sheet for the facets beside the chip row: "Meer filters (1)". */
+    more: (activeCount: number) => string;
     clear: string;
     /** The sheet's reset button. */
     clearAll: string;
@@ -131,7 +133,8 @@ export interface CollectionCopy {
     empty: (startLabel: string) => string;
     stackTitle: string;
     stackIntro: string;
-    club: { title: string; text: string; cta: CopyLink };
+    /** The hero's button to the product grid. */
+    viewPieces: string;
   };
   teaser: {
     eyebrow: string;
@@ -151,6 +154,7 @@ export const collectionCopy: CollectionCopy = {
     title: "Filteren",
     label: "Filters en sortering",
     open: (activeCount) => (activeCount > 0 ? `Filters (${activeCount})` : "Filters"),
+    more: (activeCount) => (activeCount > 0 ? `Meer filters (${activeCount})` : "Meer filters"),
     clear: "Wis filters",
     clearAll: "Wis alles",
     show: (n) => (n === 1 ? "Toon 1 sieraad" : `Toon ${n} sieraden`),
@@ -252,11 +256,7 @@ export const collectionCopy: CollectionCopy = {
     empty: (startLabel) => `De stukken zie je hier vanaf ${startLabel}.`,
     stackTitle: "Stack de drop",
     stackIntro: "Drie stukken uit de drop die Linde samen draagt.",
-    club: {
-      title: "Als eerste bij elke drop",
-      text: `Club-leden krijgen bij elke drop een eigen link en shoppen ${EARLY_ACCESS_HOURS} uur eerder.`,
-      cta: clubLink,
-    },
+    viewPieces: "Bekijk de stukken",
   },
   teaser: {
     eyebrow: "Binnenkort",

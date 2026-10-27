@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useEffect, useId, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { sharedCopy } from "@/content/copy/shared";
@@ -19,6 +19,10 @@ import { overlayClasses, useReturnFocus } from "./Sheet";
  * (the popup that grows a form): the top sits where a 44rem dialog would be centred, at least 1rem from the edge,
  * and the dialog only grows downwards. `tone="donker"` renders on --donker with data-vlak="donker",
  * so the focus ring turns bot-wit. Port of CORVANE components/ui/Modal.tsx.
+ *
+ * When the body overflows (the ring size guide on a phone), it becomes a focusable region named by the title
+ * (tabIndex 0, role="region", an inset focus ring), so keyboard users can scroll it (WCAG 2.1.1); a body that fits
+ * adds no tab stop.
  */
 
 export type ModalSize = "sm" | "md" | "lg";
@@ -65,6 +69,33 @@ const anchors: Record<ModalAnchor, string> = {
   top: "mt-[max(1rem,calc(50dvh-22rem))] mb-auto max-h-[calc(100dvh-max(1rem,calc(50dvh-22rem))-1rem)]",
 };
 
+/** Whether the element scrolls vertically; follows size changes of the element and of its children. */
+function useOverflowing() {
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    if (!node) return;
+    const check = () => setOverflowing(node.scrollHeight > node.clientHeight + 1);
+    const resize = new ResizeObserver(check);
+    const observeAll = () => {
+      resize.disconnect();
+      resize.observe(node);
+      for (const child of Array.from(node.children)) resize.observe(child);
+      check();
+    };
+    const mutations = new MutationObserver(observeAll);
+    mutations.observe(node, { childList: true });
+    observeAll();
+    return () => {
+      resize.disconnect();
+      mutations.disconnect();
+    };
+  }, [node]);
+
+  return [setNode, overflowing] as const;
+}
+
 export function Modal({
   open,
   defaultOpen,
@@ -89,6 +120,8 @@ export function Modal({
 }: ModalProps) {
   const dark = tone === "donker";
   const { handleOpenAutoFocus, handleCloseAutoFocus } = useReturnFocus(Boolean(trigger), onOpenAutoFocus, onCloseAutoFocus);
+  const titleId = useId();
+  const [bodyRef, overflowing] = useOverflowing();
 
   return (
     <Dialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -98,6 +131,7 @@ export function Modal({
         <Dialog.Content
           {...(description ? {} : { "aria-describedby": undefined })}
           {...(dark ? { "data-vlak": "donker" } : {})}
+          aria-labelledby={titleId}
           onOpenAutoFocus={handleOpenAutoFocus}
           onCloseAutoFocus={handleCloseAutoFocus}
           className={cn(
@@ -116,7 +150,7 @@ export function Modal({
             )}
           >
             <div className="flex min-w-0 flex-1 items-center gap-3 pt-2">
-              <Dialog.Title className={cn(hideTitle ? "sr-only" : "kop-2")}>{title}</Dialog.Title>
+              <Dialog.Title id={titleId} className={cn(hideTitle ? "sr-only" : "kop-2")}>{title}</Dialog.Title>
               {headerExtra}
             </div>
             <Dialog.Close asChild>
@@ -138,8 +172,10 @@ export function Modal({
           ) : null}
 
           <div
+            ref={bodyRef}
+            {...(overflowing ? { tabIndex: 0, role: "region", "aria-labelledby": titleId } : {})}
             className={cn(
-              "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:-outline-offset-2",
               padded && "px-5 pt-5 pb-6 md:px-7 md:pb-7",
               bodyClassName,
             )}

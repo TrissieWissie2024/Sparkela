@@ -673,7 +673,7 @@ Er is geen label "Lindes favoriet": de titel van de carrousel zegt het al.
 | Label (`BadgeId`) | Soort | Tekst | Klassen | Contrast |
 | --- | --- | --- | --- | --- |
 | `op-voorraad` | status | Op voorraad | `bg-succes-vlak text-succes` | 5,34 |
-| `uitverkocht` | status | Uitverkocht | `bg-vlak text-tekst` | 13,70 |
+| `uitverkocht` | status | Uitverkocht | `bg-kaart text-tekst ring-1 ring-inset ring-rand-sterk` (fix 7-9, beslissing 209: op een `vlak`-placeholder had `bg-vlak` geen vorm) | 13,70 op kaart |
 | `early-access` | status | Early access | `bg-roest text-bot-wit` | 6,76 |
 | `laatste-stuks` | marketing | Laatste stuks | `bg-fout-vlak text-fout` | 7,38 |
 | `sale` | marketing | Sale | `bg-fout-vlak text-fout` | 7,38 |
@@ -936,7 +936,7 @@ export const quiz: QuizConfig = {
 };
 ```
 
-Scoring (puur, in `components/finder/finderState.ts` → `recommend(answers: QuizAnswers, products: CatalogProduct[], config: QuizConfig["scoring"] = quiz.scoring): CatalogProduct[]`): alleen zichtbare, beschikbare sieraden; bij type ≠ `verras-me` alleen dat type; score = vibe-match × 3 + moment-match × 2 + Lindes favoriet × 1; aflopend op score, dan `featuredRank`. Neem de producten met score > 0 tot `maxResults`. Minder dan `minResults`: aanvullen met Lindes favorieten (eerst van het gekozen type, dan alle), zonder dubbelen. Tags naar Shopify: `quiz:vibe-<vibe>`, `quiz:moment-<moment>`, `quiz:type-<type>`.
+Scoring (puur, in `components/finder/finderState.ts` → `recommend(answers: QuizAnswers, products: CatalogProduct[], config: QuizConfig["scoring"] = quiz.scoring): CatalogProduct[]`): alleen zichtbare, beschikbare sieraden; bij type ≠ `verras-me` alleen dat type; score = vibe-match × 3 + moment-match × 2 + Lindes favoriet × 1; aflopend op score, dan `featuredRank`. Neem de producten met score > 0 tot `maxResults`. Minder dan `minResults`: aanvullen, eerst uit het gekozen type (Lindes favorieten, dan de rest op `featuredRank`), pas daarna uit alle types (favorieten, dan de rest), zonder dubbelen (fix 7-9, beslissing 209: wie ringen kiest ziet eerst Vera, dan pas oorbellen). Tags naar Shopify: `quiz:vibe-<vibe>`, `quiz:moment-<moment>`, `quiz:type-<type>`.
 
 ### 5.8 `content/home.ts` (sleutels)
 
@@ -2445,7 +2445,7 @@ Extra exports (3b/B1, beslissing 162): `logo-paths.ts` ook `CAP_HEIGHT`, `LOGO_B
 | `Price` | S | `{ display: PriceDisplay; size?: "sm" \| "md" \| "lg"; tone?: "licht" \| "donker"; from?: boolean }` | Prijs (`tabular`), `from` → "Vanaf €15"; bij `showCompareAt` **altijd** `<s>` + de regel `sharedCopy.price.lowest30d` (geen prop om die uit te zetten, brief §2.5) | `Price.tsx` |
 | `Accordion` | C | `AccordionProps = { items: Array<{ id: string; title: ReactNode; content: ReactNode }>; headingLevel?: 2 \| 3 \| 4; tone?: "licht" \| "donker" } & ({ type: "single"; defaultValue?: string } \| { type?: "multiple"; defaultValue?: string[] })` | Radix Accordion, triggers 64/72 px, chevron in cirkel | `Accordion.tsx` |
 | `Sheet` | C | als CORVANE: `{ open; onOpenChange; side?: "left" \| "right" \| "top"; size?: "sm" \| "md" \| "lg" \| "full"; title; hideTitle?; description?; headerExtra?; footer?; closeLabel?; onOpenAutoFocus?; onCloseAutoFocus?; children }` | Radix Dialog als drawer; `top` voor de zoekdialoog | `Sheet.tsx` |
-| `Modal` | C | `{ open; onOpenChange; size?: "sm" \| "md" \| "lg"; anchor?: "center" \| "top"; title; hideTitle?; description?; footer?; tone?: "licht" \| "donker"; onOpenAutoFocus?; onCloseAutoFocus?; children }` | Radix Dialog, sluitknop 44×44 | `Modal.tsx` |
+| `Modal` | C | `{ open; onOpenChange; size?: "sm" \| "md" \| "lg"; anchor?: "center" \| "top"; title; hideTitle?; description?; footer?; tone?: "licht" \| "donker"; onOpenAutoFocus?; onCloseAutoFocus?; children }` | Radix Dialog, sluitknop 44×44; een body die scrolt wordt een focusbare `region` met de titel als naam (WCAG 2.1.1, fix 7-9) | `Modal.tsx` |
 | `Tabs` | C | `{ tabs: Array<{ id: string; label: string; panel: ReactNode }>; label: string; defaultTab?: string; onChange?: (id: string) => void }` | `@radix-ui/react-tabs`; tablist scrollt horizontaal op mobiel; pijltjestoetsen, Home/End (beslissing 36) | nieuw |
 | `Select` | C | `{ id?: string; label: string; hideLabel?: boolean; value: string; options: Array<{ value: string; label: string }>; onChange(v: string): void }` | Native `<select>` in pill van 44 px, `border-rand-invoer` | `SortSelect.tsx` |
 | `Stars` | S | `{ rating: RatingSummary \| null; size?: "sm" \| "md"; showCount?: boolean; tone? }` | Niets bij `null` (altijd zolang er geen reviews zijn) | `Stars.tsx` |
@@ -2507,7 +2507,7 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `SearchDialog` | C | `{ open: boolean; onOpenChange(v: boolean): void }` | `Sheet side="top"`: zoekveld, live top 6 uit `searchProducts`, "Alle resultaten" → `/zoeken?q=`; Enter gaat naar `/zoeken?q=` | nieuw |
 | `MobileNav` | C | `{ feature: MobileNavFeature \| null }` | Hamburger 44 px; lazy `MobileNavSheet` via `next/dynamic` na `useAfterLoad`; `useLatch` (`lib/hooks/useLatch.ts`) | `MobileNav.tsx` |
 | `MobileNavSheet` | C | `{ open: boolean; onOpenChange(v: boolean): void; onNavigate(): void; feature: MobileNavFeature \| null }` (`MobileNavFeature` uit §6.12; `MobileNav` krijgt hem als prop van `Header`, dat hem met `getFeaturedDrop()` en `getVisibleStacks()` bepaalt) | §2.5 mobiel; sluit bij navigatie en bij resize naar `xl` | `MobileNavSheet.tsx` |
-| `Footer` | S | geen | Bestand `components/layout/Footer.tsx` (subcomponenten in hetzelfde bestand of in `components/layout/footer/`, C3). `data-vlak="donker"`; bovenaan Club-aanmelding (`SubscribeForm source="footer"` met `site.club.title`), kolommen (§2.5), `PaymentBadges tone="donker"`, socials (↗, `rel="noopener"`), bedrijfsgegevens, `VatNotice`, de link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` ("Hier de overeenkomst herroepen", exact dit label en dit doel), © met jaar als literal in content | `Footer.tsx` |
+| `Footer` | S | geen | Bestand `components/layout/Footer.tsx` (subcomponenten in hetzelfde bestand of in `components/layout/footer/`, C3). `data-vlak="donker"`; bovenaan Club-aanmelding (`SubscribeForm source="footer"` met `site.club.title`); een pagina met een eigen Club-aanmelding markeert die met `data-eigen-club`, dan verbergt `app/globals.css` dit blok (fix 7-9, beslissing 209), kolommen (§2.5), `PaymentBadges tone="donker"`, socials (↗, `rel="noopener"`), bedrijfsgegevens, `VatNotice`, de link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` ("Hier de overeenkomst herroepen", exact dit label en dit doel), © met jaar als literal in content | `Footer.tsx` |
 | `prelaunch/MiniFooter` | S | geen | Voor de `(kaal)`-layout: juridische links (`legalNav`), dezelfde link `<a href="/herroepen">{site.withdrawalLinkLabel}</a>` als de footer, bedrijfsgegevens en `VatNotice`. `layout.spec.ts` controleert de link op elke route (§19.2). Bestand `components/prelaunch/MiniFooter.tsx` (4-6/C1); er is geen `components/layout/footer/MiniFooter.tsx` | nieuw |
 | `PaymentBadges` | S | `{ tone?: "licht" \| "donker"; size?: "sm" \| "md" }` | Neutrale tekstbadges uit `site.paymentMethods`, geen merklogo's (beslissing 93) | `PaymentIcons.tsx` |
 | `ShipLabel` | C | `{ schedule: ShipLabelEntry[]; field: "barText" \| "estimateText" \| "dispatchLabel"; className?: string }` | `TimeSwitch` over het schema; na de laatste entry de fallback uit `sharedCopy` | nieuw |
@@ -2556,8 +2556,8 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | `ProductCardSkeleton` | S | geen | Zelfde maten, voor fallbacks | nieuw | 4-6/C4 |
 | `CollectionView` | C | `{ handle: string; products: CatalogProduct[]; cards: Record<string, ReactNode>; facets: Facets; stylingTile: ReactNode \| null; stylingTileAfter: number \| null }` | Leest `useSearchParams` (`type`, `vibe`, `moment`, `prijs`, `sort`), filtert en sorteert keyed `<li>`'s, schrijft met `history.replaceState`; aantal in live region; lege staat met "Wis filters" | `CollectionView.tsx` | 7-9/D3 |
 | `CollectionViewFallback` | S | zelfde data | Volledige ongefilterde grid (statische HTML, no-JS) + `InlineScript` die bij een query de wrapper markeert (D50.9) | `CollectionView.tsx` | 7-9/D3 |
-| `FilterBar` | C | `{ facets: Facets; value: Partial<Facets>; onChange(v): void; count: number; sort: SortKey; onSortChange(v): void }` | Vanaf `lg`: chiprijen per facet (`Chip` met `aria-pressed`) + `SortSelect`. Onder `lg`: knop "Filters ({n})" + `SortSelect` | nieuw | 7-9/D3 |
-| `FilterSheet` | C | zelfde + `open`, `onOpenChange` | `Sheet side="left"` met per facet een `fieldset` van checkboxen; knoppen "Wis alles" en "Toon {n} producten" (beslissing 36) | nieuw | 7-9/D3 |
+| `FilterBar` | C | `{ facets: Facets; counts?: FacetCounts; value: Partial<Facets>; onChange(v): void; count: number; sort: SortKey; onSortChange(v): void }` | Vanaf `lg` één rij (fix 7-9, beslissing 209): de eerste facet die de pagina biedt (meestal Soort) als chips (`Chip` met `aria-pressed`), "Meer filters ({n})" opent de `FilterSheet` met alle facetten, rechts aantal + `SortSelect`; gekozen waarden van de andere facetten als chips eronder. Onder `lg`: knop "Filters ({n})" + `SortSelect`, sticky onder de header | nieuw | 7-9/D3 |
+| `FilterSheet` | C | zelfde + `open`, `onOpenChange` | `Sheet side="left"` met per facet een `fieldset` van checkboxen, elk met het aantal producten naast de keuzes van de andere facetten ("Ringen (2)", `facetCounts`); knoppen "Wis alles" en "Toon {n} producten" (beslissing 36) | nieuw | 7-9/D3 |
 | `StylingTile` | S | `{ title: string; text: string; image: AssetKey; href: string }` | Tegel in het grid (zelfde maat als een kaart), link naar een stack of de Spark Finder | nieuw | 7-9/D3 |
 
 **Gedeelde componenten** (beslissing 112). `ProductCard` en `ProductGrid` zijn synchroon, zonder hooks, zonder `server-only`- of `next/cache`-import en zonder data op te halen. Daardoor werken ze als server component én binnen een `"use client"`-bestand (hun kinderen `QuickAdd`, `ProductPhoto`, `Price` en `StatusLabel` mogen dat ook). `FinderResult` en `SearchView` gebruiken ze direct; er is geen tweede kaart. `ProductCard.test.tsx` rendert de kaart ook in een client-wrapper. Omdat `"use client"` in Vitest niets doet en `server-only` daar een stub is, controleert dezelfde test ook statisch de imports (§19.1): geen `server-only`, `next/cache`, `lib/shop-data`, `lib/commerce/index`, `lib/commerce/local` of `lib/server-clock` in de importboom van `ProductCard.tsx` en `ProductGrid.tsx`, en geen async componentfunctie. FilterBar en FilterSheet nemen hun facetlabels uit `sharedCopy.vocab`.
@@ -2602,14 +2602,14 @@ Een placeholder van `PhotoSlot` en `ProductPhoto` heeft `role="img"` met de alt-
 | 11 | `MomentTiles` | S | `{ content: HomeContent["moments"] }` | nieuw |
 | 13 | `ReviewsCarousel` | S | `{ reviews: Review[]; variant?: "home" \| "footer" }` → `null` zonder reviews of als `site.flags.showReviews` uit staat; `footer` is het blok boven de footer (§2.5) | `ReviewsSection.tsx` |
 | 13 | `VideoRow` | S | `{ content: HomeContent["videos"] }`; rendert niets als `site.flags.hideMissingOptionalMedia` aan staat en geen enkele `video.*` in `SUPPLIED` staat (beslissing 127) | `VideoRow.tsx` |
-| 14 | `PhotoStrip` | S | `{ content: HomeContent["photoStrip"] }`; zelfde regel met `fotostrook.*` (beslissing 127) | nieuw |
+| 14 | `PhotoStrip` | S | `{ content: HomeContent["photoStrip"] }`; zelfde regel met `fotostrook.*` (beslissing 127); elke tegel toont de productnaam onder de foto en de link krijgt zijn naam uit de inhoud ("Bekijk …" deels visueel verborgen), geen `aria-label` (WCAG 2.5.3, fix 7-9) | nieuw |
 | 15 | `GuaranteeBlock` | S | `{ content: HomeContent["guarantee"] }` | `GuaranteeBlock.tsx` |
 | 15 | `FaqSection` | S | `{ items: FaqItem[]; content: HomeContent["faq"] }`; gebruikt `FaqList` van D3 | `FaqSection.tsx` |
 | 15 | `AboutLindeTeaser` | S | `{ content: HomeContent["aboutLinde"] }` | `StoryTeaser.tsx` |
 
 Secties 1, 2 en 16 zijn chrome (§13.5); 6 is de popup (§13.11); 7 is `DropBanner` (§13.12); 12 is `SparkFinder` (§13.11).
 
-Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-link, `heading`, `tile` en alleen de sorteervelden van de producten; één sortering voor alle tabs.
+Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-link, `heading`, `tile` en alleen de sorteervelden van de producten; één sortering voor alle tabs. Fix 7-9 (beslissing 209): optioneel `tileByTab` (uit `home.productGrid.tileByTab`), zodat Ringen de ringmaat-tegel en Kettingen de Spark Finder-tegel krijgt in plaats van de stack-tegel (ringen en kettingen tellen niet mee voor de stack-korting).
 
 ### 13.11 Spark Finder en popup (7-9/D4)
 
@@ -2640,7 +2640,7 @@ Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-l
 | Component | S/C | Props | Rendert |
 | --- | --- | --- | --- |
 | `DropBanner` | S | `{ drop: Drop }` | §12.4 |
-| `DropHero` | S | `{ drop: Drop }` | Op `bg-roest`: naam (H1), tagline, `Countdown` naar `startsAt` met `liveLabel` "Nu live", `srLabel={formatCountdownSr(startsAt, "start")}`, `fallbackLabel={formatStartLabel(startsAt)}` (§10.6), beeld (`PhotoSlot` 16:9 desktop, 4:5 mobiel) |
+| `DropHero` | S | `{ drop: Drop }` | Op `bg-roest`: naam (H1), tagline, `Countdown` naar `startsAt` met `liveLabel` "Nu live", `srLabel={formatCountdownSr(startsAt, "start")}`, `fallbackLabel={formatStartLabel(startsAt)}` (§10.6), beeld (`PhotoSlot` 16:9 op elke breedte, `tone="vlak"`), optioneel `productsHref` voor de knop "Bekijk de stukken" (fix 7-9) |
 | `DropTeaser` | S | `{ drop: Drop }` | Teaser: naam, `formatStartLabel(startsAt)`, `Countdown` naar `startsAt` (start-labels, §10.6), Club-aanmelding (`SubscribeForm source="club"`) |
 | `EarlyAccessNote` | C | `{ drop: Drop }` | `TimeGate at={startsAt}`: vóór de start de early-access-regel, daarna niets |
 | `StackCard` | S | `{ stack: Stack; products: CatalogProduct[] }` (uit `getVisibleStacks`) | Beeld (`PhotoSlot` 4:5), naam, beschrijving, de drie stukken met prijs, totaal met stack-korting ("€X in plaats van €Y", berekend met `stackQuote`), `AddStackButton products={products}` |
@@ -2654,7 +2654,7 @@ Zoals gebouwd (beslissing 205): `HomeProductTabs` krijgt per tab een `viewAll`-l
 
 | Component | S/C | Props | Rendert | Golf |
 | --- | --- | --- | --- | --- |
-| `SubscribeForm` | C | `{ source: SubscribeSource; quiz?: QuizAnswers; tone?: "licht" \| "donker"; layout?: "inline" \| "stacked"; submitLabel?: string; onSuccess?(r: SubscribeResult): void; className?: string }` | E-mailveld, `ConsentCheckbox`, honeypot, knop (standaard `site.club.cta`); succes (`pending`, voor elk adres, beslissing 199): "Check je mail om je aanmelding af te ronden. Je code WELKOM10 kun je meteen gebruiken."; terugval met e-mailadres. Bij elk succes (`ok: true`) roept hij zelf `markSubscribed()` (`lib/subscription.ts`) en `track({ event: "sign_up", method: source })` (`lib/analytics.ts`) aan, daarna `onSuccess` | 4-6/C1 |
+| `SubscribeForm` | C | `{ source: SubscribeSource; quiz?: QuizAnswers; tone?: "licht" \| "donker"; layout?: "inline" \| "stacked"; submitLabel?: string; onSuccess?(r: SubscribeResult): void; className?: string }` | E-mailveld, `ConsentCheckbox`, honeypot, knop (standaard `site.club.cta`), in die volgorde in elke `layout` (de knop altijd na de verplichte checkbox; `inline` geeft de knop alleen vanaf `sm` zijn eigen breedte; fix 7-9, beslissing 209); succes (`pending`, voor elk adres, beslissing 199): "Check je mail om je aanmelding af te ronden. Je code WELKOM10 kun je meteen gebruiken."; terugval met e-mailadres. Bij elk succes (`ok: true`) roept hij zelf `markSubscribed()` (`lib/subscription.ts`) en `track({ event: "sign_up", method: source })` (`lib/analytics.ts`) aan, daarna `onSuccess` | 4-6/C1 |
 | `ConfirmSubscription` | C | geen | Op `/nieuwsbrief/bevestigen`: leest `t` met `useSearchParams` (binnen Suspense), haalt `t` direct na het lezen uit de adresbalk met `history.replaceState` (vóór analytics kan lezen) en toont één knop "Bevestig mijn aanmelding" die `POST /api/subscribe/confirm` doet (nooit automatisch bij laden: mailscanners openen links). Succes: "Je bent erbij." met link naar de shop (of de wachtlijst tijdens prelaunch); verlopen of ongeldig: uitleg en `SubscribeForm source="club"` | 4-6/C1 |
 | `ConsentCheckbox` | C | `{ checked; onChange; error?: string; tone? }` | Eigen markup in de stijl van `Checkbox` (die heeft geen `tone`, beslissing 191), met label `site.consentText` (exact), daaronder de link `site.privacyLink`. Nooit vooraf aangevinkt | 4-6/C1 |
 | `WithdrawalForm` | C | geen | Velden naam, bestelnummer, e-mailadres, "Welke producten? (optioneel)"; één knop "Herroeping bevestigen"; succes toont de ontvangstbevestiging (referentie, datum en tijd, inhoud) | 4-6/C1 |
@@ -2697,7 +2697,7 @@ Elke pagina exporteert `metadata` of `generateMetadata` via `pageMetadata()` uit
 | 8 | Zo stack je | `HowToStack` (D3, `components/sections/`) | pagina, haarlijn boven | `<ol>` met drie stappen; mobiel rijen met icoon, vanaf `md` drie kolommen; link naar `/stacks` |
 | 9 | Lindes favorieten / Bestsellers | `FavoritesCarousel` | vlak | `homeFavorites(products, site.flags.realSalesData)` (`lib/catalog.ts`, getest): met `realSalesData: false` de producten met `lindesFavoriet` en titel `home.favorites.title`; met `true` de producten met metafield `bestseller === true` op `featuredRank` en titel `home.favorites.titleWithSales`. Nooit Lindes keuzes onder de titel "Bestsellers" (beslissing 79). `Carousel` met `ProductCard`'s (62% breed mobiel, 4 zichtbaar vanaf `xl`) |
 | 10 | Statement of subtiel? | `StatementVsSubtle` | pagina | twee kolommen (mobiel onder elkaar): foto 4:5, titel, eerlijke tekst zonder claims, knop naar `/collections/alle?vibe=chunky-en-bold` en `/collections/subtiel` |
-| 11 | Shop per moment | `MomentTiles` | pagina | vijf tegels 4:5 met naam; mobiel `ScrollRow`, vanaf `lg` vijf kolommen |
+| 11 | Shop per moment | `MomentTiles` | pagina | vijf tegels 4:5 met naam (onder `lg` op een pill over de foto, vanaf `lg` eronder; fix 7-9); mobiel `ScrollRow`, vanaf `lg` vijf kolommen |
 | 12 | Spark Finder | `SparkFinder variant="blok"` | donker | `quiz` |
 | 13 | Reviews en video | `ReviewsCarousel` (verborgen zonder reviews), `VideoRow` | pagina | `reviews`, `home.videos` (4 × `VideoSlot`) |
 | 14 | Zo dragen jullie Sparkela | `PhotoStrip` | pagina, haarlijn boven | 6 tot 8 × `PhotoSlot` 1:1, elk een link naar het product (`aria-label` "Bekijk {product}") |
@@ -2747,7 +2747,7 @@ Swatches krijgen een rand van 1 px `--rand-invoer` (goud en zilver halen geen 3:
 ### 14.3 Collectie (`app/(shop)/collections/[handle]/page.tsx`)
 
 - `ensureStatic = "navigation"`, `instant = false`, `generateStaticParams` uit `content/collections.ts` (alle handles). Onbekende handle: hetzelfde 404-patroon als de PDP (`<Suspense fallback={<NotFoundView />}><Missing /></Suspense>`). Gemeten in fase 2 (Next 16.4.3, `cacheComponents`, `partialPrefetching`): `ensureStatic = "navigation"` met `instant = false`, een client-grid met `useSearchParams` binnen Suspense en een client-nav met `usePathname` in de groepslayout bouwt als `○ /collections/alle` (1h, 1d) plus `◐ /collections/[handle]`.
-- Opbouw: `Breadcrumbs` · banner (`bg-vlak rounded-kaart` in de container: eyebrow "Collectie", H1 = titel, intro; optioneel `bannerImage` rechts vanaf `md`) · `FilterBar` / `FilterSheet` · aantal · grid · lege staat.
+- Opbouw: `Breadcrumbs` · kop zonder kaart (eyebrow "Collectie", H1 = titel, intro; optioneel `bannerImage` rechts vanaf `md` als afgeronde 16:9-placeholder op `vlak`; fix 7-9, beslissing 209: de eerste kaartrij staat op 1440×900 boven de vouw) · `FilterBar` / `FilterSheet` · aantal · grid (elke collectie heeft een `stylingTile`, zodat de ongefilterde grid geen rafelige laatste rij heeft) · lege staat.
 - Data: `getShopCollection(handle)` geeft `{ definition, products, facets }` (`ShopCollection`, `CatalogProduct[]` met badges).
 - `<Suspense fallback={<CollectionViewFallback … />}><CollectionView … /></Suspense>`; kaarten worden op de server gerenderd en als `cards` doorgegeven (CORVANE-patroon, keyed reorder). Nooit server-`searchParams` lezen.
 - URL-parameters: `?type=oorbellen,armbanden&vibe=retro&moment=festival&prijs=15-20&sort=prijs-oplopend` (komma-gescheiden). Filters die de collectie zelf al vastlegt (type op `/collections/oorbellen`) worden verborgen.
@@ -2769,12 +2769,12 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 - `generateStaticParams`: alle acht slugs. `ensureStatic = "navigation"`, `instant = false` (zoals de PDP). **Ook `/drops/[slug]/binnenkort/page.tsx`** exporteert `ensureStatic = "navigation"`, `instant = false` en `generateStaticParams` met alle acht slugs. Zonder `ensureStatic` geeft het 404-patroon bij het eerste verzoek 200 met `private, no-store` (gemeten met Next 16.4.3: `/drops/iets/binnenkort` eerst 200, pas daarna 404; met `ensureStatic` meteen 404; beslissing 133). Elke route met het 404-patroon exporteert beide.
 - **Onbekende slug**: `isDropSlug(slug)` uit `content/drops.ts` versmalt de string param tot `DropSlug`. Onbekend → `<Suspense fallback={<NotFoundView />}><Missing /></Suspense>` met `notFound()` in `Missing`, op `/drops/[slug]` én `/drops/[slug]/binnenkort` (anders geeft `/drops/iets` een pagina met status 200, een zachte 404; beslissing 103). `getDropData` krijgt alleen een `DropSlug`.
-- Opbouw: `DropHero` · `EarlyAccessNote` · H2 "De drop" + `ProductGrid` met `getDropData(slug).products` (`CatalogProduct[]`, ook in de fase `early-access`; lege lijst: "De stukken zie je hier vanaf {datum}.") · Holiday stack (als die bestaat) · Club-aanmelding · `afgelopen`-melding via `TimeGate at={endsAt}` ("Deze drop is voorbij. In de Club hoor je als eerste van de volgende.").
+- Opbouw: `DropHero` · `EarlyAccessNote` · H2 "De drop" + `ProductGrid` met `getDropData(slug).products` (`CatalogProduct[]`, ook in de fase `early-access`; lege lijst: "De stukken zie je hier vanaf {datum}.") · Holiday stack (als die bestaat) · `afgelopen`-melding met Club-aanmelding via `TimeGate at={endsAt}` ("Deze drop is voorbij. In de Club hoor je als eerste van de volgende."); zolang de drop loopt geen eigen Club-blok, de footer heeft het al (fix 7-9, beslissing 209). `DropHero` krijgt `productsHref` ("Bekijk de stukken" naar de grid) en een lichte 16:9-placeholder.
 - Teaser `/drops/[slug]/binnenkort`: `DropTeaser`, `robots: noindex`, canonical `/drops/[slug]`.
 
 ### 14.7 Stacks (`/stacks`)
 
-`PageHeader` (H1 "Stacks van Linde", intro over 3 stuks en 15% stack-korting) · uitleg in drie stappen (`HowToStack headingLevel={2}`) · grid van `StackCard` (1 kolom mobiel, 2 vanaf `md`, 3 vanaf `xl`) uit `getVisibleStacks()` · link naar de Spark Finder · `FaqList` met de vraag `stack-korting`.
+`PageHeader` (H1 "Stacks van Linde", intro over 3 stuks en 15% stack-korting) · uitleg in drie stappen (`HowToStack headingLevel={2}`) · grid van `StackCard` (1 kolom mobiel, 2 vanaf `md`, 3 vanaf `xl` bij een veelvoud van 3, anders 2 met de liggende kaart; fix 7-9) uit `getVisibleStacks()` · link naar de Spark Finder · `FaqList` met de vraag `stack-korting`.
 
 ### 14.8 Cadeaukaarten (`/cadeaukaarten`)
 
@@ -2782,7 +2782,7 @@ Zie §13.7. Volgorde in de scrollende body: `CartProgressBars` · regels · haar
 
 ### 14.9 Sparkela Club (`/sparkela-club`)
 
-`PageHeader` (H1 `site.club.title`) · voordelen in drie punten (als eerste bij elke drop, 24 uur early access, 10% op je eerste bestelling) · `SubscribeForm source="club" submitLabel="Ik doe mee"` · uitleg welke mails je krijgt en dat afmelden altijd kan · komende drops (naam en maand, zonder timers, alleen drops met `startsAt` in de toekomst).
+`PageHeader` (breadcrumbs, H1 `site.club.title`) · `SubscribeForm source="club" submitLabel="Ik doe mee"` in een kaart met `data-eigen-club` (de footer laat dan zijn Club-blok weg; fix 7-9, beslissing 209) · voordelen in drie punten (als eerste bij elke drop, 24 uur early access, 10% op je eerste bestelling) · uitleg welke mails je krijgt en dat afmelden altijd kan · komende drops (naam en maand, zonder timers, alleen drops met `startsAt` in de toekomst).
 
 ### 14.10 Zoeken (`/zoeken`)
 

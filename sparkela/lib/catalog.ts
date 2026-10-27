@@ -243,9 +243,15 @@ export function withDropMembership<T extends Pick<Product, "handle" | "tags">>(p
   return { ...product, tags: { ...product.tags, drops: [...product.tags.drops, ...missing] } };
 }
 
-/** Value and unit stay together in a spec line ("25 mm", "3,5 cm"): a no-break space between them (decision 201). */
+/**
+ * Value and unit stay together in a spec line ("25 mm", "3,5 cm"): a no-break space between them (decision 201). The
+ * separator " · " sticks to the segment before it (a no-break space in front), so a line can break after the dot but
+ * never starts with one ("Verguld staal ·" / "30 mm", fix 7-9).
+ */
 export function keepUnitsTogether(text: string): string {
-  return text.replace(/(\d)\s+(mm|cm|m|g|gr|ml|ct|karaat)(?![\p{L}\d])/giu, "$1\u00a0$2");
+  return text
+    .replace(/(\d)\s+(mm|cm|m|g|gr|ml|ct|karaat)(?![\p{L}\d])/giu, "$1\u00a0$2")
+    .replace(/\s+·\s+/gu, "\u00a0· ");
 }
 
 function dropsOf(product: Pick<Product, "tags">, drops: readonly Drop[]): Drop[] {

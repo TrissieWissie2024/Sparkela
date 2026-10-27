@@ -1,6 +1,7 @@
 import { formatMoneyShort } from "@/lib/money";
 import type { CollectionDefinition } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
+import { EARLY_ACCESS_HOURS } from "@/content/drops";
 import { stackDiscount } from "@/content/offers";
 
 /**
@@ -22,6 +23,35 @@ const giftLimit = formatMoneyShort(GIFT_LIMIT_CENTS);
  * unfiltered grid has no ragged rows (components/collection/filterParams.ts, stylingTilePlacement).
  */
 const STYLING_TILE_AFTER = 12;
+
+type StylingTileContent = NonNullable<CollectionDefinition["stylingTile"]>;
+
+/**
+ * Every collection has a styling tile (fix 7-9: "aligned grids, no ragged rows"): it fills the cells the last row
+ * leaves empty. Each one points somewhere that fits the collection: the Spark Finder, the stacks (only where the pieces
+ * count for the stack discount: earrings and bracelets), the ring size, the Club or the gift cards.
+ */
+function tile(title: string, text: string, image: StylingTileContent["image"], href: string): StylingTileContent {
+  return { afterIndex: STYLING_TILE_AFTER, title, text, image, href };
+}
+
+const finderTile = (title: string) =>
+  tile(title, "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.", "linde.portret", "/spark-finder");
+
+const stacksTile = (image: StylingTileContent["image"]) =>
+  tile(
+    "Maak er een stack van",
+    `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits} stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+    image,
+    "/stacks",
+  );
+
+const giftCardTile = tile(
+  "Liever zelf laten kiezen?",
+  "Geef een cadeaukaart. Dan kiest de ontvanger zelf een spark, en de kaart staat meteen in de mail.",
+  "linde.portret",
+  "/cadeaukaarten",
+);
 
 export const collections: CollectionDefinition[] = [
   {
@@ -52,7 +82,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "tag", tag: "nieuw" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: finderTile("Twijfel je nog?"),
   },
   {
     handle: "oorbellen",
@@ -100,7 +130,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "type", type: "kettingen" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: finderTile("Welke ketting past bij jou?"),
   },
   {
     handle: "ringen",
@@ -112,7 +142,12 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "type", type: "ringen" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: tile(
+      "Welke ringmaat heb je?",
+      "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grootste.",
+      "linde.portret",
+      "/veelgestelde-vragen",
+    ),
   },
   {
     handle: "subtiel",
@@ -124,7 +159,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "vibe", vibe: "clean-en-classy" },
     bannerImage: "home.subtiel",
-    stylingTile: null,
+    stylingTile: finderTile("Toch iets meer spark?"),
   },
   {
     handle: "limited",
@@ -136,7 +171,12 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "drop" },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: tile(
+      "Als eerste bij de volgende drop",
+      `In de Sparkela Club hoor je het eerst wanneer er een drop komt, en je shopt ${EARLY_ACCESS_HOURS} uur eerder.`,
+      "club.hero",
+      "/sparkela-club",
+    ),
   },
   {
     handle: "festival",
@@ -148,7 +188,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "moment", moment: "festival" },
     bannerImage: "momenten.festival",
-    stylingTile: null,
+    stylingTile: stacksTile("stacks.kleur-op-je-pols"),
   },
   {
     handle: "date-night",
@@ -160,7 +200,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "moment", moment: "date-night" },
     bannerImage: "momenten.date-night",
-    stylingTile: null,
+    stylingTile: finderTile("Op zoek naar jouw look?"),
   },
   {
     handle: "kantoor-maar-niet-saai",
@@ -172,7 +212,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "moment", moment: "kantoor-maar-niet-saai" },
     bannerImage: "momenten.kantoor-maar-niet-saai",
-    stylingTile: null,
+    stylingTile: stacksTile("stacks.kantoor-maar-niet-saai"),
   },
   {
     handle: "strand",
@@ -184,7 +224,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "moment", moment: "strand" },
     bannerImage: "momenten.strand",
-    stylingTile: null,
+    stylingTile: stacksTile("stacks.kleur-op-je-pols"),
   },
   {
     handle: "feestdagen",
@@ -196,7 +236,7 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "moment", moment: "feestdagen" },
     bannerImage: "momenten.feestdagen",
-    stylingTile: null,
+    stylingTile: giftCardTile,
   },
   {
     handle: "onder-25",
@@ -208,6 +248,6 @@ export const collections: CollectionDefinition[] = [
     },
     rule: { kind: "maxPrice", cents: GIFT_LIMIT_CENTS },
     bannerImage: null,
-    stylingTile: null,
+    stylingTile: giftCardTile,
   },
 ];

@@ -63,7 +63,8 @@ export function DropTeaser({ drop }: DropTeaserProps) {
             />
           </div>
           <div className="lg:col-span-5 lg:col-start-8">
-            <div className={cn("rounded-kaart bg-kaart p-6 text-tekst md:p-8", "[--ring:var(--focus)]")}>
+            {/* data-eigen-club: the footer leaves out its own Club form on this page (app/globals.css, fix 7-9). */}
+            <div data-eigen-club className={cn("rounded-kaart bg-kaart p-6 text-tekst md:p-8", "[--ring:var(--focus)]")}>
               <h2 className="kop-3 text-tekst">{copy.formTitle}</h2>
               <p className="mt-2 text-tekst-2">{copy.formText}</p>
               <SubscribeForm source="club" className="mt-5" />

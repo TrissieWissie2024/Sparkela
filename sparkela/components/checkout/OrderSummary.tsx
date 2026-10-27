@@ -1,7 +1,7 @@
 "use client";
 
-import { Gift } from "lucide-react";
-import { useId } from "react";
+import { ChevronDown, Gift } from "lucide-react";
+import { useId, useState } from "react";
 
 import type { Cart } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -22,11 +22,16 @@ import { DiscountCodeField } from "./DiscountCodeField";
  * - the discount code field (DiscountCodeField);
  * - CartTotals: subtotal, a row per discount (with "Verwijderen" for a code), shipping, total, "Je bespaart" and the
  *   VAT line. Every amount comes from the cart (lib/pricing.ts for the local provider); nothing is computed here.
+ * Below lg (the overview comes before the form there) the lines and the gift message fold away behind a toggle
+ * ("Toon de artikelen", aria-expanded), closed at first, so the contact form is not two screens down; the discount
+ * field and the totals stay visible. From lg everything shows, sticky beside the form (fix 7-9).
  */
 export function OrderSummary({ cart, className }: { cart: Cart; className?: string }) {
   const copy = pagesCopy.checkout.summary;
   const { openCart } = useCart();
   const headingId = useId();
+  const linesId = useId();
+  const [linesOpen, setLinesOpen] = useState(false);
 
   return (
     <section aria-labelledby={headingId} className={cn("rounded-kaart border border-rand bg-kaart p-5 sm:p-6 md:p-7", className)}>
@@ -47,30 +52,46 @@ export function OrderSummary({ cart, className }: { cart: Cart; className?: stri
         </button>
       </div>
 
-      <ul aria-label={copy.linesLabel} className="mt-1 divide-y divide-rand border-b border-rand">
-        {cart.lines.map((line) => (
-          <CartLineItem key={line.id} line={line} onRemove={() => {}} readOnly />
-        ))}
-        {cart.giftWrap.selected ? (
-          <li className="flex items-center gap-4 py-4">
-            <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-[10px] bg-vlak text-roest">
-              <Gift className="size-5" strokeWidth={1.5} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="kop-4 block text-tekst">{copy.giftWrap}</span>
-              {cart.giftWrap.free ? <span className="tekst-klein mt-0.5 block text-tekst-2">{copy.giftWrapFree}</span> : null}
-            </span>
-            <span className="tabular shrink-0 text-[0.9375rem] font-semibold text-tekst">{formatMoney(cart.giftWrap.price)}</span>
-          </li>
-        ) : null}
-      </ul>
+      <button
+        type="button"
+        aria-expanded={linesOpen}
+        aria-controls={linesId}
+        onClick={() => setLinesOpen((open) => !open)}
+        className="mt-1 flex min-h-11 w-full items-center justify-between gap-3 border-b border-rand text-left text-sm font-semibold text-tekst lg:hidden"
+      >
+        {linesOpen ? copy.hideLines : copy.showLines}
+        <ChevronDown
+          aria-hidden="true"
+          className={cn("size-4 shrink-0 motion-safe:transition-transform motion-safe:duration-200", linesOpen && "rotate-180")}
+          strokeWidth={1.75}
+        />
+      </button>
+      <div id={linesId} className={cn(!linesOpen && "max-lg:hidden")}>
+        <ul aria-label={copy.linesLabel} className="mt-1 divide-y divide-rand border-b border-rand">
+          {cart.lines.map((line) => (
+            <CartLineItem key={line.id} line={line} onRemove={() => {}} readOnly />
+          ))}
+          {cart.giftWrap.selected ? (
+            <li className="flex items-center gap-4 py-4">
+              <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-[10px] bg-vlak text-roest">
+                <Gift className="size-5" strokeWidth={1.5} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="kop-4 block text-tekst">{copy.giftWrap}</span>
+                {cart.giftWrap.free ? <span className="tekst-klein mt-0.5 block text-tekst-2">{copy.giftWrapFree}</span> : null}
+              </span>
+              <span className="tabular shrink-0 text-[0.9375rem] font-semibold text-tekst">{formatMoney(cart.giftWrap.price)}</span>
+            </li>
+          ) : null}
+        </ul>
 
-      {cart.note ? (
-        <div className="border-b border-rand py-4">
-          <p className="label-caps text-tekst-2">{copy.giftMessage}</p>
-          <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-line text-tekst">{cart.note}</p>
-        </div>
-      ) : null}
+        {cart.note ? (
+          <div className="border-b border-rand py-4">
+            <p className="label-caps text-tekst-2">{copy.giftMessage}</p>
+            <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-line text-tekst">{cart.note}</p>
+          </div>
+        ) : null}
+      </div>
 
       <DiscountCodeField className="border-b border-rand py-5" />
 

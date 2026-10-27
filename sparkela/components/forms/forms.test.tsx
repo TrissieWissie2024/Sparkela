@@ -42,6 +42,9 @@ describe("SubscribeForm (brief §2.8)", () => {
         expect(checkbox).not.toMatch(CHECKED_ATTRIBUTE);
         expect(checkbox).toContain('aria-required="true"');
         expect(count(html, /type="checkbox"/)).toBe(1);
+        // Field, consent, then the button: in DOM (and so tab and reading) order, in every layout.
+        expect(html.indexOf('type="email"')).toBeLessThan(html.indexOf('type="checkbox"'));
+        expect(html.indexOf('type="checkbox"')).toBeLessThan(html.indexOf('type="submit"'));
       });
     }
   }

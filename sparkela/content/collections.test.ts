@@ -68,6 +68,10 @@ describe("collections (plan §2.3)", () => {
     }
   });
 
+  it("gives every collection a styling tile, so no unfiltered grid ends in a ragged row (fix 7-9)", () => {
+    for (const collection of collections) expect(collection.stylingTile, collection.handle).not.toBeNull();
+  });
+
   it("only points to image slots that exist", () => {
     for (const collection of collections) {
       if (collection.bannerImage) expect(assets.images[collection.bannerImage], collection.handle).toBeDefined();

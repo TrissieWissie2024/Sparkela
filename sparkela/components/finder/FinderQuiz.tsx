@@ -139,7 +139,13 @@ export function FinderQuiz({ config, tone = "donker", headingLevel = 3, classNam
     <div
       ref={panelRef}
       data-finder-step={state.step}
-      className={cn("relative flex min-w-0 flex-col rounded-kaart p-5 sm:p-8 lg:p-10", t.panel, className)}
+      className={cn(
+        "relative flex min-w-0 flex-col rounded-kaart p-5 sm:p-8 lg:p-10",
+        t.panel,
+        // The result on a phone: no card around the product cards (cards on a card, 40 px narrower), fix 7-9.
+        state.step === "result" && "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:pt-0",
+        className,
+      )}
     >
       <p role="status" className="sr-only">
         {announcement}

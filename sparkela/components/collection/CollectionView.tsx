@@ -16,6 +16,7 @@ import {
   applyFilterState,
   DEFAULT_SORT,
   emptyFilters,
+  facetCounts,
   hasActiveFilters,
   parseFilterParams,
   stylingTilePlacement,
@@ -135,6 +136,7 @@ function CollectionLayout({
     <>
       <FilterBar
         facets={facets}
+        counts={facetCounts(products, state.filters, facets)}
         value={state.filters}
         onChange={(filters) => onFiltersChange?.(filters)}
         count={visible.length}

@@ -19,7 +19,9 @@ import { PaymentBadges } from "./PaymentBadges";
  *
  * Top to bottom:
  * 1. The Sparkela Club sign-up: site.club.title as heading, a line, the three benefits and SubscribeForm
- *    source="footer" (the exact consent sentence on an unchecked checkbox, the privacy link, double opt-in).
+ *    source="footer" (the exact consent sentence on an unchecked checkbox, the privacy link, double opt-in). A page
+ *    that shows its own Club sign-up marks it with data-eigen-club; app/globals.css then hides this block (and the
+ *    hairline above the links), so the same form never shows twice in a row (fix 7-9).
  * 2. Link columns Shop / Klantenservice / Sparkela / Juridisch (footerNav): 2 columns on phones, 4 from md. The
  *    Juridisch column gets "Cookie-instellingen" only while analytics is on.
  * 3. Payment methods as neutral text badges and the socials (open in a new window, ↗, rel="noopener").
@@ -41,7 +43,10 @@ export function Footer() {
   return (
     <footer data-vlak="donker" className="bg-donker text-tekst-op-donker print:hidden">
       <Container>
-        <div className="grid grid-cols-1 gap-8 pt-16 pb-14 md:pt-24 md:pb-20 lg:grid-cols-12 lg:items-start lg:gap-x-8">
+        <div
+          data-footer-club
+          className="grid grid-cols-1 gap-8 pt-16 pb-14 md:pt-24 md:pb-20 lg:grid-cols-12 lg:items-start lg:gap-x-8"
+        >
           <div className="lg:col-span-5">
             <h2 className="kop-2 text-tekst-op-donker">
               {site.club.title}
@@ -60,6 +65,7 @@ export function Footer() {
         </div>
 
         <nav
+          data-footer-nav
           aria-label={copy.navLabel}
           className="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-rand-op-donker py-12 md:grid-cols-4 md:gap-x-8 md:py-16"
         >

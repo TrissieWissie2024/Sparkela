@@ -69,6 +69,12 @@ export function LaunchCollection({ products, className }: LaunchCollectionProps)
           tile={
             <StylingTile title={copy.tile.title} text={copy.tile.text} image={copy.tile.image} href={copy.tile.href} />
           }
+          tileByTab={Object.fromEntries(
+            Object.entries(copy.tileByTab).map(([id, t]) => [
+              id,
+              <StylingTile key={id} title={t.title} text={t.text} image={t.image} href={t.href} />,
+            ]),
+          )}
         />
       </Container>
     </section>

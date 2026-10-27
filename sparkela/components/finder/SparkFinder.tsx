@@ -51,7 +51,8 @@ function FinderBlock({ headingLevel, id, className }: { headingLevel: 1 | 2; id:
     >
       {/* grid-cols-1 (minmax(0, 1fr)): with large text the column never grows past the screen. */}
       <Container className="sectie grid grid-cols-1 gap-10 md:gap-12 lg:grid-cols-12 lg:gap-x-8">
-        <div className="flex flex-col lg:col-span-4 lg:pt-2 xl:col-span-5">
+        {/* Sticky from lg: next to a tall result the heading stays in view instead of leaving an empty column. */}
+        <div className="flex flex-col lg:sticky lg:top-[calc(var(--header-hoogte)+2rem)] lg:col-span-4 lg:self-start lg:pt-2 xl:col-span-5">
           <SectionHeading
             id={headingId}
             level={headingLevel}

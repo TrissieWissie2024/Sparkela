@@ -8,6 +8,7 @@ import { formsCopy } from "@/content/copy/forms";
 import { pagesCopy } from "@/content/copy/pages";
 import { faq } from "@/content/faq";
 import { site } from "@/content/site";
+import { sharedCopy } from "@/content/copy/shared";
 import { PageHeader } from "@/components/pages/PageHeader";
 import { Accordion } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
@@ -56,7 +57,12 @@ function Answer({ item }: { item: FaqItem }) {
 export default function VeelgesteldeVragenPage() {
   return (
     <>
-      <PageHeader eyebrow={copy.eyebrow} title={copy.title} intro={copy.intro} />
+      <PageHeader
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-x-8">
           <nav aria-label={copy.navLabel} className="lg:col-span-3">

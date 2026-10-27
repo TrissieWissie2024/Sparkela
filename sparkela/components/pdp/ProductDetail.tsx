@@ -93,7 +93,7 @@ export function ProductDetail({ product, badges, stacks, stackOptions, lookProdu
               <ProductSpecs product={product} claims={claims} variantId={defaultVariant(product).id} className={BLOCK} />
             )}
             {meter ? <StatementMeter value={meter} className="mt-8 border-t border-rand pt-8" /> : null}
-            <ProductAccordions product={product} claims={claims} className="mt-10" />
+            <ProductAccordions product={product} className="mt-10" />
           </div>
         </div>
       </Container>

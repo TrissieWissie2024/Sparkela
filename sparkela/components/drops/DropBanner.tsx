@@ -60,7 +60,7 @@ export function DropBanner({ drop, headingLevel = 2 }: DropBannerProps) {
           </div>
           <div className="hidden lg:col-span-6 lg:block xl:col-span-7">
             <div className="relative aspect-video w-full overflow-hidden rounded-kaart">
-              <PhotoSlot assetKey={drop.image} label={label} aspect="fill" tone="donker" sizes="(min-width: 1280px) 680px, 50vw" />
+              <PhotoSlot assetKey={drop.image} label={label} aspect="fill" tone="vlak" sizes="(min-width: 1280px) 680px, 50vw" />
             </div>
           </div>
         </div>

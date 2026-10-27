@@ -99,8 +99,9 @@ export interface PagesCopy {
     conditions: string;
     cardsLabel: string;
     card: (n: number, total: number) => string;
-    cardChosen: (n: number, total: number, reveal: string) => string;
-    cardRevealed: (n: number, total: number, reveal: string) => string;
+    /** Visually hidden prefix of a turned card; the visible face (code and reward) completes its name. */
+    cardChosen: (n: number, total: number) => string;
+    cardRevealed: (n: number, total: number) => string;
     /** The face of every card: the same, real reward. */
     cardFace: { value: string; line: string };
     yourCard: string;
@@ -147,6 +148,9 @@ export interface PagesCopy {
       giftWrap: string;
       giftWrapFree: string;
       giftMessage: string;
+      /** Below lg the lines fold away behind this toggle, so the form starts high (fix 7-9). */
+      showLines: string;
+      hideLines: string;
     };
     discount: {
       label: string;
@@ -327,8 +331,8 @@ export const pagesCopy: PagesCopy = {
     conditions: "Eén keer te gebruiken. Niet op cadeaukaarten en niet samen met de stack-korting.",
     cardsLabel: "Drie kaarten met dezelfde beloning",
     card: (n, total) => `Kaart ${n} van ${total} omdraaien`,
-    cardChosen: (n, total, reveal) => `Kaart ${n} van ${total}, jouw kaart: ${reveal}`,
-    cardRevealed: (n, total, reveal) => `Kaart ${n} van ${total}: ${reveal}`,
+    cardChosen: (n, total) => `Kaart ${n} van ${total}, jouw kaart:`,
+    cardRevealed: (n, total) => `Kaart ${n} van ${total}:`,
     cardFace: { value: welcomeCode.code, line: reward },
     yourCard: "Jouw kaart",
     sameReward: "Zelfde beloning",
@@ -392,6 +396,8 @@ export const pagesCopy: PagesCopy = {
       giftWrap: "Cadeauverpakking",
       giftWrapFree: "Gratis in december",
       giftMessage: "Cadeauboodschap",
+      showLines: "Toon de artikelen",
+      hideLines: "Verberg de artikelen",
     },
     discount: {
       label: "Kortingscode",

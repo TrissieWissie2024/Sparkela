@@ -25,8 +25,8 @@ import { fillTileClassName, type HomeTab } from "./launchTabs";
  * order follow the visible order and a card keeps its QuickAdd state when it moves. One sort applies to every tab.
  * Only the open tab's panel is in the DOM (Radix), so a product is never listed twice.
  *
- * Grid: 2 columns below lg, 4 from lg (brief §6). A tab whose count leaves a row open gets `tile` (the styling tile)
- * in the gap, always last whatever the sort, so no row is ragged.
+ * Grid: 2 columns below lg, 4 from lg (brief §6). A tab whose count leaves a row open gets its tile (`tileByTab`, else
+ * `tile`: the styling tile) in the gap, always last whatever the sort, so no row is ragged.
  */
 
 export interface HomeProductTabsProps {
@@ -39,11 +39,13 @@ export interface HomeProductTabsProps {
   heading: Omit<SectionHeadingProps, "action" | "level">;
   /** Fills the open cells of a short tab's last row (StylingTile). */
   tile?: ReactNode;
+  /** A tab's own tile instead of `tile`, by tab id (Ringen gets the ring size, not the stack, fix 7-9). */
+  tileByTab?: Partial<Record<string, ReactNode>>;
 }
 
 const GRID = "grid grid-cols-2 gap-x-3 gap-y-8 md:gap-x-6 md:gap-y-12 lg:grid-cols-4 xl:gap-y-14";
 
-export function HomeProductTabs({ tabs, products, cards, heading, tile }: HomeProductTabsProps) {
+export function HomeProductTabs({ tabs, products, cards, heading, tile, tileByTab }: HomeProductTabsProps) {
   const [sort, setSort] = useState<SortKey>("uitgelicht");
   const copy = home.productGrid;
 
@@ -66,7 +68,8 @@ export function HomeProductTabs({ tabs, products, cards, heading, tile }: HomePr
         label={copy.tabsLabel}
         className="mt-8 md:mt-10"
         tabs={tabs.map((tab) => {
-          const fill = tile ? fillTileClassName(tab.handles.length) : null;
+          const tabTile = tileByTab?.[tab.id] ?? tile;
+          const fill = tabTile ? fillTileClassName(tab.handles.length) : null;
           return {
             id: tab.id,
             label: tab.label,
@@ -78,7 +81,7 @@ export function HomeProductTabs({ tabs, products, cards, heading, tile }: HomePr
                       {cards[handle]}
                     </li>
                   ))}
-                  {fill ? <li className={cn("min-w-0", fill)}>{tile}</li> : null}
+                  {fill ? <li className={cn("min-w-0", fill)}>{tabTile}</li> : null}
                 </ul>
                 <div className="mt-12 flex justify-center md:mt-16">
                   <Button

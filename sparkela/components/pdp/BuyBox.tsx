@@ -7,7 +7,7 @@ import type { CatalogProduct, Product } from "@/lib/types";
 import { track, viewItemEvent } from "@/lib/analytics";
 import { defaultVariant, isStackEligible } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { pdpCopy } from "@/content/copy/pdp";
 import { useCart } from "@/components/cart/useCart";
 
@@ -82,7 +82,8 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   const giftWrapOn = !product.isGiftCard && choice.giftWrap === true;
 
   const total = picks ? quoteStack({ price: variant.price.cents, type: product.type }, picks, options).total : variant.price.cents;
-  const price = formatMoney(total);
+  // A gift card amount is whole euros, written like its tiles and "Vanaf €15" ("€15", not "€15,00"), fix 7-9.
+  const price = product.isGiftCard ? formatMoneyShort(total) : formatMoney(total);
   const label = soldOut ? pdpCopy.addToCart.soldOut : picks ? pdpCopy.addToCart.stack : pdpCopy.addToCart.label;
   const reason = soldOut && product.availableForSale ? pdpCopy.addToCart.variantSoldOut(variant.title) : null;
 

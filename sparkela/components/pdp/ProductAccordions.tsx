@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import type { Product, VerifiedClaim } from "@/lib/types";
-import { keepUnitsTogether, materialForVariant, needsHygieneSeal } from "@/lib/catalog";
+import type { Product } from "@/lib/types";
+import { materialForVariant, needsHygieneSeal } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { pdpCopy } from "@/content/copy/pdp";
 import { site } from "@/content/site";
@@ -13,8 +13,9 @@ import { productCodes } from "./variants";
 /**
  * The accordions of the product page (docs/PLAN.md §13.9; brief §6 and §2.10; port of CORVANE ProductAccordions), Radix
  * Accordion type "multiple", all closed at first, h3 triggers under a visually hidden h2:
- * - Details en materiaal: the material per colour (materialForVariant, decision 81), dimensions, weight, closure, the
- *   verified claims ("… (bevestigd door de leverancier)", decision 82) and the article numbers.
+ * - Details en materiaal: what the Specificaties list does not show: the material per colour (materialForVariant,
+ *   decision 81) for a piece in more than one colour, and the article numbers (fix 7-9: dimensions, weight, closure and
+ *   the verified claims are in the list already). Left out when it would be empty.
  * - Verzorging: the metafield verzorging, else pdpCopy.care.default.
  * - Garantie: the 6 months on discolouration, Sparkela's own promise (brief §2.6).
  * - Verzenden en retourneren: for earrings and piercings (needsHygieneSeal: type oorbellen or tag piercing, decision 80)
@@ -32,21 +33,20 @@ import { productCodes } from "./variants";
 
 export interface ProductAccordionsProps {
   product: Product;
-  claims: VerifiedClaim[];
   className?: string;
 }
 
-export function ProductAccordions({ product, claims, className }: ProductAccordionsProps) {
+export function ProductAccordions({ product, className }: ProductAccordionsProps) {
   return (
     <section className={className}>
       <h2 className="sr-only">{pdpCopy.sections.details}</h2>
-      <Accordion type="multiple" headingLevel={3} items={productAccordionItems(product, claims)} />
+      <Accordion type="multiple" headingLevel={3} items={productAccordionItems(product)} />
     </section>
   );
 }
 
 /** The panels for a product, in the order of the brief. */
-export function productAccordionItems(product: Product, claims: readonly VerifiedClaim[]): AccordionItem[] {
+export function productAccordionItems(product: Product): AccordionItem[] {
   const copy = pdpCopy.accordions;
   if (product.isGiftCard) {
     return [
@@ -55,8 +55,9 @@ export function productAccordionItems(product: Product, claims: readonly Verifie
       { id: "productveiligheid", title: copy.safety.title, content: <DigitalSafety /> },
     ];
   }
+  const details = detailRows(product);
   return [
-    { id: "details", title: copy.details.title, content: <Details product={product} claims={claims} /> },
+    ...(details.length > 0 ? [{ id: "details", title: copy.details.title, content: <DetailList rows={details} /> }] : []),
     { id: "verzorging", title: copy.care.title, content: <Care text={product.metafields.verzorging} /> },
     { id: "garantie", title: copy.guarantee.title, content: <Guarantee /> },
     { id: "verzenden", title: copy.shipping.title, content: <ShippingReturns hygiene={needsHygieneSeal(product)} /> },
@@ -117,44 +118,25 @@ function present(value: string | null | undefined): string | null {
 /* Jewellery                                                                   */
 /* -------------------------------------------------------------------------- */
 
-function Details({ product, claims }: { product: Product; claims: readonly VerifiedClaim[] }) {
+/**
+ * What the Specificaties list right above does not show (fix 7-9: no second copy of Afmeting, Gewicht, Sluiting and
+ * the claims): the material per colour when the piece comes in more than one (the list shows the chosen colour only)
+ * and the article numbers.
+ */
+function detailRows(product: Product): Row[] {
   const copy = pdpCopy.accordions.details;
-  const { materiaal, afmetingen, gewicht, sluiting } = product.metafields;
   const colours = product.variants.filter((variant) => variant.swatch !== null);
   const rows: Row[] = [];
 
   if (colours.length > 1) {
     for (const variant of colours) {
-      const text = materialForVariant(materiaal, variant);
+      const text = materialForVariant(product.metafields.materiaal, variant);
       if (text) rows.push({ id: `materiaal-${variant.id}`, term: `${copy.material}: ${variant.title}`, value: text });
     }
-  } else {
-    const text = materialForVariant(materiaal, colours[0] ?? null);
-    if (text) rows.push({ id: "materiaal", term: copy.material, value: text });
-  }
-  const dimensions = present(afmetingen);
-  if (dimensions) rows.push({ id: "afmetingen", term: copy.dimensions, value: keepUnitsTogether(dimensions) });
-  const weight = present(gewicht);
-  if (weight) rows.push({ id: "gewicht", term: copy.weight, value: keepUnitsTogether(weight) });
-  const closure = present(sluiting);
-  if (closure) rows.push({ id: "sluiting", term: copy.closure, value: closure });
-  if (claims.length > 0) {
-    rows.push({
-      id: "claims",
-      term: pdpCopy.specs.claims,
-      value: (
-        <span className="flex flex-col gap-1">
-          {claims.map((claim) => (
-            <span key={claim.id}>{pdpCopy.claims.confirmed(claim.label)}</span>
-          ))}
-        </span>
-      ),
-    });
   }
   const codes = productCodes(product);
   if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: <span className="tabular">{codes.join(", ")}</span> });
-
-  return <DetailList rows={rows} />;
+  return rows;
 }
 
 function Care({ text }: { text: string | null }) {

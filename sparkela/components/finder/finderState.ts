@@ -150,9 +150,9 @@ function byRank(a: CatalogProduct, b: CatalogProduct): number {
  * 1. Only listed, available jewellery; with a type other than "verras-me" only that type.
  * 2. Score = vibe match × 3 + moment match × 2 + Linde's favourite × 1; highest first, then featuredRank. The products
  *    with a score above 0 up to `maxResults` (6).
- * 3. Fewer than `minResults` (3): topped up with Linde's favourites, first of the chosen type, then all; without
- *    duplicates. Should the catalog have too few favourites (a fresh Shopify store), the best-ranked pieces of the
- *    chosen type and then of all types fill the rest.
+ * 3. Fewer than `minResults` (3): topped up from the chosen type first (Linde's favourites, then the best-ranked rest),
+ *    and only then from all types (favourites, then the rest); without duplicates (fix 7-9: the chosen type is used up
+ *    before another type fills in).
  * 4. Full rows (D4, design bar "no ragged rows"): an odd count below `maxResults` gets one more piece by the same
  *    order of preference, so the result is 4 or 6 cards (two full rows on a phone). Still within 3 to 6.
  */
@@ -171,10 +171,12 @@ export function recommend(
     .slice(0, config.maxResults)
     .map((entry) => entry.product);
 
+  // The chosen type first, all of it (favourites first), before any other type fills in (fix 7-9): a visitor who
+  // asked for rings sees Vera before an earring.
   const preference = [
     ...ofType.filter((product) => product.lindesFavoriet),
-    ...pool.filter((product) => product.lindesFavoriet),
     ...ofType,
+    ...pool.filter((product) => product.lindesFavoriet),
     ...pool,
   ];
   const topUpTo = (count: number) => {

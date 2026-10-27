@@ -2,14 +2,14 @@
 
 import { cn } from "@/lib/cn";
 import { pagesCopy } from "@/content/copy/pages";
-import { site } from "@/content/site";
 import { Spark } from "@/components/brand/Spark";
 
 /**
  * The three face-down cards of the popup (docs/PLAN.md §13.11, decision 92; brief §2.8, §6 block 6). Port of CORVANE
  * components/email/RewardCards.tsx with Sparkela's card: roest with a bot-wit spark.
  *
- * - Every card is a <button> ("Kaart 1 van 3 omdraaien"). Every card hides the same real reward, and the modal says so
+ * - Every card is a <button> named by its content: "Kaart 1 van 3 omdraaien" (visually hidden) while face down, then
+ *   "Kaart 1 van 3, jouw kaart:" plus the visible face ("WELKOM10 10% op je eerste bestelling"), fix 7-9. Every card hides the same real reward, and the modal says so
  *   before a card is turned (site.emailCapture.intro).
  * - Turning one flips it in 300 ms (CSS 3D, behind motion-safe: only); with reduced motion there is no transform: the
  *   back is swapped for the face at once. The face shows site.emailCapture.reveal: the code WELKOM10 and "10% op je
@@ -51,12 +51,11 @@ function CardBack({ className }: { className?: string }) {
   );
 }
 
-/** Card face: the same reward on every card. */
+/** Card face: the same reward on every card. Its text is part of the button's name (no aria-label overrides it). */
 function CardFace({ chosen }: { chosen: boolean }) {
   const face = pagesCopy.popup.cardFace;
   return (
     <span
-      aria-hidden="true"
       className={cn(
         "@container absolute inset-0 flex flex-col items-center justify-center rounded-[12px] bg-kaart px-1.5 text-center text-tekst",
         "motion-safe:rotate-y-180 motion-safe:backface-hidden",
@@ -66,8 +65,8 @@ function CardFace({ chosen }: { chosen: boolean }) {
       {/* Sized to the card (container units): Unbounded is wide, and the code must fit on one line at any width. */}
       <span className="font-display text-[11cqw] leading-none font-extrabold tracking-[-0.01em] whitespace-nowrap">
         {face.value}
-      </span>
-      <Spark className="my-2 size-3 text-roest sm:my-2.5 sm:size-3.5" />
+      </span>{" "}
+      <Spark className="my-2 size-3 text-roest sm:my-2.5 sm:size-3.5" />{" "}
       <span className="max-w-[12ch] text-[0.6875rem] leading-[1.3] text-tekst-2 sm:text-[0.8125rem]">{face.line}</span>
     </span>
   );
@@ -75,7 +74,6 @@ function CardFace({ chosen }: { chosen: boolean }) {
 
 export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
   const copy = pagesCopy.popup;
-  const reveal = site.emailCapture.reveal;
   const revealed = chosen !== null;
   const others = Array.from({ length: CARD_COUNT }, (_, index) => index).filter((index) => index !== chosen);
 
@@ -84,18 +82,19 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
       {Array.from({ length: CARD_COUNT }, (_, index) => {
         const isChosen = chosen === index;
         const number = index + 1;
-        const label = !revealed
+        // The name comes from the content: a visually hidden prefix, then (once turned) the visible face, so the
+        // accessible name always contains the visible text (WCAG 2.5.3).
+        const prefix = !revealed
           ? copy.card(number, CARD_COUNT)
           : isChosen
-            ? copy.cardChosen(number, CARD_COUNT, reveal)
-            : copy.cardRevealed(number, CARD_COUNT, reveal);
+            ? copy.cardChosen(number, CARD_COUNT)
+            : copy.cardRevealed(number, CARD_COUNT);
         const followDelay = revealed && !isChosen ? FOLLOW_DELAYS[others.indexOf(index)] : undefined;
 
         return (
           <div key={index} className="flex min-w-0 flex-col items-center gap-2">
             <button
               type="button"
-              aria-label={label}
               aria-disabled={revealed || undefined}
               tabIndex={revealed && !isChosen ? -1 : undefined}
               onClick={() => {
@@ -116,6 +115,7 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
                   followDelay,
                 )}
               >
+                <span className="sr-only">{prefix} </span>
                 {/* Reduced motion: no transform; the back is swapped for the face at once. */}
                 <CardBack className={cn(revealed && "motion-reduce:hidden")} />
                 {revealed ? <CardFace chosen={isChosen} /> : null}

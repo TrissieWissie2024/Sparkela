@@ -72,7 +72,9 @@ describe("SparkCards (decision 92)", () => {
   it("three face-down buttons that hold no reward text yet", () => {
     const html = render(<SparkCards chosen={null} onChoose={() => {}} />);
     expect(html.match(/<button/g)).toHaveLength(CARD_COUNT);
-    for (let n = 1; n <= CARD_COUNT; n += 1) expect(html).toContain(`aria-label="${pagesCopy.popup.card(n, CARD_COUNT)}"`);
+    // Named by content (a visually hidden line), never by an aria-label that would override the visible face.
+    for (let n = 1; n <= CARD_COUNT; n += 1) expect(html).toContain(`<span class="sr-only">${pagesCopy.popup.card(n, CARD_COUNT)} </span>`);
+    expect(html).not.toMatch(/<button[^>]*aria-label/);
     expect(html).not.toContain(welcomeCode.code);
     expect(html).not.toContain("aria-disabled");
     expect(html).toContain(`role="group" aria-label="${pagesCopy.popup.cardsLabel}"`);
@@ -80,11 +82,11 @@ describe("SparkCards (decision 92)", () => {
 
   it("after a choice every card shows the same reward; the chosen one keeps focus, the others leave the tab order", () => {
     const html = render(<SparkCards chosen={1} onChoose={() => {}} />);
-    const reveal = escape(site.emailCapture.reveal);
     expect(html.match(new RegExp(`>${welcomeCode.code}<`, "g"))).toHaveLength(CARD_COUNT);
-    expect(html).toContain(`aria-label="${escape(pagesCopy.popup.cardChosen(2, CARD_COUNT, site.emailCapture.reveal))}"`);
-    expect(html).toContain(`aria-label="${escape(pagesCopy.popup.cardRevealed(1, CARD_COUNT, site.emailCapture.reveal))}"`);
-    expect(html).toContain(reveal);
+    expect(html).toContain(`<span class="sr-only">${escape(pagesCopy.popup.cardChosen(2, CARD_COUNT))} </span>`);
+    expect(html).toContain(`<span class="sr-only">${escape(pagesCopy.popup.cardRevealed(1, CARD_COUNT))} </span>`);
+    expect(html).toContain(escape(pagesCopy.popup.cardFace.line));
+    expect(html).not.toMatch(/<button[^>]*aria-label/);
     expect(html.match(/aria-disabled="true"/g)).toHaveLength(CARD_COUNT);
     expect(html.match(/tabindex="-1"/g)).toHaveLength(CARD_COUNT - 1);
     expect(html).toContain(pagesCopy.popup.yourCard);

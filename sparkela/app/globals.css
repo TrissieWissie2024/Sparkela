@@ -196,6 +196,22 @@
 }
 
 /*
+ * A page with its own Club sign-up (data-eigen-club: /sparkela-club, the drop teaser, an ended drop) hides the
+ * footer's Club block, so the same form never shows twice in a row (fix 7-9). Pure CSS, so it is right in the static
+ * HTML and on the rewritten teaser. Unlayered on purpose, so the block's own `grid` utility does not win. A marker
+ * inside a hidden TimeSwitch variant ([hidden]) or inside a route that Activity keeps hidden in the DOM (style
+ * display: none) does not count.
+ */
+body:has(main [data-eigen-club]:not([hidden] *, [style*="display: none"] *, [style*="display:none"] *)) {
+  [data-footer-club] {
+    display: none;
+  }
+  [data-footer-nav] {
+    border-top-width: 0;
+  }
+}
+
+/*
  * Typography utilities (plan §4.3), so sizes live in one place. Breakpoints: md 48rem, lg 64rem.
  * Headings: Unbounded 800 (kop-1, kop-2) and 700 (kop-3); kop-4 is Inter 600 (product names on cards, accordion
  * triggers). Mobile / md / lg sizes follow the table in §4.3; one kop-1 (the H1) per page.

@@ -151,6 +151,26 @@ export function applyFilterState<T extends CatalogProduct>(products: readonly T[
   return sortProducts(filterProducts([...products], state.filters), state.sort);
 }
 
+/** Per facet value: how many products it would show next to the other facets' current choices (fix 7-9). */
+export type FacetCounts = Record<FacetKey, Record<string, number>>;
+
+/**
+ * The standard faceted count: for each value of each facet, the products that pass the filters of the OTHER facets
+ * and have that value. The sheet shows it beside every option, so a combination that leads to nothing is visible
+ * before it is chosen.
+ */
+export function facetCounts(products: readonly CatalogProduct[], filters: Facets, facets: Facets): FacetCounts {
+  const counts = {} as FacetCounts;
+  for (const key of FACET_KEYS) {
+    const others = filterProducts([...products], { ...filters, [key]: [] });
+    counts[key] = {};
+    for (const item of facets[key] as readonly string[]) {
+      counts[key][item] = filterProducts(others, { ...emptyFilters(), [key]: [item] }).length;
+    }
+  }
+  return counts;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Styling tile                                                                */
 /* -------------------------------------------------------------------------- */

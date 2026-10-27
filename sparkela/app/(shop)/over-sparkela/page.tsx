@@ -5,6 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 import { pagesCopy } from "@/content/copy/pages";
 import { Spark } from "@/components/brand/Spark";
 import { PhotoSlot } from "@/components/media/PhotoSlot";
+import { sharedCopy } from "@/content/copy/shared";
 import { PageHeader } from "@/components/pages/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -29,7 +30,12 @@ export const metadata: Metadata = pageMetadata({
 export default function OverSparkelaPage() {
   return (
     <>
-      <PageHeader eyebrow={copy.eyebrow} title={copy.title} intro={copy.intro} />
+      <PageHeader
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
 
       <Container className="pb-14 md:pb-20">
         <section

@@ -7,10 +7,11 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Sheet } from "@/components/ui/Sheet";
 
 import { FACET_GROUP_LABELS, facetValueLabel } from "./facetLabels";
-import { activeFilterCount, emptyFilters, FACET_KEYS, toggleFilter, type FacetKey } from "./filterParams";
+import { activeFilterCount, emptyFilters, FACET_KEYS, toggleFilter, type FacetCounts, type FacetKey } from "./filterParams";
 
 /**
- * The filter sheet of a collection below lg (docs/PLAN.md §13.8, decision 36): a Sheet from the left with a fieldset
+ * The filter sheet of a collection (docs/PLAN.md §13.8, decision 36; below lg via "Filters", from lg via "Meer
+ * filters", fix 7-9): a Sheet from the left with a fieldset
  * of checkboxes per facet, and at the bottom "Wis alles" and "Toon {n} sieraden". Every checkbox applies at once (the
  * grid behind the sheet and the count follow), so "Toon" only closes the sheet; Radix gives the focus trap, Escape
  * and the focus return to the "Filters" button. Labels come from sharedCopy.vocab (the same words as the chips).
@@ -21,13 +22,15 @@ export interface FilterSheetProps {
   onOpenChange(open: boolean): void;
   /** The facets the page offers (already reduced by visibleFacets). */
   facets: Facets;
+  /** Products per option next to the other facets' choices, shown as "(n)" after the label (fix 7-9). */
+  counts?: FacetCounts;
   value: Facets;
   onChange(value: Facets): void;
   /** Number of products with the current filters. */
   count: number;
 }
 
-export function FilterSheet({ open, onOpenChange, facets, value, onChange, count }: FilterSheetProps) {
+export function FilterSheet({ open, onOpenChange, facets, counts, value, onChange, count }: FilterSheetProps) {
   const copy = collectionCopy.filters;
   const keys = FACET_KEYS.filter((key) => facets[key].length > 0);
 
@@ -58,7 +61,7 @@ export function FilterSheet({ open, onOpenChange, facets, value, onChange, count
     >
       <div className="flex flex-col gap-7">
         {keys.map((key) => (
-          <FacetFieldset key={key} facetKey={key} facets={facets} value={value} onChange={onChange} />
+          <FacetFieldset key={key} facetKey={key} facets={facets} counts={counts} value={value} onChange={onChange} />
         ))}
       </div>
     </Sheet>
@@ -68,11 +71,13 @@ export function FilterSheet({ open, onOpenChange, facets, value, onChange, count
 function FacetFieldset({
   facetKey,
   facets,
+  counts,
   value,
   onChange,
 }: {
   facetKey: FacetKey;
   facets: Facets;
+  counts?: FacetCounts;
   value: Facets;
   onChange(value: Facets): void;
 }) {
@@ -88,7 +93,16 @@ function FacetFieldset({
             key={item}
             checked={selected.includes(item)}
             onChange={() => onChange(toggleFilter(value, facetKey, item as Facets[typeof facetKey][number]))}
-            label={facetValueLabel(facetKey, item)}
+            label={
+              <>
+                {facetValueLabel(facetKey, item)}
+                {counts ? (
+                  <span className="tabular ml-1.5 text-tekst-2">
+                    ({counts[facetKey][item] ?? 0})
+                  </span>
+                ) : null}
+              </>
+            }
           />
         ))}
       </div>

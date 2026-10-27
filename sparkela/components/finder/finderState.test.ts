@@ -117,15 +117,15 @@ describe("scoring (plan §5.7)", () => {
 });
 
 describe("top-up (plan §5.7, decision 65)", () => {
-  it("tops up with Linde's favourites, first of the chosen type, then all, without duplicates", () => {
-    // Only Nina scores (favourite); Vera has neither the vibe nor the moment.
+  it("tops up from the chosen type first (favourites, then the rest), then from all types, without duplicates", () => {
+    // Only Nina scores (favourite); Vera has neither the vibe nor the moment but is the other ring (fix 7-9).
     const result = recommend({ vibe: "clean-en-classy", moment: "strand", type: "ringen" }, listable);
-    expect(result[0]?.handle).toBe("nina-chunky-ring");
-    const rest = result.slice(1);
-    expect(rest.length).toBeGreaterThanOrEqual(2);
-    expect(rest.every((product) => product.lindesFavoriet)).toBe(true);
-    // By featuredRank among the favourites of all types: Lola (1), Jet (6), Tess (8).
-    expect(rest.map((product) => product.handle)).toEqual(["lola-chunky-hoops", "jet-vonk-oorbellen", "tess-schakelarmband"]);
+    expect(result.slice(0, 2).map((product) => product.handle)).toEqual(["nina-chunky-ring", "vera-zegelring"]);
+    const rest = result.slice(2);
+    expect(rest.length).toBeGreaterThanOrEqual(1);
+    // Then Linde's favourites of all types by featuredRank: Lola (1), Jet (6); four cards keep the rows full.
+    expect(rest.map((product) => product.handle)).toEqual(["lola-chunky-hoops", "jet-vonk-oorbellen"]);
+    expect(new Set(result.map((product) => product.handle)).size).toBe(result.length);
   });
 
   it("an odd count below the maximum gets one more, so the rows stay full", () => {

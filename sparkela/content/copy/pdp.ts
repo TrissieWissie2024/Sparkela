@@ -193,9 +193,6 @@ export interface PdpCopy {
       title: string;
       /** Term of the material row; with two colours one row per colour, named by the colour. */
       material: string;
-      dimensions: string;
-      weight: string;
-      closure: string;
       sku: string;
     };
     care: { title: string };
@@ -411,9 +408,6 @@ export const pdpCopy: PdpCopy = {
     details: {
       title: "Details en materiaal",
       material: "Materiaal",
-      dimensions: "Afmetingen",
-      weight: "Gewicht",
-      closure: "Sluiting",
       sku: "Artikelnummer",
     },
     care: { title: "Verzorging" },

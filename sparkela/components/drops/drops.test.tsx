@@ -103,10 +103,13 @@ describe("DropHero", () => {
     expect(hiddenStates(render(<DropHero drop={holiday} />, AFTER_END))).toEqual([true, true, false]);
   });
 
-  it("preloads the drop photo slot (4:5 on phones, 16:9 from md)", () => {
-    const html = render(<DropHero drop={holiday} />);
-    expect(html).toContain("aspect-[4/5]");
-    expect(html).toContain("md:aspect-video");
+  it("has a 16:9 light photo slot and, with products, a button to them (fix 7-9)", () => {
+    const html = render(<DropHero drop={holiday} productsHref="#de-drop" />);
+    expect(html).toContain("aspect-video");
+    expect(html).not.toContain("bg-bot-wit-900");
+    expect(html).toMatch(/href="#de-drop"[^>]*>/);
+    expect(html).toContain(collectionCopy.drop.viewPieces);
+    expect(render(<DropHero drop={holiday} />)).not.toContain(collectionCopy.drop.viewPieces);
     expect(html).toContain(sharedCopy.ui.photoPlaceholder("Drop Holiday Sparkle"));
   });
 });
@@ -138,12 +141,13 @@ describe("DropTeaser", () => {
 });
 
 describe("DropClub", () => {
-  it("has a Club line while the drop runs and the ended notice with the sign-up from endsAt", () => {
+  it("shows nothing while the drop runs (the footer has the Club) and the ended notice with the sign-up from endsAt", () => {
     const running = render(<DropClub drop={holiday} />);
     expect(hiddenStates(running)).toEqual([false, true]);
-    expect(running).toContain(collectionCopy.drop.club.title);
-    expect(running).toContain('href="/sparkela-club"');
+    expect(running).not.toContain('href="/sparkela-club"');
     expect(running).toContain(collectionCopy.drop.ended);
+    // The ended variant marks itself, so the footer drops its own Club form (app/globals.css).
+    expect(running).toMatch(/data-eigen-club/);
     expect(hiddenStates(render(<DropClub drop={holiday} />, AFTER_END))).toEqual([true, false]);
   });
 });

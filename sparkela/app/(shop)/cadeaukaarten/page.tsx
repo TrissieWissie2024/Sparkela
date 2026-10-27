@@ -55,7 +55,7 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
       <PageHeader title={copy.title} intro={copy.intro} breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]} />
       <Container className="pb-16 md:pb-24">
         <section aria-labelledby={chooseId}>
-          <h2 id={chooseId} className="kop-3 text-tekst">
+          <h2 id={chooseId} className="kop-2 text-tekst">
             {copy.chooseTitle}
           </h2>
           {giftCard ? (

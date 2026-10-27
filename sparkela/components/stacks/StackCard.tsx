@@ -21,9 +21,10 @@ import { AddStackButton } from "./AddStackButton";
  * the stack price with the stack discount as plain text ("€50,88 in plaats van €59,85", stackQuote, never struck
  * through) and AddStackButton. The quote uses each piece's defaultVariant (the variant AddStackButton starts with).
  *
- * A white card with a thin border (as ProductCard) and a size container: from 40rem (a card that spans a whole row on a
- * tablet, or the single stack of a drop) the photo moves to the left and fills the height of the text beside it
- * (cropped from its 4:5), so a wide card never towers over the others. Gets `products` from getVisibleStacks() (or the drop's own products on
+ * A white card with a thin border (as ProductCard) and a size container: from 34rem (a card that spans a whole row on a
+ * tablet, the single stack of a drop, or one of two per row from xl, fix 7-9) the photo moves to the left (2 : 3, even
+ * from 48rem) and fills the height of the text beside it (cropped from its 4:5), so a wide card never towers over the
+ * others. Gets `products` from getVisibleStacks() (or the drop's own products on
  * a drop page), in the order of the stack. Server component; the button is the only client island.
  */
 
@@ -55,8 +56,8 @@ export function StackCard({ stack, products, headingLevel = 3, className }: Stac
     <article
       className={cn("@container flex h-full flex-col overflow-hidden rounded-kaart border border-rand bg-kaart text-tekst", className)}
     >
-      <div className="flex h-full flex-col @min-[40rem]:grid @min-[40rem]:grid-cols-2 @min-[60rem]:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
-        <div className="relative aspect-[4/5] w-full @min-[40rem]:aspect-auto @min-[40rem]:h-full @min-[40rem]:min-h-[24rem]">
+      <div className="flex h-full flex-col @min-[34rem]:grid @min-[34rem]:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @min-[48rem]:grid-cols-2 @min-[60rem]:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+        <div className="relative aspect-[4/5] w-full @min-[34rem]:aspect-auto @min-[34rem]:h-full @min-[34rem]:min-h-[24rem]">
           <PhotoSlot
             assetKey={stack.image}
             label={image?.label ?? stack.name}

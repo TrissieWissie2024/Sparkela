@@ -11,6 +11,7 @@ import { site } from "@/content/site";
 import { Spark } from "@/components/brand/Spark";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { PhotoSlot } from "@/components/media/PhotoSlot";
+import { sharedCopy } from "@/content/copy/shared";
 import { PageHeader } from "@/components/pages/PageHeader";
 import { Container } from "@/components/ui/Container";
 
@@ -20,6 +21,10 @@ import { Container } from "@/components/ui/Container";
  * drop, 24 hours early access, 10% on the first order), SubscribeForm source="club" with "Ik doe mee" (the consent
  * checkbox and privacy link are part of the form), which mails you get and that you can always unsubscribe, and the
  * upcoming drops: name and month only, no timers, only drops whose public start lies in the future.
+ *
+ * Fix 7-9: the sign-up card comes right after the intro (on a phone the field is on the first screen), the benefits
+ * follow; every section H2 is kop-2. The card carries data-eigen-club, so the footer leaves out its own Club block
+ * (app/globals.css): the page never shows the same form twice.
  *
  * Static (○): "in the future" is decided with getServerNow() (cached; it refreshes right after a drop start, because
  * every startsAt is a time boundary of clockLife). After the launch the waitlist redirects here (§11.8).
@@ -48,13 +53,26 @@ export default async function SparkelaClubPage() {
 
   return (
     <>
-      <PageHeader eyebrow={copy.eyebrow} title={site.club.title} intro={copy.intro} />
+      <PageHeader
+        eyebrow={copy.eyebrow}
+        title={site.club.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.eyebrow }]}
+      />
 
       <Container className="pb-16 md:pb-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start lg:gap-x-8">
           <div className="flex min-w-0 flex-col gap-10 lg:col-span-7">
+            <section aria-labelledby="club-aanmelden" data-eigen-club className="rounded-kaart border border-rand bg-kaart p-6 md:p-8">
+              <h2 id="club-aanmelden" className="kop-2 text-tekst">
+                {copy.form.title}
+              </h2>
+              <p className="mt-2 text-tekst-2">{copy.form.text}</p>
+              <SubscribeForm source="club" submitLabel={site.club.cta} layout="inline" className="mt-6" />
+            </section>
+
             <section aria-labelledby="club-voordelen">
-              <h2 id="club-voordelen" className="kop-3 text-tekst">
+              <h2 id="club-voordelen" className="kop-2 text-tekst">
                 {copy.benefitsTitle}
               </h2>
               <ul className="mt-5 border-t border-rand">
@@ -73,14 +91,6 @@ export default async function SparkelaClubPage() {
                   </li>
                 ))}
               </ul>
-            </section>
-
-            <section aria-labelledby="club-aanmelden" className="rounded-kaart border border-rand bg-kaart p-6 md:p-8">
-              <h2 id="club-aanmelden" className="kop-3 text-tekst">
-                {copy.form.title}
-              </h2>
-              <p className="mt-2 text-tekst-2">{copy.form.text}</p>
-              <SubscribeForm source="club" submitLabel={site.club.cta} layout="inline" className="mt-6" />
             </section>
           </div>
 

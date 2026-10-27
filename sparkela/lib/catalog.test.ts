@@ -230,9 +230,14 @@ describe("withDropMembership (decision 200)", () => {
 
 describe("keepUnitsTogether (decision 201)", () => {
   it("puts a no-break space between a value and its unit, and nowhere else", () => {
-    expect(keepUnitsTogether("Verguld staal met schelpje · 25 mm")).toBe("Verguld staal met schelpje · 25\u00a0mm");
+    expect(keepUnitsTogether("Verguld staal met schelpje · 25 mm")).toBe("Verguld staal met schelpje\u00a0· 25\u00a0mm");
     expect(keepUnitsTogether("Ketting 45 cm, hanger 2,5 cm")).toBe("Ketting 45\u00a0cm, hanger 2,5\u00a0cm");
     expect(keepUnitsTogether("Set van 3 maten")).toBe("Set van 3 maten");
+  });
+
+  it("glues the separator to the segment before it, so no line starts with a dot (fix 7-9)", () => {
+    expect(keepUnitsTogether("Verguld staal · 8 mm breed · zegel 10 mm")).toBe("Verguld staal\u00a0· 8\u00a0mm breed\u00a0· zegel 10\u00a0mm");
+    expect(keepUnitsTogether("Verguld staal\u00a0· 30\u00a0mm")).toBe("Verguld staal\u00a0· 30\u00a0mm");
   });
 });
 
@@ -260,7 +265,7 @@ describe("toCatalogProduct", () => {
     });
     const item = toCatalogProduct(product, ctxAt(TEST_NOW));
     // Value and unit never break apart (decision 201).
-    expect(item.specRegel).toBe("Staal, goud of zilver · 30\u00a0mm");
+    expect(item.specRegel).toBe("Staal, goud of zilver\u00a0· 30\u00a0mm");
     expect(item.lindesFavoriet).toBe(true);
     expect(item.badges).toEqual(["nieuw", "op-voorraad"]);
     expect(item.listable).toBe(true);

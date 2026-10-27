@@ -32,8 +32,10 @@ import { submitForm } from "./submitForm";
  * - not-configured or upstream: "Dat lukt nu even niet. Mail ons op hallo@sparkela.nl." with a mailto link.
  * - The button keeps focus while sending (aria-disabled, aria-busy).
  *
- * `tone="donker"` on dark surfaces (waitlist, footer): bot-wit labels, a white field. `layout="inline"` puts the
- * field and the button side by side from sm; "stacked" (default) puts the button last, full width.
+ * `tone="donker"` on dark surfaces (waitlist, footer): bot-wit labels, a white field. The order is always field, its
+ * error, what you sign up for, the consent checkbox and then the button, on screen and in tab order, so nobody presses
+ * the button before seeing the required checkbox (fix 7-9). `layout="inline"` gives the button its own width from sm;
+ * "stacked" (default) makes it full width.
  */
 
 export interface SubscribeFormProps {
@@ -188,33 +190,28 @@ export function SubscribeForm({
       <label htmlFor={emailId} className={cn("tekst-klein block font-semibold", text)}>
         {copy.emailLabel}
       </label>
-      <div className={cn("mt-1.5 flex flex-col gap-3", inline && "sm:flex-row sm:items-start")}>
-        <input
-          ref={emailRef}
-          id={emailId}
-          name="email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          spellCheck={false}
-          required
-          aria-required="true"
-          maxLength={254}
-          placeholder={copy.emailPlaceholder}
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          aria-invalid={errors.email ? true : undefined}
-          aria-describedby={cn(errors.email && errorId, whatId)}
-          className={cn(
-            "h-12 w-full min-w-0 rounded-full border bg-kaart px-5 text-base text-tekst md:text-[0.9375rem]",
-            // flex-1 only in the row: in the column below sm a 0 basis collapses the field and ignores h-12.
-            inline && "sm:flex-1",
-            "transition-[border-color] duration-200 placeholder:text-tekst-gedempt",
-            errors.email ? (dark ? "border-bot-wit" : "border-fout") : dark ? "border-kaart" : "border-rand-invoer hover:border-tekst",
-          )}
-        />
-        {inline ? button : null}
-      </div>
+      <input
+        ref={emailRef}
+        id={emailId}
+        name="email"
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        spellCheck={false}
+        required
+        aria-required="true"
+        maxLength={254}
+        placeholder={copy.emailPlaceholder}
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        aria-invalid={errors.email ? true : undefined}
+        aria-describedby={cn(errors.email && errorId, whatId)}
+        className={cn(
+          "mt-1.5 block h-12 w-full min-w-0 rounded-full border bg-kaart px-5 text-base text-tekst md:text-[0.9375rem]",
+          "transition-[border-color] duration-200 placeholder:text-tekst-gedempt",
+          errors.email ? (dark ? "border-bot-wit" : "border-fout") : dark ? "border-kaart" : "border-rand-invoer hover:border-tekst",
+        )}
+      />
       {errors.email ? (
         <p id={errorId} className={cn("mt-1.5 flex items-start gap-1.5 tekst-klein font-medium", dark ? "text-tekst-op-donker" : "text-fout")}>
           <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" strokeWidth={2} />
@@ -236,7 +233,7 @@ export function SubscribeForm({
         className="mt-2"
       />
       <Honeypot />
-      {inline ? null : <div className="mt-4">{button}</div>}
+      <div className="mt-4">{button}</div>
       <FormStatus
         id={statusId}
         status={status}

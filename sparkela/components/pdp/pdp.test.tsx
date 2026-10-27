@@ -135,14 +135,14 @@ describe("ProductSpecs", () => {
 });
 
 describe("ProductAccordions", () => {
-  function panels(item: Product, claims: VerifiedClaim[] = []): Record<string, string> {
+  function panels(item: Product): Record<string, string> {
     return Object.fromEntries(
-      productAccordionItems(item, claims).map((entry) => [String(entry.title), text(renderToStaticMarkup(<>{entry.content}</>))]),
+      productAccordionItems(item).map((entry) => [String(entry.title), text(renderToStaticMarkup(<>{entry.content}</>))]),
     );
   }
 
   it("has the five panels of the brief in order", () => {
-    expect(productAccordionItems(product("lola-chunky-hoops"), []).map((entry) => entry.title)).toEqual([
+    expect(productAccordionItems(product("lola-chunky-hoops")).map((entry) => entry.title)).toEqual([
       "Details en materiaal",
       "Verzorging",
       "Garantie",
@@ -176,7 +176,7 @@ describe("ProductAccordions", () => {
 
   it("gives the gift card How it works, Terms and product safety with the digital line and the company", () => {
     const giftCard = product("cadeaukaart");
-    const items = productAccordionItems(giftCard, []);
+    const items = productAccordionItems(giftCard);
     expect(items.map((entry) => entry.title)).toEqual(["Zo werkt het", "Voorwaarden", "Productveiligheid"]);
     const safety = panels(giftCard)["Productveiligheid"] ?? "";
     expect(safety).toContain(pdpCopy.gpsr.digital);
@@ -184,11 +184,14 @@ describe("ProductAccordions", () => {
     expect(safety).toContain(site.company.kvk);
   });
 
-  it("lists the material per colour and the verified claims in the details", () => {
-    const details = panels(product("lola-chunky-hoops"), [NIKKELVRIJ])["Details en materiaal"] ?? "";
+  it("lists only what the spec list lacks: the material per colour and the article numbers (fix 7-9)", () => {
+    const details = panels(product("lola-chunky-hoops"))["Details en materiaal"] ?? "";
     expect(details).toContain("Materiaal: Goud Roestvrij staal met goudlaag");
     expect(details).toContain("Materiaal: Zilver Roestvrij staal ");
-    expect(details).toContain("Nikkelvrij (bevestigd door de leverancier)");
+    expect(details).toContain(pdpCopy.accordions.details.sku);
+    for (const term of [pdpCopy.specs.afmeting, pdpCopy.specs.gewicht, pdpCopy.specs.sluiting]) {
+      expect(details).not.toContain(term);
+    }
   });
 });
 
@@ -276,7 +279,7 @@ describe("ProductInfo", () => {
     const lola = product("lola-chunky-hoops");
     const html = render(<ProductInfo product={lola} badges={["nieuw", "op-voorraad"]} />);
     expect(html).toMatch(/<h1[^>]*>Lola chunky hoops<\/h1>/);
-    expect(html).toContain("Staal, goud of zilver · 30 mm");
+    expect(html).toContain("Staal, goud of zilver · 30 mm");
     expect(html).toContain("€19,95");
     expect(html).toContain(site.vat.before);
     expect(html).toContain(">Nieuw<");
@@ -356,7 +359,7 @@ describe("BuyBox", () => {
     const html = render(<BuyBox product={giftCard} stackCandidates={[]} defaultStack={null} />);
     expect(html).not.toContain("Stack van 3");
     expect(html).not.toContain(pdpCopy.giftWrap.label);
-    expect(text(html)).toContain(`${pdpCopy.addToCart.label} · €15,00`);
+    expect(text(html)).toContain(`${pdpCopy.addToCart.label} · €15`);
   });
 
   it("says Uitverkocht and keeps the button focusable for a sold-out piece", () => {

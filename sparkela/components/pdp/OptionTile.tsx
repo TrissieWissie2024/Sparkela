@@ -10,12 +10,16 @@ import { cn } from "@/lib/cn";
  * colour, a different shape from the selection. Server-compatible.
  */
 
-/** Classes of a tile; `shape` "pill" for swatches and sizes, "card" for the larger tiles. */
-export function optionTileClasses(selected: boolean, shape: "pill" | "card" = "card", disabled = false): string {
+/**
+ * Classes of a tile; `shape` "pill" for swatches and sizes, "card" for the larger tiles. `invalid`: the group has an
+ * error ("Kies eerst je maat."), so the unselected tiles get the --fout border, like every other field with an error
+ * (QA round 4).
+ */
+export function optionTileClasses(selected: boolean, shape: "pill" | "card" = "card", disabled = false, invalid = false): string {
   return cn(
     "relative border bg-kaart transition-[border-color,box-shadow] duration-200 ease-out",
     shape === "pill" ? "rounded-full" : "rounded-kaart",
-    selected ? "border-tekst shadow-[inset_0_0_0_1px_var(--tekst)]" : "border-rand-invoer",
+    selected ? "border-tekst shadow-[inset_0_0_0_1px_var(--tekst)]" : invalid && !disabled ? "border-fout" : "border-rand-invoer",
     disabled ? "cursor-not-allowed" : "cursor-pointer",
     !selected && !disabled && "hover:border-tekst",
     "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:[outline-color:var(--ring)] has-focus-visible:outline-solid",

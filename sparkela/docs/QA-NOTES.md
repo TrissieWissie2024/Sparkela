@@ -316,3 +316,62 @@ Nieuwe of bijgewerkte e2e-checks: de galerijknoppen in beeld bij focus op vier l
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
 
+
+
+## 5. QA-ronde 4: fixer (28 oktober 2026)
+
+Zes lenzen (design mobiel en desktop, toegankelijkheid, performance, copy en compliance, functioneel, volledigheid) leverden 29 bevestigde bevindingen: 1 hoog, 12 middel, 16 laag; een paar kwamen dubbel (de stylingtegel op mobiel en desktop, de wachtlijst vanuit drie lenzen, de MiniFooter twee keer). Alle zijn opgepakt; wat bewust anders of niet is gedaan staat in beslissing 224. Alles is gecontroleerd op `npm run build:test` en `npm run start:test` (testklok 27 november 2026, prelaunch met de header `x-sparkela-test-now` en `page.clock`) met eigen Playwright-scripts op 390 × 844 en 1440 × 900, en waar de bevinding daarom vroeg op 320, 360, 375 × 667, 768, 1024, 1200, 1280, 1920 × 1080, 320 × 256 en 320 × 200 (400% zoom), 844 × 390 en 667 × 375. De beslissingen staan in `docs/DECISIONS.md` 223 en 224; plan §4.3, §7.3, §13.2, §13.5, §13.8, §13.9, §13.11.1, §14.20, §14.21, §15.1 en §17.1 en `docs/ASSETS.md` §3 en §4.7 zijn bijgewerkt.
+
+### 5.1 Wat er is opgelost (hoog en middel eerst)
+
+| Bevinding | Oplossing | Controle |
+| --- | --- | --- |
+| Stack-kiezer: afgekapte stukprijs in het dichte veld ("€14,9" op 390, "€1" op 360; hoog) | Het veld toont alleen het stuk (mag afbreken), de prijs staat rechts in de labelrij; de echte select ligt onzichtbaar over het veld en houdt de volle opties | 7 stack-PDP's op 320, 360, 390, 768 en 1440: geen veld afgekapt; op 360 en breder één regel van 44 px, op 320 breekt een lang stuk af in een veld van 66 px; focusring zichtbaar op het veld |
+| Stylingtegel in één cel rekte de rij op (mobiel 460 px naast kaarten van 383; desktop 521 naast 472) | De cel is een size container (`tegelcel`): de kaarten bepalen de hoogte, de foto neemt de rest, 12 px boven de pijl | 14 collecties op 390, 1024, 1200, 1280 en 1440: rij met tegel even hoog als de kaarten (390 oorbellen 383/383, feestdagen 405/405; 1440 nieuw 472 ×4; 1200 een tegel van 363 px breed in kaartvorm); hele-rijtegels ongewijzigd; home-tab Kettingen 383/383 |
+| Wachtlijst: e-mailveld pas op 1023 px (390 × 844) | Foto onder `lg` als 16:9 | 390 × 844: veld 765 tot 813; 1440 × 900: "Ik doe mee" eindigt op 828 |
+| Wachtlijst: "We zijn live." onderaan (390: y 1350; 1440: 880) | De wissel staat in een gereserveerde doos direct onder de H1 | Na de grens: knop 204 tot 252 (390) en 225 tot 273 (1440); hoogte van de pagina vóór en na gelijk (1134,1 en 908,8 px) |
+| Wachtlijst en bevestigingspagina bijna geheel inkt (3% licht) | `--pagina`, headerlogo, de aanmelding op een witte kaart; alleen de MiniFooter donker | Pixeltelling: wachtlijst 390 75% licht, 22% donker; 1440 77% / 22%; bevestigen 390 65% / 31%, 1440 75% / 25% |
+| Toegang bij 400% zoom: de pill bedekte een link met focus | `viewportTooShortForPill()`, live bij resize | Geen pill op 320 × 256 en 320 × 200 (PDP en collectie); wel op 844 × 390 en 667 × 375 |
+| Pill over de eigen Club-aanmelding (`/sparkela-club`, drop-teaser) | `pageOwnsSignup()` op `main [data-eigen-club]`, live | Geen pill op `/sparkela-club` en `/drops/love-club` (390 en 1440); wel op `/collections/alle` en het begin van `/spark-finder` |
+| "Materiaal: Zilver" in de details | "Materiaal, goudkleurig" / "Materiaal, zilverkleurig" | Lola: de termen zijn Materiaal, Afmeting, Gewicht, Sluiting, Materiaal, goudkleurig, Materiaal, zilverkleurig, Artikelnummer |
+| "Goud" als materiaal in collectie-, menu-, stack- en dropcopy | Goudkleurig, glans; content-guard tegen een losse "goud" | content-guard groen, met zelftest |
+| "Sparkela maakt chunky sieraden" (meta) en "stukken van Linde" | Nieuwe zinnen; content-guard tegen maakclaims | content-guard groen, met zelftest |
+| Zoeken: "nieuw", "limited", "subtiel", "klassiek", "drop", "onder 25" gaven niets | De woorden van de shop in de zoektekst, collecties als paginachips, exact vóór voorvoegsel | `/zoeken`: "nieuw" Nieuw en Club plus de Nieuw-stukken; "limited" en "drop" de vier Holiday-stukken met de chip Limited; "subtiel" en "klassiek" de vier clean-stukken; "onder 25" de chip "Cadeaus onder €25" |
+| Sitebeeld-`sizes` haalde de master | `STYLING_TILE_SIZES`, "Statement of subtiel?" en de banner nauwkeuriger | gemeten breedtes in de bevinding gedekt (tegel 140 tot 529 px, nu ook in één cel op volle kaartbreedte) |
+
+De lage bevindingen (bedrijfsgegevens per regel, `text-wrap-style: pretty`, één FAQ-voetblok, harde spaties in tegelteksten, de maatfout in de labelrij, early access, focus na filters, de pauzeknop, INP van menu en tas, lange specregels, één omschrijving van de mails, productnamen, de stack bij de voorraadgrens, focus na een lege checkout en de fotostrook) staan per punt in beslissing 223(j).
+
+### 5.2 Metingen
+
+| Meting | Vóór | Na |
+| --- | --- | --- |
+| "In je tas" na drukken zonder maat (Nina, 1440 × 900) | 834 → 864 px | 834 → 834 px; tegels met `border-fout` |
+| Focus na "Wis filters" en na een gekozen chip (`/collections/alle?vibe=retro&moment=festival`, 390 en 1440) | `<body>` | het aantal "24 sieraden" en de chip "Festival" |
+| Focus na een lege tas in de drawer op `/checkout` (Esc, 390 en 1440) | `<body>` | de kop "Je tas is leeg" |
+| Pauzeknoppen op de home | twee keer "Aftellen pauzeren" zonder beschrijving | beschreven door "Eindigt op maandag 30 november om middernacht" en "… donderdag 31 december …" |
+| Bo ×3 in de tas, "Voeg de stack toe" | voegde Tess en Roos toe | `aria-disabled` met "Van Bo grote druppels zit alles wat we nu hebben al in je tas."; de tas blijft Bo ×3 |
+| Eenwoordige laatste regels (`/sparkela-club`, `/drops/love-club`, `/privacy`, `/algemene-voorwaarden`, `/cookies`, `/account`) | 6, 2, 10, 7, 9 en 1 | 0 op elke pagina |
+| Mobiel menu en tas uit de header | synchroon gemount | in een transition; menu en tas openen, Esc zet de focus terug op "Menu openen" |
+
+### 5.3 Toegankelijkheid
+
+- De pill verschijnt niet meer waar hij een control met focus kon bedekken (400% zoom) of over een eigen formulier lag; de stack-selects houden hun native rol, label en waarde; de maatfout is gekoppeld aan de radiogroep en de tegels hebben de foutrand; de contactlink onder elke FAQ en het mailadres in beide footers hebben een tikvlak van 44 px.
+- Focus valt na het verdwijnen van de knop met focus (filters, lege tas) nooit meer terug op `<body>`.
+
+### 5.4 Mechanische controles (eindstand)
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 83 bestanden geslaagd, 1 overgeslagen; 1469 tests geslaagd, 4 overgeslagen |
+| `npm run build:test` | groen, geen waarschuwingen; `ƒ` alleen de zes `/api/*`-routes en de proxy |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 385 geslaagd, 29 overgeslagen, 0 mislukt, 5,1 minuten |
+
+Een eerste e2e-run vond twee regressies van deze ronde, beide opgelost: "Bo statementdruppels" maakte op 320 px een kaart te breed (horizontale scroll op 11 routes; de naam is nu "Bo grote druppels" en kaarttitels hebben `break-words`), en de focus na een gekozen chip ging op de telefoon soms nog naar `<body>` omdat de URL in een transition volgt (de focus gaat nu in een layout-effect zodra precies de gevraagde filters gerenderd zijn).
+
+Nieuwe of bijgewerkte e2e-checks: een stylingtegel in één cel even hoog als de kaarten in zijn rij (de rij zonder de inhoud van de tegel is even hoog) met 12 px boven de pijl, de stack-kiezer zonder afgekapt veld op 360, 390 en 1440, de focus na een gekozen chip en na "Wis filters", het e-mailveld van de wachtlijst op het eerste scherm van 390 × 844, de wissel "We zijn live." met "Naar de shop" binnen het eerste scherm en in dezelfde hoogte, geen pill op `/sparkela-club`, `/drops/love-club` en een scherm van 320 × 200, en `/collections/nieuw` op 1920 × 1080 met late fonts (CLS 0). Nieuwe unit-tests in `components/qa-round4.test.tsx` (zoeken op de woorden van de shop en de collectiechips, het `Select`-veld met `display`, de maatfout in de labelrij, één FAQ-voetblok, `CompanyDetails`, de tegelklassen, lange specregels, de fotostrookzin, de link van de zoektegel), plus `stylingTilePlacement` per breakpoint, de materiaaltermen, de countdown-beschrijving, de wachtlijst (licht, wissel onder de H1, 16:9 op telefoons, bedrijfsgegevens per regel) en de content-guard (losse "goud", maakclaims, met zelftest).
+
+### 5.5 Servers
+
+Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.

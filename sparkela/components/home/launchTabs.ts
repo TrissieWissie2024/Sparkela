@@ -96,12 +96,13 @@ export function sortedTabHandles<T extends Pick<CatalogProduct, "handle" | "feat
  * cell of an odd last row and is hidden otherwise; from lg (4 columns) it spans the cells the last row leaves open
  * and is hidden when the rows are full. Literal strings, so Tailwind's scanner finds every class.
  */
-const MOBILE_FILL: Record<0 | 1, string> = { 0: "hidden", 1: "col-span-1" };
+const MOBILE_FILL: Record<0 | 1, string> = { 0: "hidden", 1: "col-span-1 tegelcel" };
+// One cell is a `tegelcel` (app/globals.css, QA round 4): the cards next to the tile set the row height.
 const DESKTOP_FILL: Record<0 | 1 | 2 | 3, string> = {
   0: "lg:hidden",
-  1: "lg:block lg:col-span-3",
-  2: "lg:block lg:col-span-2",
-  3: "lg:block lg:col-span-1",
+  1: "lg:block lg:col-span-3 lg:tegelcel-uit",
+  2: "lg:block lg:col-span-2 lg:tegelcel-uit",
+  3: "lg:block lg:col-span-1 lg:tegelcel",
 };
 
 /**

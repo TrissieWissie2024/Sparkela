@@ -1,7 +1,7 @@
 import type { AssetKey, JewelryType, Moment } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
 import { stackDiscount } from "@/content/offers";
-import { site } from "@/content/site";
+import { site, type SocialLink } from "@/content/site";
 
 /**
  * Homepage copy (docs/PLAN.md §5.8, §14.1, brief §6). Verbatim brief copy (plan §5.2) is checked by the content
@@ -124,7 +124,8 @@ export interface HomeContent {
     seal: { value: string; unit: string };
     cta: HomeLink;
   };
-  faq: { eyebrow: string; title: string; allLink: HomeLink; contact: { text: string; link: HomeLink } };
+  /** The links under the questions are sharedCopy.faqLinks (QA round 4: the same block as on the product page). */
+  faq: { eyebrow: string; title: string };
   aboutLinde: {
     eyebrow: string;
     title: string;
@@ -141,6 +142,20 @@ const { type, moment } = sharedCopy.vocab;
 const [uspFreeShipping, uspDispatch, uspGuarantee] = site.usps;
 const momentOrder: Moment[] = ["festival", "date-night", "kantoor-maar-niet-saai", "strand", "feestdagen"];
 const guaranteeMonths = String(site.guarantee.months);
+
+/**
+ * The photo strip's intro (QA round 4): "Tag …" only names accounts that exist (confirmedSocials, plan §11.9 step 8),
+ * with the handle, so a visitor knows whom to tag. Until Instagram or TikTok is confirmed a neutral line.
+ */
+function photoStripIntro(socials: readonly SocialLink[]): string {
+  const tagged = socials.filter((social) => social.confirmed && (social.id === "instagram" || social.id === "tiktok"));
+  if (tagged.length === 0) return "Elke foto linkt naar het stuk dat je ziet.";
+  const handles = [...new Set(tagged.map((social) => social.handle))];
+  const platforms = tagged.map((social) => social.label).join(" of ");
+  return handles.length === 1
+    ? `Jouw stack hier zien? Tag ${handles[0]} op ${platforms}.`
+    : `Jouw stack hier zien? Tag ons: ${tagged.map((social) => `${social.handle} op ${social.label}`).join(" of ")}.`;
+}
 
 export const home: HomeContent = {
   meta: {
@@ -184,7 +199,7 @@ export const home: HomeContent = {
     viewAllType: (typeLabel) => `Bekijk alle ${typeLabel.toLowerCase()}`,
     tile: {
       title: "Maak er een stack van",
-      text: `Combineer ${stackDiscount.minUnits} oorbellen of armbanden en krijg ${stackDiscount.percent}% stack-korting. Linde zette er al een paar voor je klaar.`,
+      text: `Combineer ${stackDiscount.minUnits}\u00a0oorbellen of armbanden en krijg ${stackDiscount.percent}% stack-korting. Linde zette er al een paar voor je klaar.`,
       image: "stacks.goud-en-gedurfd",
       href: "/stacks",
     },
@@ -199,7 +214,8 @@ export const home: HomeContent = {
       kettingen: {
         eyebrow: "Spark Finder",
         title: "Welke ketting past bij jou?",
-        text: "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.",
+        // "Spark Finder" never breaks apart in a one-cell tile (QA round 4).
+        text: "Drie vragen in de Spark\u00a0Finder, en Linde laat zien welke stukken bij jouw vibe passen.",
         image: "linde.portret",
         href: "/spark-finder",
       },
@@ -281,7 +297,7 @@ export const home: HomeContent = {
   },
   photoStrip: {
     title: "Zo dragen jullie Sparkela",
-    intro: "Jouw stack hier zien? Tag ons op Instagram of TikTok.",
+    intro: photoStripIntro(site.socials ?? []),
     listLabel: "Foto's",
     itemLabel: (productTitle) => `Bekijk ${productTitle}`,
     items: [
@@ -317,8 +333,6 @@ export const home: HomeContent = {
   faq: {
     eyebrow: "Vragen",
     title: "Veelgestelde vragen",
-    allLink: { label: "Alle vragen", href: "/veelgestelde-vragen" },
-    contact: { text: "Staat je vraag er niet bij?", link: { label: "Stuur ons een bericht", href: "/contact" } },
   },
   aboutLinde: {
     eyebrow: "Over Sparkela",

@@ -120,7 +120,7 @@ export function Countdown({
         style={{ minWidth: `${((8 + prefix.length) * INTER_SEMIBOLD_ZERO_EM).toFixed(3)}em` }}>
         {text}
       </span>
-      <VisuallyHidden {...hideAttribute} suppressHydrationWarning>
+      <VisuallyHidden {...hideAttribute} id={`${id}-label`} suppressHydrationWarning>
         {srLabel}
       </VisuallyHidden>
       {showPause ? (
@@ -130,6 +130,8 @@ export function Countdown({
           type="button"
           aria-pressed={paused}
           aria-label={sharedCopy.countdown.pause}
+          // Which countdown it pauses (QA round 4: the promo bar and a drop banner both had "Aftellen pauzeren").
+          aria-describedby={`${id}-label`}
           onClick={() => setPaused((value) => !value)}
           className={cn(
             "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full text-inherit hover:bg-current/10",

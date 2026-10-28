@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type FormEvent, type RefObject } from "react";
 
-import { searchPages, searchProducts } from "@/lib/catalog";
+import { availableSearchPages, searchPages, searchProducts } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { collectionPath } from "@/lib/paths";
 import { collections } from "@/content/collections";
@@ -74,7 +74,10 @@ export function SearchView() {
   const deferred = useDeferredValue(query);
   const trimmed = deferred.trim();
   const results = useMemo(() => searchProducts(searchable, deferred), [searchable, deferred]);
-  const pages = useMemo(() => searchPages(sharedCopy.searchPages, deferred), [deferred]);
+  const pages = useMemo(
+    () => searchPages(availableSearchPages(sharedCopy.searchPages, searchable), deferred),
+    [searchable, deferred],
+  );
 
   useEffect(() => () => clearTimeout(timer.current), []);
   // Runs on mount and every time the route is shown again (Back from a product): the field follows the real URL.

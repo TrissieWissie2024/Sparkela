@@ -133,7 +133,7 @@ describe("stack picker logic (decision 129)", () => {
 
   it("names Linde's stack behind the default picks, also for a drop stack outside the visible stacks", () => {
     const lolaPicks: [string, string] = [defaultVariant(card("tess-schakelarmband")).id, defaultVariant(card("roos-brede-bangle")).id];
-    expect(defaultStackName("lola-chunky-hoops", lolaPicks, candidatesFor("lola-chunky-hoops"))).toBe("Goud en gedurfd");
+    expect(defaultStackName("lola-chunky-hoops", lolaPicks, candidatesFor("lola-chunky-hoops"))).toBe("Chunky en gedurfd");
     const boPicks: [string, string] = lolaPicks;
     expect(defaultStackName("bo-statement-druppels", boPicks, candidatesFor("bo-statement-druppels"))).toBeNull();
     const holiday = stacks.find((stack) => stack.slug === "holiday-stack");

@@ -46,6 +46,8 @@ export interface PdpCopy {
   stack: {
     /** Option label in the stack picker: "Lola chunky hoops, Zilver · €19,95" (decision 129). */
     option: (title: string, variantLabel: string | null, price: string) => string;
+    /** What the closed select shows (QA round 4): the piece without its price, which stands in the label row. */
+    optionName: (title: string, variantLabel: string | null) => string;
     /** Legend of the two tiles. */
     legend: string;
     /** Tile 1. */
@@ -64,7 +66,7 @@ export interface PdpCopy {
     piece: (n: number) => string;
     /** After piece 1: it is the piece of this page (chosen above). */
     thisPiece: string;
-    /** Under the selects while the picks are Linde's stack: "Lindes stack: Goud en gedurfd". */
+    /** Under the selects while the picks are Linde's stack: "Lindes stack: Chunky en gedurfd". */
     lindesStack: (name: string) => string;
     /** Button that puts Linde's picks back. */
     resetToLinde: string;
@@ -149,6 +151,8 @@ export interface PdpCopy {
     soldOut: string;
     /** Why the button is not available: the chosen variant is sold out. */
     variantSoldOut: (variant: string) => string;
+    /** Why the button is not available: the chosen piece is in the cart as often as we have it (QA round 4). */
+    allInCart: (title: string) => string;
     /** Under the button when adding failed. */
     errors: { notYetAvailable: string; unavailable: string; quantityCapped: string; generic: string };
   };
@@ -205,6 +209,11 @@ export interface PdpCopy {
       title: string;
       /** Term of the material row; with two colours one row per colour, named by the colour. */
       material: string;
+      /**
+       * Term of a colour's material row (QA round 4): the colour as an adjective, "Materiaal, goudkleurig", never
+       * "Materiaal: Zilver", which reads as a precious-metal claim for stainless steel (Waarborgwet, decision 216).
+       */
+      materialFor: (colour: string) => string;
       sku: string;
     };
     care: { title: string };
@@ -246,13 +255,10 @@ export interface PdpCopy {
     /** "Sanne, geverifieerde koper". */
     verifiedBuyer: string;
   };
+  /** The links under the questions are sharedCopy.faqLinks (QA round 4: the same block as on the home). */
   faq: {
     eyebrow: string;
     title: string;
-    allLink: PdpLink;
-    /** "Iets anders?" before the contact link. */
-    other: string;
-    contact: PdpLink;
   };
 }
 
@@ -288,6 +294,7 @@ export const pdpCopy: PdpCopy = {
   },
   stack: {
     option: (title, variantLabel, price) => `${title}${variantLabel ? `, ${variantLabel}` : ""} · ${price}`,
+    optionName: (title, variantLabel) => `${title}${variantLabel ? `, ${variantLabel}` : ""}`,
     legend: "Los of als stack",
     single: "Los",
     singleText: (title) => `Alleen ${title}`,
@@ -357,6 +364,7 @@ export const pdpCopy: PdpCopy = {
     adding: "Bezig met toevoegen",
     soldOut: "Uitverkocht",
     variantSoldOut: (variant) => `${variant} is uitverkocht. Kies een andere uitvoering.`,
+    allInCart: (title) => `Van ${title} zit alles wat we nu hebben al in je tas.`,
     errors: {
       notYetAvailable: "Dit stuk kun je nog niet bestellen. Kijk snel nog eens.",
       unavailable: "Dit stuk is net uitverkocht. Kies een andere uitvoering of kijk bij de rest.",
@@ -428,6 +436,7 @@ export const pdpCopy: PdpCopy = {
     details: {
       title: "Details en materiaal",
       material: "Materiaal",
+      materialFor: (colour) => `Materiaal, ${colour.toLowerCase()}kleurig`,
       sku: "Artikelnummer",
     },
     care: { title: "Verzorging" },
@@ -492,8 +501,5 @@ export const pdpCopy: PdpCopy = {
   faq: {
     eyebrow: "Vragen",
     title: "Goed om te weten",
-    allLink: { label: "Alle vragen", href: "/veelgestelde-vragen" },
-    other: "Iets anders?",
-    contact: { label: "Neem contact op", href: "/contact" },
   },
 };

@@ -11,7 +11,7 @@ Een cookie is een klein bestand dat een website in je browser zet. Daarnaast kan
 Sommige cookies en opslag zijn nodig om de site te laten werken. Daar hoeven we geen toestemming voor te vragen. Ze volgen je niet en we gebruiken ze niet voor reclame.
 
 - **Je tas**: zodat je producten in je tas blijven staan als je verder kijkt of later terugkomt.
-- **Early access**: als je als Club-lid de early-access-link van een drop opent, onthoudt een cookie dat je de drop {{vroegeToegangUren}} uur eerder mag zien.
+- **Early access**: als je als Club-lid je link voor early access van een drop opent, onthoudt een cookie dat je de drop {{vroegeToegangUren}} uur eerder mag zien.
 - **Preview**: alleen voor het team van Sparkela, om de shop te bekijken voordat hij open is.
 - **Je keuzes op deze site**: of je je al hebt aangemeld en wanneer je de knop “Kies je spark” zag, zodat die niet steeds terugkomt, en je keuze voor statistiekcookies.
 

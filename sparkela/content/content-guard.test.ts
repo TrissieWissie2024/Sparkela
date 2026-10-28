@@ -263,6 +263,12 @@ const SOCIAL_PROOF = [
   "trustpilot",
 ];
 
+/** Who makes the pieces (brief §2 preamble, §4: bought from a wholesaler; QA round 4). */
+const MAKER_WORDS = ["maakt (?:\\p{L}+ )?sieraden", "ontwerpt", "ontworpen door", "handgemaakt\\p{L}*", "eigen ontwerp\\p{L}*"];
+
+/** "goud" as a word of its own: not goudlaag, goudkleurig, goud- of zilverkleurig or a slug like goud-en-gedurfd. */
+const BARE_GOLD = new RegExp("(?:^|[^\\p{L}\\p{N}-])goud(?=$|[^\\p{L}\\p{N}-])", "iu");
+
 /** Rule 12: CORVANE words that betray a port that was not rewritten (decision 99). */
 const CORVANE_WORDS = word("(?:scent|spray|geur|parfum)\\p{L}*|vane|corvane");
 
@@ -292,6 +298,17 @@ const RULES: Rule[] = [
   { name: "straight double quote (use “…”)", test: (text) => text.includes('"') },
   // Rule 12: words of the sister project.
   { name: "CORVANE word", test: (text) => CORVANE_WORDS.test(text) },
+  // Brief §2 (ACM, QA round 4): Sparkela buys its pieces from a wholesaler and does not make or design them.
+  ...MAKER_WORDS.map((source) => ({ name: `maker claim "${source}"`, test: (text: string) => word(source).test(text) })),
+  // Rule 1 (QA round 4, brief §2.6, Waarborgwet): "goud" as the material of gold-plated steel ("Goud dat het licht
+  // vangt", "een vleugje goud"). Copy says goudkleurig, goudlaag or "goud- of zilverkleurig"; only the colour value
+  // itself ("Goud", a variant or swatch label) and the search synonyms (never shown) may say it. A hyphen belongs to
+  // the word, so slugs stay out.
+  {
+    name: 'bare "goud" as a material',
+    test: (text) => BARE_GOLD.test(text),
+    allow: (entry) => entry.value === "Goud" || entry.path.startsWith("sharedCopy.searchSynonyms."),
+  },
 ];
 
 function check(entries: TextEntry[], rules: Rule[]): Finding[] {
@@ -469,6 +486,10 @@ describe("content guard: banned copy (rules 1, 2, 3, 8, 12)", () => {
       "Uw bestelling is onderweg.",
       "Een frisse scent voor elke dag.",
       "Met een vleugje geur.",
+      "Sparkela maakt chunky sieraden met een spark.",
+      "Ontworpen door Linde.",
+      "Goud dat het licht vangt.",
+      "Hartjes, rood en een vleugje goud.",
     ];
     for (const sample of caught) {
       const findings = check([{ file: "content/sample.ts", path: "sample", value: sample }], RULES);
@@ -482,6 +503,10 @@ describe("content guard: banned copy (rules 1, 2, 3, 8, 12)", () => {
       "Verkleuren de sieraden?",
       "Mix oorbellen en armbanden zoals jij wilt.",
       "Uitverkocht",
+      "Staal, goud- of zilverkleurig · 30 mm",
+      "Goudkleurige stukken die het licht vangen.",
+      "goud-en-gedurfd",
+      "Goud",
     ];
     const findings = check(clean.map((value) => ({ file: "content/sample.ts", path: "sample", value })), RULES);
     expect(findings, report(findings)).toEqual([]);

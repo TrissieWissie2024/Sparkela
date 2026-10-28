@@ -17,6 +17,8 @@ export interface SocialLink {
   id: "instagram" | "tiktok" | "pinterest";
   label: string;
   href: string;
+  /** The account name to tag ("@sparkela.nl"), named by the photo strip once confirmed (QA round 4). */
+  handle: string;
   /** false while the account is a placeholder: no sameAs in JSON-LD (plan §18.1). */
   confirmed: boolean;
 }
@@ -114,9 +116,9 @@ export const site: SiteConfig = {
     vatId: "[Btw-id]",
   },
   socials: [
-    { id: "instagram", label: "Instagram", href: "https://www.instagram.com/sparkela.nl", confirmed: false },
-    { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@sparkela.nl", confirmed: false },
-    { id: "pinterest", label: "Pinterest", href: "https://www.pinterest.com/sparkelanl", confirmed: false },
+    { id: "instagram", label: "Instagram", href: "https://www.instagram.com/sparkela.nl", handle: "@sparkela.nl", confirmed: false },
+    { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@sparkela.nl", handle: "@sparkela.nl", confirmed: false },
+    { id: "pinterest", label: "Pinterest", href: "https://www.pinterest.com/sparkelanl", handle: "sparkelanl", confirmed: false },
   ],
   paymentMethods: PAYMENT_METHODS,
   paymentMethodsInText: PAYMENT_METHODS.map((method) => (COMMON_NOUN_METHODS.has(method) ? method.toLowerCase() : method)),

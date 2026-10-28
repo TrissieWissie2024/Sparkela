@@ -12,6 +12,7 @@ import { VatNotice } from "@/components/time/VatNotice";
 import { Container } from "@/components/ui/Container";
 import { SentenceLines } from "@/components/ui/SentenceLines";
 
+import { CompanyDetails } from "./CompanyDetails";
 import { PaymentBadges } from "./PaymentBadges";
 
 /**
@@ -47,7 +48,6 @@ const linkClasses =
   "inline-flex min-h-11 min-w-11 items-center text-[0.9375rem] text-tekst-op-donker decoration-1 underline-offset-4 hover:underline";
 
 export function Footer() {
-  const { company } = site;
   const copy = chromeCopy.footer;
 
   return (
@@ -130,24 +130,7 @@ export function Footer() {
         <div className="mt-8 flex flex-col gap-6 tekst-klein text-tekst-2-op-donker md:mt-10 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
           <div>
             <h2 className="sr-only">{copy.companyLabel}</h2>
-            <address className="flex flex-col not-italic">
-              <span>
-                {company.tradeName} · {company.legalName}
-              </span>
-              <span>{company.address}</span>
-              <span>
-                {copy.kvk(company.kvk)} · {copy.vatId(company.vatId)}
-              </span>
-              <span>
-                {/* A standalone link: a 44 px target around the text line (QA round 2), the line rhythm unchanged. */}
-                <a
-                  href={`mailto:${site.email}`}
-                  className="relative text-tekst-op-donker underline underline-offset-4 before:absolute before:-inset-x-1 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-[''] hover:decoration-2"
-                >
-                  {site.email}
-                </a>
-              </span>
-            </address>
+            <CompanyDetails />
             <VatNotice tone="donker" className="mt-3" />
           </div>
 

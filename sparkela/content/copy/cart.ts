@@ -237,7 +237,7 @@ export const cartCopy: CartCopy = {
   },
   empty: {
     title: "Je tas is nog leeg",
-    text: "Eén paar chunky oorbellen en je outfit is af. Begin bij het nieuwste van Linde.",
+    text: "Eén paar chunky oorbellen en je outfit is af. Begin bij wat net binnen is.",
     cta: { label: "Shop nieuw", href: "/collections/nieuw" },
     secondary: { label: "Bekijk alles", href: "/collections/alle" },
   },

@@ -111,7 +111,7 @@ export const products: LocalProductInput[] = [
   },
   {
     handle: "bo-statement-druppels",
-    title: "Bo statement druppels",
+    title: "Bo grote druppels",
     description:
       "Grote goudkleurige druppels die bij elke beweging het licht vangen. Zet ze bij een simpele zwarte top en je bent klaar.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:date-night", "moment:feestdagen", "nieuw"],
@@ -194,7 +194,7 @@ export const products: LocalProductInput[] = [
   },
   {
     handle: "jet-vonk-oorbellen",
-    title: "Jet vonk oorbellen",
+    title: "Jet vonkoorbellen",
     description:
       "Een goudkleurige vonk voor als je outfit wel wat extra mag. Draag ze met je haar omhoog, dan zie je ze het best.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:feestdagen", "moment:date-night", "nieuw"],
@@ -215,7 +215,7 @@ export const products: LocalProductInput[] = [
   },
   {
     handle: "sam-schelp-oorbellen",
-    title: "Sam schelp oorbellen",
+    title: "Sam schelpoorbellen",
     description:
       "Kleine goudkleurige hoops met een schelpje eraan. Vakantiegevoel, ook als je gewoon op de fiets naar college gaat.",
     tags: ["type:oorbellen", "vibe:kleurrijk-en-speels", "moment:strand", "moment:festival"],
@@ -521,7 +521,7 @@ export const products: LocalProductInput[] = [
   /* ------------------------------------------------------------------------ */
   {
     handle: "holiday-ster-oorbellen",
-    title: "Ster oorbellen",
+    title: "Steroorbellen",
     description: "Grote goudkleurige sterren voor de feestdagen. Van kerstdiner tot oudejaarsavond.",
     tags: ["type:oorbellen", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {
@@ -562,7 +562,7 @@ export const products: LocalProductInput[] = [
   {
     handle: "holiday-sparkle-armband",
     title: "Sparkle armband",
-    description: "Een goudkleurige schakelarmband met kleine glinsters. Samen met de Ster oorbellen heb je je kerstlook rond.",
+    description: "Een goudkleurige schakelarmband met kleine glinsters. Samen met de Steroorbellen heb je je kerstlook rond.",
     tags: ["type:armbanden", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {
       ...sharedMetafields,
@@ -581,7 +581,7 @@ export const products: LocalProductInput[] = [
   },
   {
     handle: "holiday-ster-ketting",
-    title: "Ster ketting",
+    title: "Sterketting",
     description: "Een goudkleurige ster aan een stevige schakelketting. Draag hem op een zwarte jurk of over je kersttrui.",
     tags: ["type:kettingen", "vibe:chunky-en-bold", "moment:feestdagen", "drop:holiday-sparkle"],
     metafields: {

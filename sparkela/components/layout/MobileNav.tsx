@@ -2,7 +2,7 @@
 
 import { Menu } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 import type { MobileNavFeature } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -47,7 +47,8 @@ export function MobileNav({ feature, className }: { feature: MobileNavFeature | 
         aria-label={chromeCopy.header.openMenu}
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpened(true)}
+        // A transition (QA round 4, INP): the tap paints first, the menu's Radix mount and style recalculation after.
+        onClick={() => startTransition(() => setOpened(true))}
         className={cn(className)}
       >
         <Menu aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />

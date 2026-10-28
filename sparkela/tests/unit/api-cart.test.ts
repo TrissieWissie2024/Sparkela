@@ -388,7 +388,7 @@ describe("POST add", () => {
     handlers.CartLinesAdd = () => shopifyFixture("cart-warnings-stock");
     const result = await read(await post({ op: "add", lines: [{ variantId: NOOR_GOUD, quantity: 5 }] }, withCart));
     expect(result).toMatchObject({ ok: false, error: "quantity-capped" });
-    expect(result.cart?.notices).toEqual([{ kind: "quantity-capped", title: "Bo statement druppels", max: 3 }]);
+    expect(result.cart?.notices).toEqual([{ kind: "quantity-capped", title: "Bo grote druppels", max: 3 }]);
   });
 });
 

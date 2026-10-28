@@ -113,14 +113,14 @@
               "quantityAvailable": 15,
               "image": {
                 "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/jet-vonk-oorbellen-packshot.jpg?v=1764000000",
-                "altText": "Jet vonk oorbellen in goud",
+                "altText": "Jet vonkoorbellen in goud",
                 "width": 1600,
                 "height": 2000
               },
               "product": {
                 "id": "gid://shopify/Product/9012345600006",
                 "handle": "jet-vonk-oorbellen",
-                "title": "Jet vonk oorbellen",
+                "title": "Jet vonkoorbellen",
                 "tags": [
                   "moment:date-night",
                   "moment:feestdagen",

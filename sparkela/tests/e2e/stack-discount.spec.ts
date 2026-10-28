@@ -26,7 +26,7 @@ test("two pieces get the nudge, the third gives the stack discount", async ({ pa
   await expect(totalsRow(drawer, "Totaal")).toHaveText("€50,88");
 
   // Per line, a row of its own and no strikethrough anywhere in the drawer.
-  const jet = cartLines(drawer).filter({ has: page.getByRole("link", { name: "Jet vonk oorbellen", exact: true }) });
+  const jet = cartLines(drawer).filter({ has: page.getByRole("link", { name: "Jet vonkoorbellen", exact: true }) });
   await expect(jet.getByText("Stack-korting −€3,74", { exact: true })).toBeVisible();
   await expect(cartDrawer(page).locator("s, del")).toHaveCount(0);
 });

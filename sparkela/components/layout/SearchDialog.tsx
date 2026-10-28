@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useDeferredValue, useId, useMemo, useRef, useState, type FormEvent } from "react";
 
 import type { NavItem } from "@/lib/types";
-import { defaultVariant, searchPages, searchProducts } from "@/lib/catalog";
+import { availableSearchPages, defaultVariant, searchPages, searchProducts } from "@/lib/catalog";
 import { priceDisplay } from "@/lib/pricing";
 import { productPath } from "@/lib/paths";
 import { chromeCopy } from "@/content/copy/chrome";
@@ -51,7 +51,10 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const statusId = `${id}-status`;
 
   const results = useMemo(() => searchProducts(searchable, deferred), [searchable, deferred]);
-  const pages = useMemo(() => searchPages(sharedCopy.searchPages, deferred), [deferred]);
+  const pages = useMemo(
+    () => searchPages(availableSearchPages(sharedCopy.searchPages, searchable), deferred),
+    [searchable, deferred],
+  );
   const trimmed = deferred.trim();
   const top = results.slice(0, SEARCH_DIALOG_LIMIT);
   const quickLinks = mainNav.filter((item): item is Extract<NavItem, { kind: "link" }> => item.kind === "link");

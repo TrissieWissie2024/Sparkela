@@ -16,6 +16,8 @@ export interface StackOption {
   /** The variant id. */
   value: string;
   label: string;
+  /** The label without the price, for the closed select (the price stands in its label row, QA round 4). */
+  name: string;
   product: CatalogProduct;
   variant: Variant;
 }
@@ -30,6 +32,7 @@ export function stackOptionsFor(candidates: readonly CatalogProduct[]): StackOpt
       options.push({
         value: variant.id,
         label: pdpCopy.stack.option(product.title, labelled ? variant.title : null, formatMoney(variant.price)),
+        name: pdpCopy.stack.optionName(product.title, labelled ? variant.title : null),
         product,
         variant,
       });

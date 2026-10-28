@@ -198,6 +198,9 @@
     font-size: 1rem;
     line-height: 1.5;
     text-rendering: optimizeLegibility;
+    /* QA round 4: no one-word last line in any body text, also in span, li, dd and label (only <p> had it). The
+       longhand is inherited and leaves text-wrap-mode alone, so nowrap utilities still win. */
+    text-wrap-style: pretty;
   }
 
   h1,
@@ -405,6 +408,27 @@ main:has([data-compacte-footer]:not([hidden] *, [data-inline-hidden] *)) ~ foote
   }
   @media (min-width: 64rem) {
     padding-block: 5rem;
+  }
+}
+
+/*
+ * A grid cell that must never set its row's height (QA round 4: the styling tile in one cell of a product grid).
+ * `tegelcel` makes the cell a size container named "cel": size containment, so its own content counts as empty and
+ * the grid stretches it to the height the product cards next to it set. `tegelcel-uit` undoes it at a breakpoint
+ * where the tile spans several cells (a row of its own, where its content has to give the height). Inside, the
+ * `in-tegelcel:` variant styles only a tile that sits in such a cell (StylingTile: photo takes the rest of the height).
+ */
+@utility tegelcel {
+  container: cel / size;
+}
+
+@utility tegelcel-uit {
+  container: none;
+}
+
+@custom-variant in-tegelcel {
+  @container cel (min-width: 1px) {
+    @slot;
   }
 }
 

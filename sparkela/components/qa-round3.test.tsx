@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { pdpCopy } from "@/content/copy/pdp";
+import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
@@ -82,8 +83,8 @@ describe("ProductFaq inPage (QA round 3)", () => {
     expect(own).toContain("max-w-[1240px]");
     for (const html of [inPage, own]) {
       expect(html).toContain(pdpCopy.faq.eyebrow);
-      expect(html).toContain(`href="${pdpCopy.faq.allLink.href}"`);
-      expect(html).toContain(`href="${pdpCopy.faq.contact.href}"`);
+      expect(html).toContain(`href="${sharedCopy.faqLinks.allLink.href}"`);
+      expect(html).toContain(`href="${sharedCopy.faqLinks.contact.link.href}"`);
       expect(html).toContain("lg:col-start-6");
     }
   });

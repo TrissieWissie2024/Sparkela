@@ -183,7 +183,9 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     };
   }, [adapter, commit]);
 
-  const openCart = useCallback(() => setOpen(true), []);
+  // As a transition (QA round 4, INP), like addToCart below: the pressed button paints first, the Radix dialog's mount
+  // and the full style recalculation it triggers (body pointer-events, the scroll lock) follow in a later task.
+  const openCart = useCallback(() => startTransition(() => setOpen(true)), []);
   const closeCart = useCallback(() => setOpen(false), []);
 
   const addToCart = useCallback(

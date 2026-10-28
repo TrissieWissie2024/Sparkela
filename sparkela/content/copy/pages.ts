@@ -208,7 +208,7 @@ export const pagesCopy: PagesCopy = {
   pageEyebrows: { service: "Klantenservice", legal: "Juridisch", shop: "Shop", gifts: "Cadeaus" },
   about: {
     title: "Over Sparkela",
-    metaDescription: "Sparkela maakt chunky sieraden met een spark, gekozen en gestyled door Linde. Lees waar we voor staan.",
+    metaDescription: "Chunky sieraden met een spark, gekozen en gestyled door Linde. Lees waar Sparkela voor staat.",
     eyebrow: "Ons verhaal",
     intro: "Sieraden die je outfit afmaken. Gekozen en gestyled door Linde, met een retro randje.",
     lindeIntro: "Hoi, ik ben Linde. [Linde schrijft hier haar eigen verhaal.]",
@@ -274,8 +274,9 @@ export const pagesCopy: PagesCopy = {
     mails: {
       title: "Welke mails krijg je?",
       items: [
-        "Een seintje als er een nieuwe drop aankomt, met je early-access-link.",
+        "Een seintje als er een nieuwe drop aankomt, met je eigen link voor early access.",
         "Af en toe nieuws van Linde: nieuwe stukken en stylingtips.",
+        "Af en toe een actie, zoals een cadeautje bij je bestelling.",
         "Geen dagelijkse mails, dat beloven we.",
       ],
       unsubscribe: "Afmelden kan altijd, met de link onderaan elke mail.",

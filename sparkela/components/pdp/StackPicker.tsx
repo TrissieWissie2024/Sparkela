@@ -23,9 +23,10 @@ import { isDefaultPicks, optionsExcept, quoteStack, resolvePicks, stackOptionsFo
  *   lib/pricing.ts, rounded per piece like the cart). Never a struck price: the saving is its own line (brief §2.5).
  * With the stack chosen, a panel shows piece 1 (the variant chosen above) and two Selects "Stuk 2" and "Stuk 3" with
  * one option per variant for sale of the candidates, labelled "Lola chunky hoops, Zilver · €19,95" (real unit
- * prices). They start at Linde's stack (`defaultPicks`, else the fallback of §7.2) and are never empty; the two
- * selects never hold the same variant. Under them "Lindes stack: Goud en gedurfd" while the picks are hers, else a
- * button to put them back. "Voeg de stack toe" (AddToCart) then adds exactly these three variant ids.
+ * prices; the closed field shows the name and the price stands at the end of its label row, QA round 4). They
+ * start at Linde's stack (`defaultPicks`, else the fallback of §7.2) and are never empty; the two selects never hold
+ * the same variant. Under them "Lindes stack: Chunky en gedurfd" while the picks are hers, else a button to put them
+ * back. "Voeg de stack toe" (AddToCart) then adds exactly these three variant ids.
  * Without defaultPicks (fewer than two candidates) there is nothing to choose and it renders nothing: the buy box is
  * "Los" only.
  */
@@ -144,27 +145,43 @@ export function StackPicker({
           </div>
           <p className="tekst-klein mt-2 text-tekst-2">{copy.intro}</p>
 
+          {/* Every piece: "Stuk n" with its real unit price at the end of the label row (tabular, one column), the
+              piece itself below. The closed selects show the name only and may wrap, so no price is ever clipped
+              (QA round 4: "€14,9" at 390 px); their options keep the price for the native picker and screen readers. */}
           <div className="mt-4 grid gap-3">
-            <p className="flex flex-wrap items-baseline gap-x-2 text-[0.9375rem]">
-              <span className="font-semibold text-tekst">{copy.piece(1)}</span>
-              <span className="text-tekst">
-                {copy.option(product.title, product.variants.length > 1 ? variant.title : null, formatMoney(variant.price))}
-              </span>
-              <span className="tekst-klein text-tekst-2">{`(${copy.thisPiece})`}</span>
-            </p>
-            {([0, 1] as const).map((slot) => (
-              <Select
-                key={slot}
-                label={copy.piece(slot + 2)}
-                layout="stack"
-                value={picks[slot]}
-                options={optionsExcept(options, picks[slot === 0 ? 1 : 0]).map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-                onChange={(next) => setPick(slot, next)}
-              />
-            ))}
+            <div className="flex flex-col gap-1.5">
+              <p className="flex items-baseline justify-between gap-3">
+                <span className="tekst-klein font-semibold text-tekst">
+                  {copy.piece(1)} <span className="font-normal text-tekst-2">{`(${copy.thisPiece})`}</span>
+                </span>
+                <span className="tabular shrink-0 text-[0.9375rem] font-semibold text-tekst">{formatMoney(variant.price)}</span>
+              </p>
+              <p className="text-base leading-6 text-pretty text-tekst md:text-[0.9375rem]">
+                {copy.optionName(product.title, product.variants.length > 1 ? variant.title : null)}
+              </p>
+            </div>
+            {([0, 1] as const).map((slot) => {
+              const chosen = options.find((option) => option.value === picks[slot]);
+              return (
+                <Select
+                  key={slot}
+                  label={copy.piece(slot + 2)}
+                  layout="stack"
+                  value={picks[slot]}
+                  options={optionsExcept(options, picks[slot === 0 ? 1 : 0]).map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  display={chosen?.name ?? ""}
+                  labelAside={
+                    chosen ? (
+                      <span className="tabular text-[0.9375rem] font-semibold text-tekst">{formatMoney(chosen.variant.price)}</span>
+                    ) : null
+                  }
+                  onChange={(next) => setPick(slot, next)}
+                />
+              );
+            })}
           </div>
 
           {onDefault && !stackName ? null : (

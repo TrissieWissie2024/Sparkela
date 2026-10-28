@@ -23,8 +23,13 @@ import {
   isDialogOpen,
   isEditingField,
   markShown,
+  pageOwnsSignup,
   pillSpotTaken,
+  STICKY_ATC_EVENT,
   useConsentOpen,
+  usePageOwnsSignup,
+  useViewportTooShortForPill,
+  viewportTooShortForPill,
 } from "./state";
 
 /**
@@ -37,12 +42,14 @@ import {
  *   the top of the window), whichever comes first. Only when canShowPill(now): popup on, storage works, no sign-up,
  *   last-shown missing or older than 7 days. At that moment also: no dialog or drawer open, no consent banner, no
  *   sticky add-to-cart bar in view, the visitor is not typing, nothing marked data-pill-vrij in the bottom left
- *   corner (the home's delivery bar at the fold, QA round 3), and not on /checkout or /wachtlijst. If one of those
+ *   corner (the home's delivery bar at the fold, QA round 3), no own Club sign-up on the page (data-eigen-club: the
+ *   Club page, a drop teaser, the finder's email step; QA round 4), a viewport tall enough for it next to the sticky
+ *   chrome (viewportTooShortForPill, QA round 4: 400% zoom), and not on /checkout or /wachtlijst. If one of those
  *   holds, it tries again every second until it can.
  * - markShown(Date.now()) as it appears (an effect, never render), so it shows at most once per 7 days. If that write
  *   fails, it does not appear.
- * - Then it stays for the visit, across client navigations: hidden on /checkout and /wachtlijst, hidden while the
- *   consent banner is open, above the sticky bar on product pages (--onderbalk). Its × hides it for this visit and
+ * - Then it stays for the visit, across client navigations: hidden on /checkout and /wachtlijst, on a page with its
+ *   own Club sign-up and on a viewport too short for it (both live), hidden while the consent banner is open, above the sticky bar on product pages (--onderbalk). Its × hides it for this visit and
  *   stores nothing more (last-shown is already there). After a sign-up it never shows again.
  * - While it shows, <html> gets a scroll-padding-bottom that clears it (WCAG 2.4.11, plan §4.8), handed back on hide
  *   unless the consent banner or the sticky bar wrote their own value in the meantime ("sparkela:sticky-atc"). It also
@@ -69,9 +76,6 @@ const FOCUS_CLEARANCE_PX = 16;
 /** CSS variable on <html> with the room the footer keeps free under its content while the pill shows. */
 const PILL_SPACE_VAR = "--pill-ruimte";
 
-/** Window event of StickyAddToCart (7-9/D2) after it changed body padding or scroll-padding (decision 194). */
-const STICKY_ATC_EVENT = "sparkela:sticky-atc";
-
 export function EmailCapture() {
   const copy = site.emailCapture;
   const popup = pagesCopy.popup;
@@ -79,6 +83,8 @@ export function EmailCapture() {
   const { isOpen: cartOpen } = useCart();
   const subscribed = useSubscribed();
   const consentOpen = useConsentOpen();
+  const ownsSignup = usePageOwnsSignup();
+  const tooShort = useViewportTooShortForPill();
 
   const [appeared, setAppeared] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -92,7 +98,8 @@ export function EmailCapture() {
   const lastPaddingRef = useRef("");
 
   const onBlockedPath = isBlockedPath(pathname);
-  const showPill = copy.enabled && appeared && !dismissed && !subscribed && !onBlockedPath && !consentOpen;
+  const showPill =
+    copy.enabled && appeared && !dismissed && !subscribed && !onBlockedPath && !consentOpen && !ownsSignup && !tooShort;
 
   // Latest values for the timer and the exit-intent listener, without re-arming them.
   const blockedNow = useEffectEvent(
@@ -102,7 +109,9 @@ export function EmailCapture() {
       bodyBlocksPill() ||
       isDialogOpen() ||
       isEditingField() ||
-      pillSpotTaken(),
+      pillSpotTaken() ||
+      pageOwnsSignup() ||
+      viewportTooShortForPill(),
   );
 
   // Rule 1: one timer (8 s from the start of the page load) and one exit-intent listener per page load.

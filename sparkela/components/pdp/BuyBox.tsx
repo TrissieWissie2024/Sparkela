@@ -81,6 +81,14 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   const [sizeError, setSizeError] = useState(false);
   const sizeErrorId = `${useId()}-maat`;
   const soldOut = !sizeMissing && !variant.availableForSale;
+  // QA round 4: the chosen piece is already in the cart as often as we have it. "Voeg de stack toe" then added only
+  // the two others, so the button is unavailable with the reason under it (also "Los", which added nothing).
+  const inCart = (cart?.lines ?? [])
+    .filter((line) => line.merchandise.variantId === variant.id)
+    .reduce((sum, line) => sum + line.quantity, 0);
+  const atStockLimit =
+    !sizeMissing && !soldOut && variant.quantityAvailable !== null && inCart > 0 && inCart >= variant.quantityAvailable;
+  const unavailable = soldOut || atStockLimit;
   const stackable = !product.isGiftCard && product.availableForSale && isStackEligible(product.type) && defaultStack !== null;
   const options = useMemo(() => stackOptionsFor(stackCandidates), [stackCandidates]);
   const stackChoice: StackChoice = stackable && choice.stack?.mode === "stack" ? choice.stack : { mode: "los" };
@@ -91,7 +99,11 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   // A gift card amount is whole euros, written like its tiles and "Vanaf €15" ("€15", not "€15,00"), fix 7-9.
   const price = product.isGiftCard ? formatMoneyShort(total) : formatMoney(total);
   const label = soldOut ? pdpCopy.addToCart.soldOut : picks ? pdpCopy.addToCart.stack : pdpCopy.addToCart.label;
-  const reason = soldOut && product.availableForSale ? pdpCopy.addToCart.variantSoldOut(variant.title) : null;
+  const reason = atStockLimit
+    ? pdpCopy.addToCart.allInCart(product.title)
+    : soldOut && product.availableForSale
+      ? pdpCopy.addToCart.variantSoldOut(variant.title)
+      : null;
 
   const summary: string[] = [];
   if (product.options.length > 0 && !sizeMissing) {
@@ -105,11 +117,11 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
     if (sizeMissing) {
       setSizeError(true);
       // Focus (and so scroll to) the first size that is for sale; the message is linked to the group.
-      const group = document.getElementById(sizeErrorId)?.parentElement;
+      const group = document.getElementById(sizeErrorId)?.closest("[data-variant-picker]");
       group?.querySelector<HTMLInputElement>("input[type=radio]:not(:disabled)")?.focus();
       return;
     }
-    if (soldOut || addingRef.current) return;
+    if (unavailable || addingRef.current) return;
     addingRef.current = true;
     setError(null);
     try {
@@ -168,7 +180,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
 
       <div className="flex flex-col gap-4">
         <div>
-          <AddToCart disabled={soldOut} label={label} price={price} reason={reason} onAdd={handleAdd} buttonRef={buttonRef} />
+          <AddToCart disabled={unavailable} label={label} price={price} reason={reason} onAdd={handleAdd} buttonRef={buttonRef} />
           <p role="status" className={cn("tekst-klein font-medium text-fout", error ? "mt-2.5" : "sr-only")}>
             {error}
           </p>
@@ -181,7 +193,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
         title={product.title}
         summary={summary}
         price={price}
-        disabled={soldOut}
+        disabled={unavailable}
         onAdd={() => {
           void handleAdd();
         }}

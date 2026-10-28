@@ -128,7 +128,8 @@ export function ProductCard({
         className,
       )}
     >
-      <Heading className={cn("kop-4 order-2 pt-3 @min-[15rem]:pt-4", SIDE_PADDING)}>
+      {/* break-words: a long name from Shopify ("statementdruppels") never pushes the page sideways at 320 px. */}
+      <Heading className={cn("kop-4 order-2 pt-3 break-words @min-[15rem]:pt-4", SIDE_PADDING)}>
         <Link
           href={href}
           className={cn(
@@ -175,15 +176,22 @@ export function ProductCard({
  * QA round 2: each part has a hanging indent (padding 1.1em, text-indent -1.1em; the dot itself resets the indent), so
  * a part that wraps inside itself ("Staal, goud- of / zilverkleurig") continues flush with the box and never loses its
  * first letters to the clip. On a narrow card (below 12rem: two columns on a phone) every part starts its own line, so
- * where the line breaks never depends on the font (no shift when Inter arrives after the first paint).
- * Screen readers get the text as written (the visual parts are aria-hidden).
+ * where the line breaks never depends on the font (no shift when Inter arrives after the first paint); a spec longer than
+ * SPEC_STACK_FROM characters does that on every card (QA round 4). Screen readers get the text as written (the visual parts are aria-hidden).
  */
 function SpecLine({ text }: { text: string }) {
   const parts = text.split(/\s*·\s*/u).filter(Boolean);
+  // QA round 4: a long spec ("Staal, goud- of zilverkleurig · 30 mm") fitted one line in the fallback font and two in
+  // Inter on a wide card too, so its row grew when Inter arrived. Such a spec has one part per line at every width.
+  const stacked = parts.length > 1 && text.length > SPEC_STACK_FROM;
   return (
     <p className="tekst-klein mt-1 overflow-hidden text-tekst-2">
       <span className="sr-only">{text}</span>
-      <span aria-hidden="true" data-spec-parts="" className="-ml-[1.1em] flex flex-wrap @max-[12rem]:flex-col">
+      <span
+        aria-hidden="true"
+        data-spec-parts=""
+        className={cn("-ml-[1.1em] flex flex-wrap", stacked ? "flex-col" : "@max-[12rem]:flex-col")}
+      >
         {parts.map((part, index) => (
           <span key={index} className={SPEC_PART}>
             {part}
@@ -193,6 +201,9 @@ function SpecLine({ text }: { text: string }) {
     </p>
   );
 }
+
+/** From this many characters a spec line has one part per line on every card width (QA round 4, see SpecLine). */
+export const SPEC_STACK_FROM = 32;
 
 /** One part of the spec line: a hanging indent, with the dot in the first 1.1em (see SpecLine). */
 const SPEC_PART =

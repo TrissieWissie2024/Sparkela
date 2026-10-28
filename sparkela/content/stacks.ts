@@ -8,8 +8,8 @@ import type { Stack } from "@/lib/types";
 export const stacks: Stack[] = [
   {
     slug: "goud-en-gedurfd",
-    name: "Goud en gedurfd",
-    description: "Chunky hoops met een schakelarmband en een brede bangle. Veel goud, nul twijfel.",
+    name: "Chunky en gedurfd",
+    description: "Chunky hoops met een schakelarmband en een brede bangle. Veel glans, nul twijfel.",
     productHandles: ["lola-chunky-hoops", "tess-schakelarmband", "roos-brede-bangle"],
     image: "stacks.goud-en-gedurfd",
   },

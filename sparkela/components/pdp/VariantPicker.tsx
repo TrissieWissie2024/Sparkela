@@ -85,9 +85,11 @@ export function VariantPicker({ product, value, onChange, errorId, error = null,
   const sizes = product.options.find((option) => option.values.length > 0)?.values ?? product.variants.map((variant) => variant.title);
 
   return (
-    <div className={className}>
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4">
-        <p className="flex flex-wrap items-baseline gap-x-2.5">
+    <div data-variant-picker="" className={className}>
+      {/* The error ("Kies eerst je maat.") stands in the label row, where the chosen value goes (QA round 4): the row
+          keeps its 44 px, so nothing below moves and "In je tas" stays under the pointer that pressed it. */}
+      <div className="flex min-h-11 items-center justify-between gap-x-4">
+        <p className="flex min-w-0 flex-wrap items-baseline gap-x-2.5">
           <span id={labelId} className="label-caps text-tekst-2">
             {groupLabel(kind)}
           </span>
@@ -101,9 +103,14 @@ export function VariantPicker({ product, value, onChange, errorId, error = null,
               {pdpCopy.variant.lowStock(low)}
             </span>
           ) : null}
+          {errorId ? (
+            <span id={errorId} role="status" className={cn("tekst-klein font-semibold text-fout", !error && "sr-only")}>
+              {error}
+            </span>
+          ) : null}
         </p>
         {kind === "maat" ? (
-          <Button variant="link" size="sm" onClick={() => setGuideOpen(true)} aria-haspopup="dialog">
+          <Button variant="link" size="sm" onClick={() => setGuideOpen(true)} aria-haspopup="dialog" className="shrink-0">
             {pdpCopy.variant.sizeGuide}
           </Button>
         ) : null}
@@ -123,16 +130,11 @@ export function VariantPicker({ product, value, onChange, errorId, error = null,
             variant={variant}
             kind={kind}
             checked={chosen && variant.id === selected.id}
+            invalid={Boolean(error)}
             onSelect={() => onChange(variant.id)}
           />
         ))}
       </div>
-
-      {errorId ? (
-        <p id={errorId} role="status" className={cn("tekst-klein font-medium text-fout", error ? "mt-2.5" : "sr-only")}>
-          {error}
-        </p>
-      ) : null}
 
       {kind === "bedrag" ? <p className="tekst-klein mt-3 text-tekst-2">{pdpCopy.variant.giftCardNote}</p> : null}
 
@@ -146,12 +148,15 @@ function VariantOption({
   variant,
   kind,
   checked,
+  invalid = false,
   onSelect,
 }: {
   name: string;
   variant: Variant;
   kind: VariantKind;
   checked: boolean;
+  /** The group has an error: the --fout border on the unselected tiles (QA round 4). */
+  invalid?: boolean;
   onSelect(): void;
 }) {
   const soldOut = !variant.availableForSale;
@@ -175,7 +180,7 @@ function VariantOption({
       <label
         className={cn(
           "inline-flex h-11 items-center gap-2.5 pr-4 pl-1.5 text-[0.9375rem] font-medium text-tekst",
-          optionTileClasses(checked, "pill", soldOut),
+          optionTileClasses(checked, "pill", soldOut, invalid),
         )}
       >
         {input}
@@ -204,7 +209,7 @@ function VariantOption({
       className={cn(
         "inline-flex items-center justify-center font-semibold text-tekst tabular",
         card ? "h-14 px-3 text-base" : "h-12 min-w-14 px-4 text-[0.9375rem]",
-        optionTileClasses(checked, card ? "card" : "pill", soldOut),
+        optionTileClasses(checked, card ? "card" : "pill", soldOut, invalid),
         soldOut && "text-tekst-2",
       )}
     >

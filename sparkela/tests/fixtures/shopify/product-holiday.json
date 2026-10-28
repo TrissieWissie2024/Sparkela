@@ -3,7 +3,7 @@
     "product": {
       "id": "gid://shopify/Product/9012345600021",
       "handle": "holiday-ster-oorbellen",
-      "title": "Ster oorbellen",
+      "title": "Steroorbellen",
       "description": "Gouden sterren voor de feestdagen.",
       "tags": [
         "drop:holiday-sparkle",
@@ -42,7 +42,7 @@
         "nodes": [
           {
             "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/holiday-ster-oorbellen-packshot.jpg?v=1764000000",
-            "altText": "Ster oorbellen in goud",
+            "altText": "Steroorbellen in goud",
             "width": 1600,
             "height": 2000
           }

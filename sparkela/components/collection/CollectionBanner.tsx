@@ -43,7 +43,7 @@ export function CollectionBanner({ definition, headingId, className }: Collectio
             label={assets.images[image]?.label ?? definition.title}
             aspect="fill"
             alt=""
-            sizes="(min-width: 1280px) 370px, 34vw"
+            sizes="(min-width: 1280px) 330px, (min-width: 1024px) 27vw, 34vw"
           />
         </div>
       ) : null}

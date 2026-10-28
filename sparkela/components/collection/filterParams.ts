@@ -178,9 +178,23 @@ export function facetCounts(products: readonly CatalogProduct[], filters: Facets
 /** Least common multiple of the grid's 2, 3 and 4 columns: index 12 starts a row at every breakpoint. */
 export const GRID_ROW_ALIGN = 12;
 
-const SPAN_BASE: Record<number, string> = { 1: "col-span-1", 2: "col-span-2" };
-const SPAN_MD: Record<number, string> = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3" };
-const SPAN_XL: Record<number, string> = { 1: "xl:col-span-1", 2: "xl:col-span-2", 3: "xl:col-span-3", 4: "xl:col-span-4" };
+/*
+ * Span classes per breakpoint. In one cell the cell is a `tegelcel` (app/globals.css, QA round 4): the product cards
+ * next to the tile set the row height, so the tile never stretches them; with more cells it is a row of its own and
+ * its content gives the height again (`tegelcel-uit`). Literal strings, so Tailwind's scanner finds every class.
+ */
+const SPAN_BASE: Record<number, string> = { 1: "col-span-1 tegelcel", 2: "col-span-2" };
+const SPAN_MD: Record<number, string> = {
+  1: "md:col-span-1 md:tegelcel",
+  2: "md:col-span-2 md:tegelcel-uit",
+  3: "md:col-span-3 md:tegelcel-uit",
+};
+const SPAN_XL: Record<number, string> = {
+  1: "xl:col-span-1 xl:tegelcel",
+  2: "xl:col-span-2 xl:tegelcel-uit",
+  3: "xl:col-span-3 xl:tegelcel-uit",
+  4: "xl:col-span-4 xl:tegelcel-uit",
+};
 
 function spanFor(count: number, columns: number): number {
   const rest = count % columns;

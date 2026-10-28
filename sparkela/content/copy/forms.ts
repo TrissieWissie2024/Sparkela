@@ -114,8 +114,7 @@ export interface FormsCopy {
     /** launchLabel = formatDayMonth(site.launchAt), never typed again (plan §14.20). */
     promise: (launchLabel: string) => string;
     signupTitle: string;
-    /** Before the launch: when the shop opens (formatStartLabel(site.launchAt)), same box as `live`. */
-    opensAt: (startLabel: string) => string;
+    /** From launchAt, in the place of the promise (QA round 4: on the first screen), with the button `toShop`. */
     live: string;
     toShop: string;
     benefitsLabel: string;
@@ -182,8 +181,6 @@ export interface FormsCopy {
   miniFooter: {
     legalLabel: string;
     companyLabel: string;
-    kvk: (kvk: string) => string;
-    vatId: (vatId: string) => string;
   };
 }
 
@@ -200,7 +197,8 @@ export const formsCopy: FormsCopy = {
     },
     emailLabel: "Je e-mailadres",
     emailPlaceholder: "jij@voorbeeld.nl",
-    what: `${percent}% op je eerste bestelling, nieuwe drops en af en toe een actie. Afmelden kan altijd.`,
+    // One scope everywhere (QA round 4, brief §2.8): the same four things as "Welke mails krijg je?" on /sparkela-club.
+    what: `${percent}% op je eerste bestelling, nieuwe drops, stylingtips en af en toe een actie. Afmelden kan altijd.`,
     consentError: "Vink aan dat je de nieuwsbrief wilt ontvangen.",
     pending: `Check je mail om je aanmelding af te ronden. Je code ${code} kun je meteen gebruiken.`,
     sending: "Je aanmelding wordt verstuurd.",
@@ -296,7 +294,6 @@ export const formsCopy: FormsCopy = {
     title: "Sparkela komt eraan",
     promise: (launchLabel) => `Chunky sieraden met een spark. Vanaf ${launchLabel} online.`,
     signupTitle: `Als eerste shoppen, plus ${percent}% op je eerste bestelling`,
-    opensAt: (startLabel) => `De shop opent op ${startLabel}.`,
     live: "We zijn live.",
     toShop: "Naar de shop",
     benefitsLabel: "Wat je krijgt als Club-lid",
@@ -361,7 +358,5 @@ export const formsCopy: FormsCopy = {
   miniFooter: {
     legalLabel: "Juridisch",
     companyLabel: "Bedrijfsgegevens",
-    kvk: (kvk) => `KvK ${kvk}`,
-    vatId: (vatId) => `Btw-id ${vatId}`,
   },
 };

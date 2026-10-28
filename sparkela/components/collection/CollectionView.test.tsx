@@ -73,7 +73,7 @@ describe("CollectionView", () => {
     expect(html).toContain('href="/stacks"');
     // 11 earrings: the tile fills the one empty cell in 2, 3 and 4 columns.
     expect(earrings).toHaveLength(11);
-    expect(html).toContain('class="min-w-0 col-span-1 md:col-span-1 xl:col-span-1"');
+    expect(html).toContain('class="min-w-0 col-span-1 tegelcel md:col-span-1 md:tegelcel xl:col-span-1 xl:tegelcel"');
     expect(html.indexOf('href="/stacks"')).toBeGreaterThan(html.lastIndexOf('href="/products/'));
   });
 

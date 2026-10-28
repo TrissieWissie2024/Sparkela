@@ -64,7 +64,7 @@ Alle bestanden staan onder `sparkela/public/`. De kolom "Bestand" is het pad van
 | `home.statement` | `/images/home/statement.webp` | 4:5 | 1200 × 1500 | Home, blok "Statement of subtiel?" | Draagfoto met grote, chunky stukken. Eén duidelijk statement, rustige achtergrond. |
 | `home.subtiel` | `/images/home/subtiel.webp` | 4:5 | 1200 × 1500 | Home, blok "Statement of subtiel?"; ook de banner van `/collections/subtiel` (uitsnede, §4.7) | Draagfoto met de subtiele lijn: mini hoops, fijne ketting, dun armbandje. |
 | `linde.portret` | `/images/linde/portret.webp` | 4:5 | 1200 × 1500 | Home ("Over Linde") en `/over-sparkela`; ook in de stylingtegels van de Spark Finder, de ringmaat en de cadeaukaarten (collecties en de home-tabs ringen en kettingen, uitsnede, §4.7) | Portret van Linde met haar favoriete stukken, daglicht, ontspannen. Kader ruim, met het gezicht net boven het midden (§4.7). |
-| `linde.wachtlijst` | `/images/linde/wachtlijst.webp` | 4:5 | 1200 × 1500 | `/wachtlijst` | Staande foto van Linde voor de wachtlijstpagina, op een donkere of rustige achtergrond. |
+| `linde.wachtlijst` | `/images/linde/wachtlijst.webp` | 4:5 | 1200 × 1500 | `/wachtlijst` (vanaf 1024 px heel; op een telefoon een liggende uitsnede, §4.7) | Staande foto van Linde voor de wachtlijstpagina, op een rustige, lichte achtergrond (de pagina is licht). Gezicht en sieraden in het midden van de hoogte (§4.7). |
 | `club.hero` | `/images/club/club.webp` | 4:5 | 1200 × 1500 | `/sparkela-club`; ook de stylingtegel van `/collections/limited` (uitsnede, §4.7) | Groepsfoto of duo met sieraden, vrolijk en informeel. |
 
 ### 4.2 Shop per moment
@@ -88,7 +88,7 @@ Op `/stacks` en waar een stack wordt uitgelicht (bijvoorbeeld de kaart in het mo
 | `stacks.goud-en-gedurfd` | `/images/stacks/goud-en-gedurfd.webp` | 4:5 | 1200 × 1500 | Chunky hoops, schakelarmband, brede bangle |
 | `stacks.kleur-op-je-pols` | `/images/stacks/kleur-op-je-pols.webp` | 4:5 | 1200 × 1500 | Kleurige oorbellen, kralenarmband, schelp oorbellen |
 | `stacks.kantoor-maar-niet-saai` | `/images/stacks/kantoor-maar-niet-saai.webp` | 4:5 | 1200 × 1500 | Dikke ringetjes, dun armbandje, schakelarmband |
-| `stacks.holiday-stack` | `/images/stacks/holiday-stack.webp` | 4:5 | 1200 × 1500 | Ster oorbellen, glitter hoops, sparkle armband (Holiday Sparkle) |
+| `stacks.holiday-stack` | `/images/stacks/holiday-stack.webp` | 4:5 | 1200 × 1500 | Steroorbellen, glitter hoops, sparkle armband (Holiday Sparkle) |
 
 De stukken per stack staan in `content/stacks.ts`. Verandert een stack, dan verandert de foto mee.
 
@@ -139,7 +139,8 @@ Op deze plekken toont de site een andere vorm dan de foto zelf heeft. De foto wo
 | Plek | Sleutels | Vorm op de site | Wat blijft zichtbaar van een 4:5-foto |
 | --- | --- | --- | --- |
 | Collectiebanner (vanaf 768 px) | `momenten.*`, `home.subtiel` | 16:9 | de hele breedte, het middelste 45% van de hoogte |
-| Stylingtegel in één cel (telefoon) | `linde.portret`, `club.hero`, `stacks.*` | 4:5 | alles |
+| Wachtlijst op een telefoon (onder 1024 px) | `linde.wachtlijst` | 16:9 | de hele breedte, het middelste 45% van de hoogte (27,5% tot 72,5%) |
+| Stylingtegel in één cel (telefoon en desktop) | `linde.portret`, `club.hero`, `stacks.*` | volgt de hoogte van de kaarten ernaast: op een telefoon ongeveer 1,2 : 1 tot 1,4 : 1 (liggend), op desktop ongeveer 1 : 1 | op een telefoon het middelste 55% tot 65% van de hoogte, op desktop het middelste 80% |
 | Stylingtegel met de foto links (tablet, een tegel van 2 cellen) | idem | smaller dan 4:5 (tot 0,43 : 1) | de hele hoogte, het middelste 55% tot 80% van de breedte |
 | Stylingtegel over een hele rij (desktop) | idem | 16 : 10 | de hele breedte, het middelste 50% van de hoogte |
 | Stackkaart naast de tekst (`/stacks` vanaf tablet, de droppagina) | `stacks.*` | 0,57 : 1 tot 1 : 1, volgt de lengte van de tekst | bij 0,57 het middelste 70% van de breedte, bij 1 : 1 het middelste 80% van de hoogte |

@@ -235,6 +235,24 @@ test.describe("no layout shift when the fonts arrive late", () => {
       expect(total, `${path}: ${JSON.stringify(shifts)}`).toBeLessThan(0.001);
     });
   }
+
+  // QA round 4: on a wide card a long spec ("Staal, goud- of zilverkleurig · 30 mm") fitted one line in the fallback
+  // and two in Inter, so the first row on /collections/nieuw at 1920 × 1080 grew when Inter arrived.
+  test.describe("on a wide screen", () => {
+    test.use({ viewport: { width: 1920, height: 1080 } });
+
+    test("/collections/nieuw at 1920 × 1080: CLS 0 with late fonts", async ({ page, isMobile }) => {
+      test.skip(isMobile, "Wide cards are a desktop case.");
+      await page.route(/\.woff2(\?.*)?$/, async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, FONT_DELAY_MS));
+        await route.continue();
+      });
+      await observeLayoutShift(page);
+      await gotoHydrated(page, "/collections/nieuw");
+      const { total, shifts } = await layoutShift(page);
+      expect(total, JSON.stringify(shifts)).toBeLessThan(0.001);
+    });
+  });
 });
 
 /* -------------------------------------------------------------------------- */
@@ -441,4 +459,85 @@ test("the search dialog keeps its link to all results in view on a phone", async
     await dialog.getByRole("searchbox").fill("goud");
     await expect(dialog.getByRole("link", { name: /^Bekijk alle \d+ resultaten$/ })).toBeInViewport({ ratio: 1 });
   }
+});
+
+/* -------------------------------------------------------------------------- */
+/* QA round 4                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A styling tile in one cell never sets its row's height (QA round 4): the product cards next to it keep their own
+ * height, so no card in that row gets an empty band above its price, and the tile's arrow keeps 12 px above it.
+ */
+test("a one-cell styling tile is exactly as tall as the cards in its row", async ({ page }) => {
+  for (const path of ["/collections/oorbellen", "/collections/feestdagen", "/collections/nieuw", "/collections/kettingen"]) {
+    await gotoHydrated(page, path);
+    await fontsReady(page);
+    const result = await page.evaluate(() => {
+      const tile = document.querySelector("main [class*='group/tegel']");
+      const cell = tile?.closest("li");
+      const grid = cell?.parentElement;
+      if (!tile || !cell || !grid) return null;
+      const top = Math.round(cell.getBoundingClientRect().top);
+      const row = Array.from(grid.children).filter((li) => li !== cell && Math.round(li.getBoundingClientRect().top) === top);
+      const arrow = tile.querySelector("svg")!.getBoundingClientRect();
+      const text = Array.from(tile.querySelectorAll("p")).pop()!.getBoundingClientRect();
+      const withTile = Math.round(cell.getBoundingClientRect().height);
+      // The row without the tile's content: the height the cards give it on their own.
+      (tile as HTMLElement).style.display = "none";
+      const cardsOnly = row.length > 0 ? Math.round(row[0]!.getBoundingClientRect().height) : null;
+      (tile as HTMLElement).style.display = "";
+      return { withTile, cardsOnly, arrowGap: arrow.top - text.bottom, fits: arrow.bottom <= tile.getBoundingClientRect().bottom };
+    });
+    expect(result, path).not.toBeNull();
+    if (result!.cardsOnly === null) continue; // a whole-row tile: its content gives the height
+    expect(result!.withTile, path).toBe(result!.cardsOnly);
+    expect(result!.arrowGap, path).toBeGreaterThanOrEqual(11.5);
+    expect(result!.fits, path).toBe(true);
+  }
+});
+
+/** The closed stack selects show the piece without its price, so nothing is clipped (QA round 4: "€14,9" at 390). */
+test("the stack picker never clips a piece or its price", async ({ page, isMobile }) => {
+  const widths = isMobile ? [360, 390] : [1440];
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    await gotoHydrated(page, "/products/ivy-dun-armbandje");
+    await page.getByRole("main").locator("label").filter({ has: page.getByRole("radio", { name: /^Stack van 3/ }) }).click();
+    const selects = page.getByRole("main").getByRole("combobox", { name: /^Stuk [23]$/ });
+    await expect(selects).toHaveCount(2);
+    const clipped = await selects.evaluateAll((nodes) =>
+      nodes.filter((select) => {
+        const shown = select.nextElementSibling?.querySelector("span");
+        return !shown || shown.scrollWidth > shown.clientWidth + 1;
+      }).length,
+    );
+    expect(clipped, `${width} px`).toBe(0);
+  }
+});
+
+/** Removing the last chosen filter or "Wis filters" never drops focus on <body> (QA round 4, WCAG 2.4.3). */
+test("focus stays on the page when chosen filters go away", async ({ page }) => {
+  await gotoHydrated(page, "/collections/alle?vibe=retro&moment=festival");
+  const chosen = page.getByRole("list", { name: "Gekozen filters" });
+  const retro = chosen.getByRole("button", { name: "Retro" });
+  await retro.focus();
+  await page.keyboard.press("Enter");
+  await expect(chosen.getByRole("button", { name: "Festival" })).toBeFocused();
+  await page.getByRole("button", { name: "Wis filters" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("24 sieraden", { exact: true })).toBeFocused();
+});
+
+test.describe("waitlist on a phone", () => {
+  test.use({ extraHTTPHeaders: proxyTimeHeaders(PRELAUNCH_NOW_ISO), clockAt: PRELAUNCH_NOW });
+
+  /** Social traffic lands here: the email field is on the first screen of a 390 × 844 phone (QA round 4). */
+  test("shows the email field on the first screen", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "The phone layout; on desktop everything is above the fold.");
+    await gotoHydrated(page, "/");
+    const field = page.getByRole("textbox", { name: "Je e-mailadres" });
+    const box = await field.boundingBox();
+    expect(box && box.y + box.height <= 844, `field at ${box?.y}`).toBe(true);
+  });
 });

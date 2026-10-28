@@ -46,14 +46,14 @@
               "quantityAvailable": 15,
               "image": {
                 "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/holiday-ster-ketting-packshot.jpg?v=1764000000",
-                "altText": "Ster ketting in goud",
+                "altText": "Sterketting in goud",
                 "width": 1600,
                 "height": 2000
               },
               "product": {
                 "id": "gid://shopify/Product/9012345600024",
                 "handle": "holiday-ster-ketting",
-                "title": "Ster ketting",
+                "title": "Sterketting",
                 "tags": [
                   "drop:holiday-sparkle",
                   "moment:feestdagen",

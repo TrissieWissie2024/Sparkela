@@ -100,7 +100,8 @@ export const keepLocalEscape: ContentProps["onEscapeKeyDown"] = (event) => {
 
 /**
  * Remembers what had focus when a dialog opened and returns focus there when it closes, for dialogs opened without
- * a Radix trigger (the cart after "In winkelwagen"). Shared by Sheet and Modal.
+ * a Radix trigger (the cart after "In je tas"). An opener that is gone by then hands focus to the page's
+ * [data-focus-fallback] or <main> (QA round 4). Shared by Sheet and Modal.
  *
  * A dialog closed by following a link inside it to another page (a search result, a menu link, a product in the
  * cart) sends focus to <main id="main"> instead of back to its trigger in the header, the same place RouteFocus puts
@@ -145,6 +146,14 @@ export function useReturnFocus(
     if (target?.isConnected) {
       event.preventDefault();
       target.focus({ preventScroll: true });
+      return;
+    }
+    // The opener is gone (QA round 4: "Tas aanpassen" on /checkout unmounts when the drawer empties the cart): the
+    // page's marked fallback (data-focus-fallback, e.g. the empty state's heading) or <main>, never <body>.
+    if (target) {
+      event.preventDefault();
+      const fallback = document.querySelector<HTMLElement>("main [data-focus-fallback]") ?? document.getElementById("main");
+      fallback?.focus({ preventScroll: true });
     }
   };
   return { handleOpenAutoFocus, handleCloseAutoFocus, handleClickCapture };

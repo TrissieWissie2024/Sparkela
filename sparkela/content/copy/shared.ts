@@ -95,9 +95,23 @@ export interface SharedCopy {
    * find (stacks, shipping, the Club). `keywords` are normalised words; a query word matches one that it starts with
    * or that starts with it (from 4 letters).
    */
-  searchPages: Array<{ label: string; href: string; keywords: string }>;
+  searchPages: Array<{
+    label: string;
+    href: string;
+    keywords: string;
+    /** Only offered while a visible product carries this badge (the Limited collection between drops is empty). */
+    whileBadge?: BadgeId;
+  }>;
   /** Heading above those links, in the search dialog and on /zoeken. */
   searchPagesTitle: string;
+  /**
+   * Under every FAQ block (home, product page, /stacks, /cadeaukaarten; QA round 4: one pattern with one text):
+   * the link to all questions and a contact line (FaqFooterLinks).
+   */
+  faqLinks: {
+    allLink: { label: string; href: string };
+    contact: { text: string; link: { label: string; href: string } };
+  };
   vocab: {
     type: Record<JewelryType, string>;
     vibe: Record<Vibe, string>;
@@ -241,6 +255,8 @@ export const sharedCopy: SharedCopy = {
     goudkleurig: "goud",
     zilverkleurig: "zilver",
     feestdagen: "kerst kerstmis",
+    // QA round 4: the words of the menu and the collections ("Subtiel en klassiek" is the clean-en-classy vibe).
+    classy: "subtiel subtiele klassiek klassieke",
     cadeaukaart: "giftcard cadeaubon tegoedbon",
   },
   searchTypeWords: {
@@ -267,8 +283,17 @@ export const sharedCopy: SharedCopy = {
     { label: "Sparkela Club", href: "/sparkela-club", keywords: "club nieuwsbrief welkomstcode kortingscode" },
     { label: "Contact", href: "/contact", keywords: "contact mailen email" },
     { label: "Over Sparkela", href: "/over-sparkela", keywords: "linde verhaal eigenaar" },
+    // QA round 4: the collections the menu and the badges name, so "nieuw" or "limited" never ends in "Niets gevonden".
+    { label: "Nieuw", href: "/collections/nieuw", keywords: "nieuw nieuwe new" },
+    { label: "Limited", href: "/collections/limited", keywords: "limited drop drops", whileBadge: "limited" },
+    { label: "Subtiel en klassiek", href: "/collections/subtiel", keywords: "subtiel subtiele klassiek klassieke" },
+    { label: `Cadeaus onder ${formatMoneyShort(BUCKET_25)}`, href: "/collections/onder-25", keywords: "cadeaus onder goedkoop budget" },
   ],
   searchPagesTitle: "Pagina's",
+  faqLinks: {
+    allLink: { label: "Alle vragen", href: "/veelgestelde-vragen" },
+    contact: { text: "Staat je vraag er niet bij?", link: { label: "Stuur ons een bericht", href: "/contact" } },
+  },
   vocab: {
     type: {
       oorbellen: "Oorbellen",

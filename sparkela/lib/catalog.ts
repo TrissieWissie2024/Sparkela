@@ -501,7 +501,7 @@ export function normalizeSearchText(value: string): string {
 }
 
 type Searchable = Pick<CatalogProduct, "title" | "type" | "tags" | "featuredRank"> &
-  Partial<Pick<CatalogProduct, "variants" | "specRegel">>;
+  Partial<Pick<CatalogProduct, "variants" | "specRegel" | "badges">>;
 
 function haystackOf(item: Searchable): string {
   const { type: typeLabels, vibe: vibeLabels, moment: momentLabels } = sharedCopy.vocab;
@@ -514,8 +514,11 @@ function haystackOf(item: Searchable): string {
   if (item.specRegel) parts.push(item.specRegel);
   for (const slug of item.tags.drops) {
     const drop = allDrops.find((candidate) => candidate.slug === slug);
-    if (drop) parts.push(drop.name);
+    if (drop) parts.push(drop.name, "drop");
   }
+  // QA round 4: the shop's own words on cards and in the menu, "Nieuw" and "Limited" (only while the badge shows).
+  if (item.tags.nieuw) parts.push("nieuw nieuwe");
+  if (item.badges?.includes("limited")) parts.push("limited");
   const text = normalizeSearchText(parts.join(" "));
   const words = new Set(text.split(" "));
   // Words people type that the catalog says differently ("kerst" for feestdagen, "goud" for verguld).
@@ -568,19 +571,40 @@ const PAGE_PREFIX_MIN = 4;
 /**
  * The pages whose keywords match the query (QA round 2; sharedCopy.searchPages): a query word of at least 3 letters
  * matches a keyword that it starts with ("retourneren" → "retour"), or, from PAGE_PREFIX_MIN letters, a keyword
- * that starts with it ("cade" → "cadeau"). In the order given; an empty query finds nothing.
+ * that starts with it ("cade" → "cadeau"). A page with an exact keyword comes first, then one whose keyword starts
+ * the word, then a prefix of a longer keyword (QA round 4: "nieuw" shows the Nieuw collection before the Club's
+ * "nieuwsbrief"); within each, the order given. An empty query finds nothing.
  */
 export function searchPages<T extends { keywords: string }>(pages: readonly T[], query: string): T[] {
   const words = normalizeSearchText(query.slice(0, MAX_QUERY_LENGTH))
     .split(" ")
     .filter((word) => word.length >= 3);
   if (words.length === 0) return [];
-  return pages.filter((page) => {
+  const scored: Array<{ page: T; score: number }> = [];
+  for (const page of pages) {
     const keywords = normalizeSearchText(page.keywords).split(" ");
-    return words.some((word) =>
-      keywords.some((keyword) => word.startsWith(keyword) || (word.length >= PAGE_PREFIX_MIN && keyword.startsWith(word))),
-    );
-  });
+    let score = Infinity;
+    for (const word of words) {
+      for (const keyword of keywords) {
+        if (word === keyword) score = Math.min(score, 0);
+        else if (word.startsWith(keyword)) score = Math.min(score, 1);
+        else if (word.length >= PAGE_PREFIX_MIN && keyword.startsWith(word)) score = Math.min(score, 2);
+      }
+    }
+    if (score !== Infinity) scored.push({ page, score });
+  }
+  return scored.sort((a, b) => a.score - b.score).map((entry) => entry.page);
+}
+
+/**
+ * The search pages that apply now (QA round 4): a page with `whileBadge` (the Limited collection) only while a product
+ * the visitor can see carries that badge, so search never offers an empty drop collection between drops.
+ */
+export function availableSearchPages<T extends { whileBadge?: BadgeId }>(
+  pages: readonly T[],
+  products: ReadonlyArray<{ badges?: readonly BadgeId[] }>,
+): T[] {
+  return pages.filter((page) => !page.whileBadge || products.some((product) => product.badges?.includes(page.whileBadge!)));
 }
 
 /* -------------------------------------------------------------------------- */

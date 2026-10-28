@@ -149,7 +149,7 @@ describe("items and events", () => {
     const { beginCheckoutEvent, cartToItems } = await load();
     const lines = [
       line({ handle: "lola-chunky-hoops", title: "Lola chunky hoops", unit: 1995, quantity: 2, lineTotal: 3591 }),
-      line({ handle: "bo-statement-druppels", title: "Bo statement druppels", unit: 2295, quantity: 1, lineTotal: 2066 }),
+      line({ handle: "bo-statement-druppels", title: "Bo grote druppels", unit: 2295, quantity: 1, lineTotal: 2066 }),
     ];
     const codes: DiscountCodeState[] = [
       { code: "OUDECODE", applicable: false, reason: "unknown" },

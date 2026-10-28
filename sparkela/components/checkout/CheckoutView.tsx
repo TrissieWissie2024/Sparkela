@@ -193,7 +193,9 @@ function CheckoutEmpty() {
         <Spark className="size-8" />
         <Spark className="size-5" />
       </div>
-      <h2 id={headingId} className="kop-2 mt-6 text-tekst">
+      {/* data-focus-fallback: emptied from the drawer, its trigger ("Tas aanpassen") is gone; closing the drawer puts
+          focus here instead of on <body> (Sheet useReturnFocus, QA round 4). */}
+      <h2 id={headingId} tabIndex={-1} data-focus-fallback="" className="kop-2 mt-6 text-tekst">
         {copy.title}
       </h2>
       <p className="mt-3 leading-relaxed text-tekst-2">{copy.text}</p>

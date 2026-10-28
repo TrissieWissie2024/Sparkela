@@ -30,7 +30,7 @@ const momentShots = [
   { moment: "date-night", label: "Date night", alt: "Close-up van goudkleurige oorbellen bij een avondoutfit", brief: "Avondlicht, zwarte of donkere outfit, oorbellen en ketting in focus." },
   { moment: "kantoor-maar-niet-saai", label: "Kantoor maar niet saai", alt: "Blazer met een goudkleurige schakelarmband en ringetjes", brief: "Blazer of overhemd, daglicht, subtiele maar opvallende stukken." },
   { moment: "strand", label: "Strand", alt: "Schelp- en kralensieraden in de zon", brief: "Buiten in de zon, zomeroutfit, kleurige oorbellen en kralen." },
-  { moment: "feestdagen", label: "Feestdagen", alt: "Goud en glitter bij een feestelijke outfit", brief: "Warm licht, feestelijke outfit, de stukken van Holiday Sparkle." },
+  { moment: "feestdagen", label: "Feestdagen", alt: "Goudkleurige sieraden en glitter bij een feestelijke outfit", brief: "Warm licht, feestelijke outfit, de stukken van Holiday Sparkle." },
 ] as const;
 
 const photoStripCount = 8;

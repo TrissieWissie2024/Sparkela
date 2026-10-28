@@ -35,10 +35,10 @@ async function recordLoadedResources(page: Page) {
   });
 }
 
-async function openHome(page: Page) {
+async function openHome(page: Page, path = "/") {
   await recordLoadedResources(page);
   await page.clock.install({ time: TEST_NOW });
-  const response = await page.goto("/");
+  const response = await page.goto(path);
   expect(response?.status()).toBe(200);
   await waitForHydration(page);
 }
@@ -194,6 +194,25 @@ test("a control that gets focus in the popup is never under its bottom fade (QA 
       )
       .toBe("clear");
   }
+});
+
+// QA round 4: the Club page and a drop teaser have their own sign-up (data-eigen-club); the pill would offer it again
+// and lie over that form.
+for (const path of ["/sparkela-club", "/drops/love-club"]) {
+  test(`on ${path}, with its own Club sign-up, the pill stays away (QA round 4)`, async ({ page }) => {
+    await openHome(page, path);
+    await waitPastTheDelay(page);
+    await expect(sparkPill(page)).toBeHidden();
+  });
+}
+
+// QA round 4 (WCAG 2.4.11): at 400% zoom a 1280 × 800 window is 320 × 200 CSS px; with the sticky header and the pill
+// there was no room left for a focused link.
+test("on a viewport too short for it next to the sticky header, the pill stays away (QA round 4)", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 200 });
+  await openHome(page, "/products/lola-chunky-hoops");
+  await waitPastTheDelay(page);
+  await expect(sparkPill(page)).toBeHidden();
 });
 
 test("six days after it showed, it stays away", async ({ page }) => {

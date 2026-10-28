@@ -135,7 +135,10 @@ describe("Countdown", () => {
   it("shows the fixed label in a tabular box, the screen reader text and the inline script before mount", () => {
     const html = renderToStaticMarkup(<Countdown {...props} tone="op-roest" />);
     expect(html).toMatch(/<span data-countdown-text="" aria-hidden="true" class="tabular inline-block text-left font-semibold" style="min-width:5.280em">t\/m 31 december<\/span>/);
-    expect(html).toContain(`<span class="sr-only" data-countdown-hide="">${props.srLabel}</span>`);
+    expect(html).toMatch(new RegExp(`<span class="sr-only" data-countdown-hide="" id="([^"]+)-label">${props.srLabel}</span>`));
+    // The pause button says which countdown it pauses (QA round 4: two "Aftellen pauzeren" on one page).
+    const labelId = /id="([^"]+-label)"/.exec(html)?.[1];
+    expect(html).toContain(`aria-describedby="${labelId}"`);
     expect(html).toContain("text-bot-wit");
     expect(html).toContain('<script type="text/javascript">');
     expect(html).not.toMatch(/aria-live/);

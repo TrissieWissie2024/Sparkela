@@ -206,9 +206,10 @@ export const collectionCopy: CollectionCopy = {
     suggestionsLabel: "Collecties en pagina's",
     more: {
       title: "Niet gevonden wat je zocht?",
-      text: "Laat de Spark Finder kiezen, of kijk alles rustig door.",
+      // The name never breaks in the text; the link is the short name, so it fits the 135 px tile (QA round 4).
+      text: "De Spark\u00a0Finder kiest met je mee. Of kijk alles rustig door.",
       links: [
-        { label: "Naar de Spark Finder", href: "/spark-finder" },
+        { label: "Spark Finder", href: "/spark-finder" },
         { label: "Alle sieraden", href: "/collections/alle" },
       ],
     },

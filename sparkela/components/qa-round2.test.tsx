@@ -47,8 +47,9 @@ describe("search (QA round 2)", () => {
     expect(hrefs("stacks")).toEqual(["/stacks"]);
     expect(hrefs("retour")).toEqual(["/verzenden-en-retourneren"]);
     expect(hrefs("retourneren")).toEqual(["/verzenden-en-retourneren"]);
-    expect(hrefs("cadeau")).toEqual(["/cadeaukaarten"]);
-    expect(hrefs("cade")).toEqual(["/cadeaukaarten"]);
+    // The gift card page by its exact keyword first, then "Cadeaus onder €25" (QA round 4) by prefix.
+    expect(hrefs("cadeau")).toEqual(["/cadeaukaarten", "/collections/onder-25"]);
+    expect(hrefs("cade")).toEqual(["/cadeaukaarten", "/collections/onder-25"]);
     expect(hrefs("ver")).toEqual([]);
     expect(hrefs("hoops")).toEqual([]);
     expect(hrefs("")).toEqual([]);
@@ -83,7 +84,7 @@ describe("ProductCard spec line (QA round 2)", () => {
     const html = renderToStaticMarkup(
       <CatalogProvider products={pieceList}>
         <CartProvider provider="local">
-          <ProductCard product={{ ...lola, specRegel: "Staal, goud- of zilverkleurig · 30 mm" }} />
+          <ProductCard product={{ ...lola, specRegel: "Verguld staal · 30 mm" }} />
         </CartProvider>
       </CatalogProvider>,
     );

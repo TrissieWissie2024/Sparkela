@@ -1,9 +1,7 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
 import type { FaqItem } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { pdpCopy } from "@/content/copy/pdp";
+import { FaqFooterLinks } from "@/components/sections/FaqFooterLinks";
 import { FaqList } from "@/components/sections/FaqList";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -17,7 +15,8 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  *
  * QA round 3: /stacks and /cadeaukaarten render their "Goed om te weten" with this component too (`inPage`: inside
  * the page's own Container, with the page's rhythm of a hairline and 4 to 6rem above), so the block has one layout
- * everywhere: the eyebrow, the questions from column 6 and the links to all questions and contact.
+ * everywhere: the eyebrow, the questions from column 6 and the links to all questions and contact (FaqFooterLinks, the
+ * same block as the home FAQ, QA round 4).
  */
 export function ProductFaq({
   items,
@@ -33,8 +32,6 @@ export function ProductFaq({
 }) {
   if (items.length === 0) return null;
   const copy = pdpCopy.faq;
-  const link =
-    "inline-flex min-h-11 items-center gap-1.5 font-medium text-link underline decoration-1 underline-offset-4 hover:text-link-hover hover:decoration-2";
 
   const grid = (
     // Phones: heading, questions, then the links (as the home FAQ and CORVANE); from lg the links sit under the heading.
@@ -48,23 +45,7 @@ export function ProductFaq({
         <SectionHeading id={headingId} eyebrow={copy.eyebrow} title={copy.title} />
       </div>
       <FaqList items={items} headingLevel={3} className="lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1" />
-      <div className="lg:col-span-4 lg:row-start-2 lg:mt-5">
-        <p>
-          <Link href={copy.allLink.href} className={link}>
-            {copy.allLink.label}
-            <ArrowRight aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
-          </Link>
-        </p>
-        <p className="tekst-klein text-tekst-2">
-          {copy.other}{" "}
-          <Link
-            href={copy.contact.href}
-            className="relative inline-block text-link underline decoration-1 underline-offset-4 before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-link-hover"
-          >
-            {copy.contact.label}
-          </Link>
-        </p>
-      </div>
+      <FaqFooterLinks className="lg:col-span-4 lg:row-start-2 lg:mt-5" />
     </div>
   );
 

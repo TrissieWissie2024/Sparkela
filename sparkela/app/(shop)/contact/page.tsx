@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { pageMetadata } from "@/lib/seo";
+import { chromeCopy } from "@/content/copy/chrome";
 import { formsCopy } from "@/content/copy/forms";
 import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
@@ -59,9 +60,9 @@ export default function ContactPage() {
               <br />
               {company.address}
               <br />
-              {formsCopy.miniFooter.kvk(company.kvk)}
+              {chromeCopy.footer.kvk(company.kvk)}
               <br />
-              {formsCopy.miniFooter.vatId(company.vatId)}
+              {chromeCopy.footer.vatId(company.vatId)}
             </address>
           </section>
           <section aria-labelledby="contact-meer">

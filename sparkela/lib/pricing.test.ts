@@ -352,7 +352,7 @@ describe("priceCart: rules", () => {
     expect(giftCards.notices).toEqual([{ kind: "quantity-capped", title: "Cadeaukaart", max: 99 }]);
     const low = price([lineOf(bo, undefined, 5)]);
     expect(low.lines[0].quantity).toBe(3);
-    expect(low.notices).toEqual([{ kind: "quantity-capped", title: "Bo statement druppels", max: 3 }]);
+    expect(low.notices).toEqual([{ kind: "quantity-capped", title: "Bo grote druppels", max: 3 }]);
   });
 
   it("merges duplicate variants and ignores quantities below 1", () => {
@@ -412,7 +412,7 @@ describe("priceCart: rules", () => {
 
   it("applies the code when it is higher than the stack discount and hides the stack milestone", () => {
     // 3 × Mae 12,95 on one line = 3885: stack percentOf(3885, 15) = 583 (rounded per line, §8.4 rows D and E; not
-    // 3 × 194) + Ster ketting 29,95: code 10% of 6880 = 688 > 583.
+    // 3 × 194) + Sterketting 29,95: code 10% of 6880 = 688 > 583.
     const withoutCode = price([lineOf(mae, "Goud", 3), lineOf(sterKetting)]);
     expect(withoutCode.discounts.map((d) => [d.source, d.amount.cents])).toEqual([["stack", 583]]);
     const cart = price([lineOf(mae, "Goud", 3), lineOf(sterKetting)], { discountCode: "WELKOM10" });

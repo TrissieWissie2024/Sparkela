@@ -192,8 +192,10 @@ describe("ProductAccordions", () => {
 
   it("lists only what the spec list lacks: the material per colour and the article numbers (fix 7-9)", () => {
     const details = panels(product("lola-chunky-hoops"))["Details en materiaal"] ?? "";
-    expect(details).toContain("Materiaal: Goud Roestvrij staal met goudlaag");
-    expect(details).toContain("Materiaal: Zilver Roestvrij staal ");
+    // The colour as an adjective (QA round 4): never "Materiaal: Zilver", a precious-metal claim for stainless steel.
+    expect(details).toContain("Materiaal, goudkleurig Roestvrij staal met goudlaag");
+    expect(details).toContain("Materiaal, zilverkleurig Roestvrij staal ");
+    expect(details).not.toMatch(/Materiaal: (Goud|Zilver)/);
     expect(details).toContain(pdpCopy.accordions.details.sku);
     for (const term of [pdpCopy.specs.afmeting, pdpCopy.specs.gewicht, pdpCopy.specs.sluiting]) {
       expect(details).not.toContain(term);
@@ -256,11 +258,13 @@ describe("StackPicker", () => {
         defaultPicks={picks}
         value={{ mode: "stack", picks }}
         onChange={() => {}}
-        stackName="Goud en gedurfd"
+        stackName="Chunky en gedurfd"
       />,
     );
-    expect(html).toContain("Lindes stack: Goud en gedurfd");
-    expect(html).toContain("Lola chunky hoops, Goud · €19,95");
+    expect(html).toContain("Lindes stack: Chunky en gedurfd");
+    // Piece 1 by name, its price at the end of the label row (QA round 4: no price inside a one-line field).
+    expect(html).toContain(">Lola chunky hoops, Goud</p>");
+    expect(html).toContain("€19,95</span></p>");
   });
 
   it("renders nothing without default picks (Los only)", () => {
@@ -347,7 +351,7 @@ describe("BuyBox", () => {
     const lola = product("lola-chunky-hoops");
     const picks: [string, string] = [defaultVariant(card("tess-schakelarmband")).id, defaultVariant(card("roos-brede-bangle")).id];
     const html = render(
-      <BuyBox product={lola} stackCandidates={candidatesFor("lola-chunky-hoops")} defaultStack={picks} stackName="Goud en gedurfd">
+      <BuyBox product={lola} stackCandidates={candidatesFor("lola-chunky-hoops")} defaultStack={picks} stackName="Chunky en gedurfd">
         <DeliveryEstimate schedule={buildShipSchedule(TEST_NOW)} />
       </BuyBox>,
     );

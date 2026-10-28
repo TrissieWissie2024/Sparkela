@@ -430,7 +430,7 @@ describe("searchProducts", () => {
   it("finds colours, the spec line, the drop name and synonyms (QA round 1)", () => {
     const more = [
       makeCatalogProduct({ handle: "duo", title: "Duo hoops", type: "oorbellen", variants: [{ title: "Goud", price: 1495 }, { title: "Zilver", price: 1495 }], metafields: { specRegel: "Staal, goud- of zilverkleurig · 30 mm" }, featuredRank: 1 }),
-      makeCatalogProduct({ handle: "ster", title: "Ster oorbellen", type: "oorbellen", moments: ["feestdagen"], drops: ["holiday-sparkle"], metafields: { specRegel: "Verguld staal · 35 mm" }, featuredRank: 2 }),
+      makeCatalogProduct({ handle: "ster", title: "Steroorbellen", type: "oorbellen", moments: ["feestdagen"], drops: ["holiday-sparkle"], metafields: { specRegel: "Verguld staal · 35 mm" }, featuredRank: 2 }),
     ];
     const found = (query: string) => searchProducts(more, query).map((item) => item.handle);
     expect(found("zilver")).toEqual(["duo"]);

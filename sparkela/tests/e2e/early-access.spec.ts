@@ -75,12 +75,12 @@ test("the Club link opens the drop, its products and the bag, nothing else", asy
   // A product of the drop: reachable and it goes into the bag.
   const pdp = await gotoHydrated(page, "/products/holiday-ster-oorbellen");
   expect(pdp?.headers()["x-sparkela-gate"]).toBe("early-access");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ster oorbellen");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Steroorbellen");
   await expect(page.getByRole("main").getByText("Early access", { exact: true })).toBeVisible();
   await mainAddToCart(page).click();
   const drawer = cartDrawer(page);
   await expect(drawer).toBeVisible();
-  await expect(cartLines(drawer).getByRole("link", { name: "Ster oorbellen", exact: true })).toBeVisible();
+  await expect(cartLines(drawer).getByRole("link", { name: "Steroorbellen", exact: true })).toBeVisible();
   // Nothing from the drop is offered as "Maak de look af" before the public start.
   await expect(drawer.getByRole("region", { name: "Maak de look af" })).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -90,7 +90,7 @@ test("the Club link opens the drop, its products and the bag, nothing else", asy
   await page.getByRole("main").getByRole("button", { name: "Voeg de stack toe: Holiday stack" }).click();
   await expect(drawer).toBeVisible();
   await expect(cartLines(drawer)).toHaveCount(3);
-  for (const title of ["Ster oorbellen", "Glitter hoops", "Sparkle armband"]) {
+  for (const title of ["Steroorbellen", "Glitter hoops", "Sparkle armband"]) {
     await expect(cartLines(drawer).getByRole("link", { name: title, exact: true })).toBeVisible();
   }
   await expect(drawer.getByText("Je stack-korting van 15% is binnen", { exact: true })).toBeVisible();

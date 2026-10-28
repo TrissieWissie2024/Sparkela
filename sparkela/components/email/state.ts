@@ -147,6 +147,69 @@ export function pillSpotTaken(): boolean {
   return false;
 }
 
+/**
+ * A page with its own Club sign-up in view of the DOM (QA round 4): /sparkela-club, the drop teaser, an ended drop and
+ * the Spark Finder's email step carry data-eigen-club, the same marker app/globals.css uses to drop the footer's Club
+ * form. The pill would offer the same sign-up a second time and land on top of that form, so it stays away there. A
+ * marker inside a hidden TimeSwitch variant or an Activity-hidden route (data-inline-hidden) does not count.
+ */
+export const OWN_SIGNUP_SELECTOR = "main [data-eigen-club]:not([hidden] *, [data-inline-hidden] *, [hidden], [data-inline-hidden])";
+
+export function pageOwnsSignup(): boolean {
+  return document.querySelector(OWN_SIGNUP_SELECTOR) !== null;
+}
+
+function subscribeOwnSignup(listener: () => void): () => void {
+  const main = document.getElementById("main") ?? document.body;
+  const observer = new MutationObserver(listener);
+  observer.observe(main, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["hidden", "data-inline-hidden", "data-eigen-club"],
+  });
+  return () => observer.disconnect();
+}
+
+/** pageOwnsSignup(), kept live while the page changes (a client navigation, the finder reaching its email step). */
+export function usePageOwnsSignup(): boolean {
+  return useSyncExternalStore(subscribeOwnSignup, pageOwnsSignup, () => false);
+}
+
+/** Room the pill takes at the bottom: its 46 px, the 24 px offset and the 16 px kept clear above it. */
+const PILL_BLOCK_PX = 86;
+/** Less free height than this between the sticky header (scroll-padding-top) and the pill: no pill (QA round 4). */
+const MIN_FREE_HEIGHT_PX = 120;
+
+/**
+ * True when the viewport is too short for the pill next to the fixed chrome (QA round 4, WCAG 2.4.11): at 400% zoom a
+ * 1280 × 800 window is 320 × 200 CSS px, and header, sticky filter row or buy bar and the pill left no room, so a
+ * focused link could sit completely under the pill. The free height is the viewport minus scroll-padding-top (the
+ * sticky header, plus the collection's filter row below lg) minus the sticky add-to-cart bar minus the pill itself.
+ * Landscape phones keep it (390 × 844 turned: about 220 px free).
+ */
+export function viewportTooShortForPill(): boolean {
+  const top = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  return window.innerHeight - top - stickyBarHeight() - PILL_BLOCK_PX < MIN_FREE_HEIGHT_PX;
+}
+
+/** Window event of StickyAddToCart (7-9/D2) after it changed body padding or scroll-padding (decision 194). */
+export const STICKY_ATC_EVENT = "sparkela:sticky-atc";
+
+function subscribeViewport(listener: () => void): () => void {
+  window.addEventListener("resize", listener);
+  window.addEventListener(STICKY_ATC_EVENT, listener);
+  return () => {
+    window.removeEventListener("resize", listener);
+    window.removeEventListener(STICKY_ATC_EVENT, listener);
+  };
+}
+
+/** viewportTooShortForPill(), kept live on resize (zooming in) and when the sticky bar comes or goes. */
+export function useViewportTooShortForPill(): boolean {
+  return useSyncExternalStore(subscribeViewport, viewportTooShortForPill, () => false);
+}
+
 /** True while the visitor is typing or choosing in a form field (the pill never interrupts that). */
 export function isEditingField(): boolean {
   const active = document.activeElement;

@@ -119,7 +119,8 @@ export default async function SparkelaClubPage() {
                     <span className="label-caps tabular text-tekst-2">{dropMonth(drop)}</span>
                     <span className="min-w-0">
                       <span className="kop-4 block text-tekst">{drop.name}</span>
-                      <span className="tekst-klein mt-0.5 block text-tekst-2">{drop.tagline}</span>
+                      {/* Balanced: a one-line tagline that wraps never leaves one word alone (QA round 4). */}
+                      <span className="tekst-klein mt-0.5 block text-balance text-tekst-2">{drop.tagline}</span>
                     </span>
                   </li>
                 ))}

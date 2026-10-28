@@ -26,7 +26,7 @@ export interface AddStackButtonProps {
   products: [CatalogProduct, CatalogProduct, CatalogProduct];
   /** Visible label: collectionCopy.stacks.add ("Voeg de stack toe"). */
   label: string;
-  /** Name of the stack, for the accessible name ("Voeg de stack toe: Goud en gedurfd"). */
+  /** Name of the stack, for the accessible name ("Voeg de stack toe: Chunky en gedurfd"). */
   stackName?: string;
   className?: string;
 }

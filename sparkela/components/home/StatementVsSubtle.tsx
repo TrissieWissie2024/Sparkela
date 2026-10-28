@@ -45,7 +45,7 @@ export function StatementVsSubtle({ content, className }: StatementVsSubtleProps
                   assetKey={column.image}
                   label={assets.images[column.image]?.label ?? column.title}
                   aspect="4:5"
-                  sizes="(min-width: 1280px) 376px, (min-width: 640px) 50vw, 100vw"
+                  sizes="(min-width: 1280px) 376px, (min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
                 />
               </div>
               <h3 className="kop-3 mt-6 text-tekst">{column.title}</h3>

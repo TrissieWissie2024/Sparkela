@@ -150,7 +150,21 @@ describe("stylingTilePlacement", () => {
     }
     expect(stylingTilePlacement(11, 12).spans).toEqual([1, 1, 1]);
     expect(stylingTilePlacement(24, 12).spans).toEqual([2, 3, 4]);
-    expect(stylingTilePlacement(6, 12).className).toBe("col-span-2 md:col-span-3 xl:col-span-2");
+    expect(stylingTilePlacement(6, 12).className).toBe("col-span-2 md:col-span-3 md:tegelcel-uit xl:col-span-2 xl:tegelcel-uit");
+  });
+
+  it("makes a one-cell tile a tegelcel at exactly the breakpoints where it fills one cell (QA round 4)", () => {
+    // 11 products: one cell everywhere, so the cards next to it set the row height at every width.
+    expect(stylingTilePlacement(11, 12).className).toBe("col-span-1 tegelcel md:col-span-1 md:tegelcel xl:col-span-1 xl:tegelcel");
+    // 5 products: one cell on phones and md, three cells (the rest of the last row) from xl.
+    expect(stylingTilePlacement(5, 12).className).toBe("col-span-1 tegelcel md:col-span-1 md:tegelcel xl:col-span-3 xl:tegelcel-uit");
+    for (let count = 1; count <= 30; count += 1) {
+      const { spans, className } = stylingTilePlacement(count, 12);
+      const classes = className.split(" ");
+      expect(classes.includes("tegelcel"), `phones, ${count}`).toBe(spans[0] === 1);
+      expect(classes.includes("md:tegelcel"), `md, ${count}`).toBe(spans[1] === 1);
+      expect(classes.includes("xl:tegelcel"), `xl, ${count}`).toBe(spans[2] === 1);
+    }
   });
 
   it("snaps the index to a row start in every column count, or to the end of a shorter grid", () => {

@@ -139,7 +139,7 @@ function detailRows(product: Product): Row[] {
   if (colours.length > 1) {
     for (const variant of colours) {
       const text = materialForVariant(product.metafields.materiaal, variant);
-      if (text) rows.push({ id: `materiaal-${variant.id}`, term: `${copy.material}: ${variant.title}`, value: text });
+      if (text) rows.push({ id: `materiaal-${variant.id}`, term: copy.materialFor(variant.title), value: text });
     }
   }
   const codes = productCodes(product);

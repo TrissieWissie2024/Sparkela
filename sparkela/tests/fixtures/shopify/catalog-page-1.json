@@ -214,7 +214,7 @@
           {
             "id": "gid://shopify/Product/9012345600002",
             "handle": "bo-statement-druppels",
-            "title": "Bo statement druppels",
+            "title": "Bo grote druppels",
             "description": "Grote druppels voor een avond waarop je gezien wilt worden.",
             "tags": [
               "moment:date-night",
@@ -254,7 +254,7 @@
               "nodes": [
                 {
                   "url": "https://cdn.shopify.com/s/files/1/0912/3456/7890/files/bo-statement-druppels-packshot.jpg?v=1764000000",
-                  "altText": "Bo statement druppels in goud",
+                  "altText": "Bo grote druppels in goud",
                   "width": 1600,
                   "height": 2000
                 }

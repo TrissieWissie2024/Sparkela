@@ -35,6 +35,11 @@ function tile(eyebrow: string, title: string, text: string, image: StylingTileCo
   return { afterIndex: STYLING_TILE_AFTER, eyebrow, title, text, image, href };
 }
 
+/*
+ * In tile texts the product name "Spark Finder" and a number with its unit ("3 stuks") never break apart (QA round 4:
+ * "Doe de Spark" / "Finder." in a 137 px tile). Non-breaking spaces in body copy only, never inside a link.
+ */
+
 /** Eyebrows of the tiles (QA round 2): what the tile is, so a Club or gift card pointer never reads as a styling tip. */
 const EYEBROW = {
   styling: "Stylingtip",
@@ -45,13 +50,13 @@ const EYEBROW = {
 } as const;
 
 const finderTile = (title: string) =>
-  tile(EYEBROW.finder, title, "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.", "linde.portret", "/spark-finder");
+  tile(EYEBROW.finder, title, "Drie vragen in de Spark\u00a0Finder, en Linde laat zien welke stukken bij jouw vibe passen.", "linde.portret", "/spark-finder");
 
 const stacksTile = (image: StylingTileContent["image"]) =>
   tile(
     EYEBROW.styling,
     "Maak er een stack van",
-    `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits} stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+    `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
     image,
     "/stacks",
   );
@@ -79,7 +84,7 @@ export const collections: CollectionDefinition[] = [
       afterIndex: STYLING_TILE_AFTER,
       eyebrow: EYEBROW.finder,
       title: "Twijfel je nog?",
-      text: "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.",
+      text: "Drie vragen in de Spark\u00a0Finder, en Linde laat zien welke stukken bij jouw vibe passen.",
       image: "linde.portret",
       href: "/spark-finder",
     },
@@ -87,7 +92,7 @@ export const collections: CollectionDefinition[] = [
   {
     handle: "nieuw",
     title: "Nieuw",
-    intro: "Net binnen en klaar om te stylen. Dit zijn de nieuwste stukken van Linde.",
+    intro: "Net binnen en klaar om te stylen. Dit zijn de nieuwste stukken die Linde koos.",
     seo: {
       title: "Nieuw binnen",
       description: "De nieuwste sieraden van Sparkela: chunky oorbellen, armbanden en meer, net binnen.",
@@ -109,7 +114,7 @@ export const collections: CollectionDefinition[] = [
     stylingTile: {
       afterIndex: STYLING_TILE_AFTER,
       title: "Maak er een stack van",
-      text: `Combineer je oorbellen met twee armbanden of nog een paar. Vanaf ${stackDiscount.minUnits} stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+      text: `Combineer je oorbellen met twee armbanden of nog een paar. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
       image: "stacks.goud-en-gedurfd",
       href: "/stacks",
     },
@@ -207,7 +212,7 @@ export const collections: CollectionDefinition[] = [
   {
     handle: "date-night",
     title: moment["date-night"],
-    intro: "Een beetje glans voor een avond uit. Goud dat het licht vangt.",
+    intro: "Een beetje glans voor een avond uit. Goudkleurige stukken die het licht vangen.",
     seo: {
       title: "Sieraden voor date night",
       description: "Sieraden voor een avond uit: statement oorbellen en kettingen van Sparkela.",
@@ -243,7 +248,7 @@ export const collections: CollectionDefinition[] = [
   {
     handle: "feestdagen",
     title: moment.feestdagen,
-    intro: "Goud en glitter voor kerst en oud en nieuw. Ook een mooi cadeau.",
+    intro: "Glans en glitter voor kerst en oud en nieuw. Ook een mooi cadeau.",
     seo: {
       title: "Sieraden voor de feestdagen",
       description: "Feestelijke sieraden van Sparkela voor kerst en oud en nieuw.",

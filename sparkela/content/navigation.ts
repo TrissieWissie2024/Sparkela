@@ -47,7 +47,7 @@ const momentDescriptions: Record<Moment, string> = {
   "date-night": "Een beetje glans voor een avond uit",
   "kantoor-maar-niet-saai": "Net genoeg spark voor een werkdag",
   strand: "Licht, zonnig en klaar voor de vakantie",
-  feestdagen: "Goud en glitter voor de feestdagen",
+  feestdagen: "Glans en glitter voor kerst en oud en nieuw",
 };
 
 const momentOrder: Moment[] = ["festival", "date-night", "kantoor-maar-niet-saai", "strand", "feestdagen"];

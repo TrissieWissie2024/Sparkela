@@ -273,10 +273,10 @@ export const lola = makeCatalogProduct({
   featuredRank: 1,
 });
 
-/** Bo statement druppels, earrings, €22,95, stock 3 (low stock). */
+/** Bo grote druppels, earrings, €22,95, stock 3 (low stock). */
 export const bo = makeCatalogProduct({
   handle: "bo-statement-druppels",
-  title: "Bo statement druppels",
+  title: "Bo grote druppels",
   type: "oorbellen",
   vibes: ["chunky-en-bold"],
   moments: ["date-night", "feestdagen"],
@@ -300,10 +300,10 @@ export const noor = makeCatalogProduct({
   featuredRank: 5,
 });
 
-/** Jet vonk oorbellen, earrings, €24,95. */
+/** Jet vonkoorbellen, earrings, €24,95. */
 export const jet = makeCatalogProduct({
   handle: "jet-vonk-oorbellen",
-  title: "Jet vonk oorbellen",
+  title: "Jet vonkoorbellen",
   type: "oorbellen",
   vibes: ["chunky-en-bold"],
   moments: ["feestdagen", "date-night"],
@@ -313,10 +313,10 @@ export const jet = makeCatalogProduct({
   featuredRank: 6,
 });
 
-/** Sam schelp oorbellen, earrings, €15,95. */
+/** Sam schelpoorbellen, earrings, €15,95. */
 export const sam = makeCatalogProduct({
   handle: "sam-schelp-oorbellen",
-  title: "Sam schelp oorbellen",
+  title: "Sam schelpoorbellen",
   type: "oorbellen",
   vibes: ["kleurrijk-en-speels"],
   moments: ["strand", "festival"],
@@ -403,10 +403,10 @@ export const jade = makeCatalogProduct({
   featuredRank: 20,
 });
 
-/** Ster ketting, necklace of the Holiday Sparkle drop, €29,95. Not stack-eligible. */
+/** Sterketting, necklace of the Holiday Sparkle drop, €29,95. Not stack-eligible. */
 export const sterKetting = makeCatalogProduct({
   handle: "holiday-ster-ketting",
-  title: "Ster ketting",
+  title: "Sterketting",
   type: "kettingen",
   vibes: ["chunky-en-bold"],
   moments: ["feestdagen"],

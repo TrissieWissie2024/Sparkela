@@ -34,12 +34,12 @@ const RINGS = ["16", "17", "18", "19"];
 /** Plan §5.4, row by row (featuredRank = position). */
 const TABLE: TableRow[] = [
   { handle: "lola-chunky-hoops", title: "Lola chunky hoops", type: "oorbellen", vibes: ["chunky-en-bold", "retro"], moments: ["festival", "date-night"], price: 1995, variants: ["Goud", "Zilver"], stock: [25, 12], extraTags: ["nieuw"], favorite: true },
-  { handle: "bo-statement-druppels", title: "Bo statement druppels", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["date-night", "feestdagen"], price: 2295, variants: ["Goud"], stock: [3], extraTags: ["nieuw"], favorite: false },
+  { handle: "bo-statement-druppels", title: "Bo grote druppels", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["date-night", "feestdagen"], price: 2295, variants: ["Goud"], stock: [3], extraTags: ["nieuw"], favorite: false },
   { handle: "mila-color-pop", title: "Mila color pop", type: "oorbellen", vibes: ["kleurrijk-en-speels"], moments: ["festival", "strand"], price: 1795, variants: ["Goud"], stock: [18], extraTags: [], favorite: false },
   { handle: "fenna-retro-schijfjes", title: "Fenna retro schijfjes", type: "oorbellen", vibes: ["retro"], moments: ["kantoor-maar-niet-saai", "date-night"], price: 1695, variants: ["Goud"], stock: [20], extraTags: [], favorite: false },
   { handle: "noor-dikke-ringetjes", title: "Noor dikke ringetjes", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["kantoor-maar-niet-saai"], price: 1495, variants: ["Goud", "Zilver"], stock: [30, 30], extraTags: ["nieuw"], favorite: false },
-  { handle: "jet-vonk-oorbellen", title: "Jet vonk oorbellen", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["feestdagen", "date-night"], price: 2495, variants: ["Goud"], stock: [15], extraTags: ["nieuw"], favorite: true },
-  { handle: "sam-schelp-oorbellen", title: "Sam schelp oorbellen", type: "oorbellen", vibes: ["kleurrijk-en-speels"], moments: ["strand", "festival"], price: 1595, variants: ["Goud"], stock: [22], extraTags: [], favorite: false },
+  { handle: "jet-vonk-oorbellen", title: "Jet vonkoorbellen", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["feestdagen", "date-night"], price: 2495, variants: ["Goud"], stock: [15], extraTags: ["nieuw"], favorite: true },
+  { handle: "sam-schelp-oorbellen", title: "Sam schelpoorbellen", type: "oorbellen", vibes: ["kleurrijk-en-speels"], moments: ["strand", "festival"], price: 1595, variants: ["Goud"], stock: [22], extraTags: [], favorite: false },
   { handle: "tess-schakelarmband", title: "Tess schakelarmband", type: "armbanden", vibes: ["chunky-en-bold"], moments: ["kantoor-maar-niet-saai", "date-night"], price: 1995, variants: ["Goud"], stock: [25], extraTags: ["nieuw"], favorite: true },
   { handle: "roos-brede-bangle", title: "Roos brede bangle", type: "armbanden", vibes: ["retro", "chunky-en-bold"], moments: ["festival"], price: 2195, variants: ["Goud"], stock: [14], extraTags: [], favorite: false },
   { handle: "lieke-kralenarmband", title: "Lieke kralenarmband", type: "armbanden", vibes: ["kleurrijk-en-speels"], moments: ["strand", "festival"], price: 1395, variants: ["Goud"], stock: [40], extraTags: [], favorite: false },
@@ -53,10 +53,10 @@ const TABLE: TableRow[] = [
   { handle: "lou-fijne-schakelketting", title: "Lou fijne schakelketting", type: "kettingen", vibes: ["clean-en-classy"], moments: ["kantoor-maar-niet-saai", "date-night"], price: 1695, variants: ["Goud"], stock: [20], extraTags: [], favorite: false },
   { handle: "ivy-dun-armbandje", title: "Ivy dun armbandje", type: "armbanden", vibes: ["clean-en-classy"], moments: ["kantoor-maar-niet-saai"], price: 1495, variants: ["Goud", "Zilver"], stock: [20, 20], extraTags: [], favorite: false },
   { handle: "jade-stipjes", title: "Jade stipjes", type: "oorbellen", vibes: ["clean-en-classy"], moments: ["kantoor-maar-niet-saai", "strand"], price: 1295, variants: ["Goud"], stock: [35], extraTags: [], favorite: false },
-  { handle: "holiday-ster-oorbellen", title: "Ster oorbellen", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["feestdagen"], price: 2495, variants: ["Goud"], stock: [20], extraTags: ["drop:holiday-sparkle"], favorite: false },
+  { handle: "holiday-ster-oorbellen", title: "Steroorbellen", type: "oorbellen", vibes: ["chunky-en-bold"], moments: ["feestdagen"], price: 2495, variants: ["Goud"], stock: [20], extraTags: ["drop:holiday-sparkle"], favorite: false },
   { handle: "holiday-glitter-hoops", title: "Glitter hoops", type: "oorbellen", vibes: ["kleurrijk-en-speels"], moments: ["feestdagen"], price: 2295, variants: ["Goud"], stock: [20], extraTags: ["drop:holiday-sparkle"], favorite: false },
   { handle: "holiday-sparkle-armband", title: "Sparkle armband", type: "armbanden", vibes: ["chunky-en-bold"], moments: ["feestdagen"], price: 2695, variants: ["Goud"], stock: [15], extraTags: ["drop:holiday-sparkle"], favorite: false },
-  { handle: "holiday-ster-ketting", title: "Ster ketting", type: "kettingen", vibes: ["chunky-en-bold"], moments: ["feestdagen"], price: 2995, variants: ["Goud"], stock: [15], extraTags: ["drop:holiday-sparkle"], favorite: false },
+  { handle: "holiday-ster-ketting", title: "Sterketting", type: "kettingen", vibes: ["chunky-en-bold"], moments: ["feestdagen"], price: 2995, variants: ["Goud"], stock: [15], extraTags: ["drop:holiday-sparkle"], favorite: false },
 ];
 
 const PUBLISHED_AT = "2026-11-20T12:00:00+01:00";

@@ -47,7 +47,7 @@ describe("WaitlistHero", () => {
       </ClockProvider>,
     );
     expect(production).not.toContain("FOTO:");
-    expect(production).not.toContain("lg:grid-cols-2");
+    expect(production).not.toContain("lg:grid-cols-12");
   });
 
   it("shows the placeholder in the two-column layout outside production, so that layout is checked (QA round 1)", () => {
@@ -57,13 +57,26 @@ describe("WaitlistHero", () => {
       </ClockProvider>,
     );
     expect(local).toContain("FOTO: Linde, wachtlijst");
-    expect(local).toContain("lg:grid-cols-2");
+    expect(local).toContain("lg:grid-cols-12");
+    // QA round 4: a compact 16:9 crop below lg, so the email field is on the first screen of a phone; 4:5 from lg.
+    expect(local).toContain("aspect-video");
+    expect(local).toContain("lg:aspect-[4/5]");
   });
 
-  it("has both launch variants in fixed height: the opening line before, a plain link to the shop after", () => {
+  it("has both launch variants in one reserved box under the H1: the promise before, a plain link to the shop after", () => {
     expect(html).toContain(escape(formsCopy.waitlist.live));
     expect(html).toMatch(/<a href="\/"[^>]*>Naar de shop<\/a>/);
-    expect(html).toContain("De shop opent op vrijdag 27 november om 00.00 uur.");
+    // QA round 4: the switch sits right under the H1 (the first screen), before the sign-up card.
+    const h1 = html.indexOf("<h1");
+    expect(html.indexOf("Naar de shop")).toBeGreaterThan(h1);
+    expect(html.indexOf("Naar de shop")).toBeLessThan(html.indexOf(escape(formsCopy.waitlist.signupTitle)));
+    expect(html).not.toContain("De shop opent op");
+  });
+
+  it("is a light page with the header logo and the sign-up in a white card (QA round 4, brief §5 70/20/10)", () => {
+    expect(html).toContain("bg-pagina");
+    expect(html).not.toContain('data-vlak="donker"');
+    expect(html).toContain("rounded-kaart border border-rand bg-kaart");
   });
 
   it("links only confirmed socials (QA round 3: no guessed handles before the accounts exist)", () => {
@@ -91,5 +104,15 @@ describe("MiniFooter (brief §2.10)", () => {
     expect(html).toContain(escape(site.company.legalName));
     expect(html).toContain(escape(site.company.kvk));
     expect(html).toContain(site.vat.before);
+  });
+
+  it("puts each group of company details on its own line, without a separator at a line end (QA round 4)", () => {
+    const address = /<address[^>]*>([\s\S]*?)<\/address>/.exec(html)?.[1] ?? "";
+    const lines = [...address.matchAll(/<span>([\s\S]*?)<\/span>/g)].map((match) => match[1]?.replace(/<[^>]+>/g, "") ?? "");
+    expect(lines).toHaveLength(4);
+    expect(lines[3]).toBe(site.email);
+    for (const line of lines) expect(line.trim().endsWith("·"), line).toBe(false);
+    // The standalone mail link has a 44 px target (as in the shop footer).
+    expect(address).toContain("before:h-11");
   });
 });

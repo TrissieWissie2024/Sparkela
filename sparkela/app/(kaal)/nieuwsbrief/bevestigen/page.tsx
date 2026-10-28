@@ -23,18 +23,19 @@ export const metadata: Metadata = pageMetadata({
 
 export default function ConfirmPage() {
   return (
-    <section data-vlak="donker" className="flex-1 bg-donker text-tekst-op-donker">
-      <Container className="py-10 md:py-14 lg:py-16">
+    <section className="flex-1 bg-pagina text-tekst">
+      <Container className="py-8 md:py-12 lg:py-16">
         {/* A 44rem column on the container's left edge, in line with the MiniFooter (as the waitlist). */}
         <div className="max-w-[44rem]">
-        {/* The logo's built-in free space trimmed on the left, so its letters line up with the H1 (as on the waitlist). */}
-        <div style={{ marginLeft: -logoLayout(LOGO_WIDTH).clearSpace }}>
-          <Logo variant="op-donker" width={LOGO_WIDTH} />
-        </div>
-        {/* H1 and intro follow the state (button, invalid link, confirmed): ConfirmSubscription renders them. */}
-        <Suspense fallback={<ConfirmFallback />}>
-          <ConfirmSubscription />
-        </Suspense>
+          {/* The header logo (inkt word, roest spark) on the light page (QA round 4), its built-in free space trimmed
+              on the left, so its letters line up with the H1 (as on the waitlist). */}
+          <div style={{ marginLeft: -logoLayout(LOGO_WIDTH).clearSpace }}>
+            <Logo variant="header" width={LOGO_WIDTH} />
+          </div>
+          {/* H1 and intro follow the state (button, invalid link, confirmed): ConfirmSubscription renders them. */}
+          <Suspense fallback={<ConfirmFallback />}>
+            <ConfirmSubscription />
+          </Suspense>
         </div>
       </Container>
     </section>

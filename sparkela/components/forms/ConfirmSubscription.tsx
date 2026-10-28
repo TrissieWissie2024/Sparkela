@@ -17,7 +17,7 @@ import { submitForm } from "./submitForm";
 
 /**
  * The second step of the double opt-in on /nieuwsbrief/bevestigen (docs/PLAN.md §13.13, §14.21, §15.3; decisions 74
- * and 110). On a dark surface ((kaal) layout).
+ * and 110). On --pagina ((kaal) layout, QA round 4: light page, donker MiniFooter).
  *
  * - Reads the token `t` with useSearchParams (the page wraps this in <Suspense fallback={<ConfirmFallback />}>), keeps
  *   it in state and removes it from the address bar right away with history.replaceState, before analytics could read
@@ -40,7 +40,7 @@ import { submitForm } from "./submitForm";
 type Status = "idle" | "sending" | "done" | "invalid" | "error";
 
 function ResultLinks() {
-  const link = buttonClasses({ variant: "outline-op-donker", size: "md" });
+  const link = buttonClasses({ variant: "outline", size: "md" });
   return (
     <TimeGate
       at={site.launchAt}
@@ -78,7 +78,7 @@ function ConfirmHeading({
       <h1 ref={headingRef} tabIndex={-1} className="kop-1 mt-8 max-w-[12em] md:mt-10">
         {title}
       </h1>
-      <p className="tekst-groot mt-4 text-tekst-2-op-donker">{intro}</p>
+      <p className="tekst-groot mt-4 text-tekst-2">{intro}</p>
     </>
   );
 }
@@ -86,11 +86,11 @@ function ConfirmHeading({
 /** The "invalid" state: the message and a new sign-up. Shared with ConfirmFallback, so both render the same markup. */
 function InvalidState({ message, headingRef }: { message: string; headingRef?: RefObject<HTMLHeadingElement | null> }) {
   return (
-    <div className="text-tekst-op-donker">
+    <div className="text-tekst">
       <ConfirmHeading title={formsCopy.confirm.invalidTitle} intro={message} headingRef={headingRef} />
       <h2 className="kop-3 mt-10">{formsCopy.confirm.retryTitle}</h2>
       {/* Inline, as on the waitlist in the same kaal template: a pill button, not a 704 px roest bar (QA round 3). */}
-      <SubscribeForm source="club" tone="donker" layout="inline" className="mt-4 max-w-[34rem]" />
+      <SubscribeForm source="club" layout="inline" className="mt-4 max-w-[34rem]" />
     </div>
   );
 }
@@ -151,7 +151,7 @@ export function ConfirmSubscription() {
 
   if (status === "done") {
     return (
-      <div className="text-tekst-op-donker">
+      <div className="text-tekst">
         <ConfirmHeading
           title={copy.success}
           intro={result === "already-confirmed" ? copy.already : copy.successText}
@@ -183,7 +183,6 @@ export function ConfirmSubscription() {
         status={status === "sending" ? "sending" : status === "error" ? "error" : "idle"}
         message={status === "error" && !fallbackEmail ? message : undefined}
         fallbackEmail={fallbackEmail}
-        tone="donker"
       />
       </form>
     </>
@@ -220,7 +219,7 @@ export function ConfirmFallback() {
           {formsCopy.confirm.button}
         </button>
         <noscript>
-          <p className="tekst-klein mt-3 text-tekst-op-donker">{formsCopy.confirm.noScript(site.email)}</p>
+          <p className="tekst-klein mt-3 text-tekst">{formsCopy.confirm.noScript(site.email)}</p>
         </noscript>
       </div>
       <div {...{ [VARIANT_ATTRIBUTE]: "opnieuw" }} hidden>

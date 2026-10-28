@@ -40,7 +40,8 @@ for (const path of ["/", "/collections/oorbellen"]) {
     expect(response?.headers()["x-sparkela-gate"]).toBe("wachtlijst");
     await expect(page).toHaveURL(path);
     await expectWaitlist(page);
-    await expect(page.getByText("De shop opent op vrijdag 27 november om 00.00 uur.", { exact: true })).toBeVisible();
+    // The promise with the launch date from config, right under the H1 (QA round 4: the switch to "We zijn live." goes there).
+    await expect(page.getByText("Vanaf 27\u00a0november online.", { exact: true })).toBeVisible();
   });
 }
 
@@ -157,21 +158,26 @@ test.describe("at the launch", () => {
   const justBefore = "2026-11-26T23:59:55+01:00";
   test.use({ extraHTTPHeaders: proxyTimeHeaders(justBefore), clockAt: Date.parse(justBefore) });
 
-  test("an open waitlist turns into 'We zijn live.' with a link to the shop, in the same height", async ({ page }) => {
+  test("an open waitlist turns into 'We zijn live.' with a link to the shop on the first screen, in the same height", async ({ page }) => {
     const response = await gotoHydrated(page, "/");
     expect(response?.headers()["x-sparkela-gate"]).toBe("wachtlijst");
     const region = page.getByRole("region", { name: WAITLIST_H1 });
     const before = await region.boundingBox();
-    await expect(page.getByText("De shop opent op vrijdag 27 november om 00.00 uur.", { exact: true })).toBeVisible();
+    const promise = page.getByText("Vanaf 27\u00a0november online.", { exact: true });
+    await expect(promise).toBeVisible();
 
     await page.clock.runFor(10 * SECOND);
 
     await expect(page.getByText("We zijn live.", { exact: true })).toBeVisible();
     const toShop = page.getByRole("link", { name: "Naar de shop" });
     await expect(toShop).toHaveAttribute("href", "/");
-    await expect(page.getByText("De shop opent op vrijdag 27 november om 00.00 uur.", { exact: true })).toBeHidden();
+    await expect(promise).toBeHidden();
     const after = await region.boundingBox();
     expect(after?.height, "no layout shift at the switch").toBe(before?.height);
+    // QA round 4: the switch replaces the promise under the H1, so it is on the first screen, not under the form.
+    const box = await toShop.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box && viewport && box.y + box.height <= viewport.height, "'Naar de shop' in the first viewport").toBe(true);
 
     // After the launch the proxy serves the shop (the header follows the new moment).
     await page.setExtraHTTPHeaders({ [TEST_NOW_HEADER]: "2026-11-27T00:00:10+01:00" });

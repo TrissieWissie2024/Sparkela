@@ -2,7 +2,7 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useId, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 
 import type { Facets, SortKey } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -31,8 +31,11 @@ const FilterSheet = dynamic(() => import("@/components/layout/islands").then((mo
  *   width (its label for screen readers only, so both fit at 320 px), sticky under the header; below it the count with "Wis filters" and the
  *   chosen filters as pressed chips that remove themselves, so the first card row stays high (decision 36).
  *
- * The count is a polite live region (plan §18.3 point 14). Facets the page does not offer are empty and left out.
- * No hooks besides the sheet's open state, so the Suspense fallback renders the same markup (no layout shift).
+ * The count is a polite live region (plan §18.3 point 14), and the place focus goes when "Wis filters" or the last
+ * chosen chip disappears (QA round 4); a removed chip hands focus to the chip that takes its place. Facets the page
+ * does not offer are empty and left out.
+ * No hooks besides the sheet's open state and the focus handover (refs and a layout effect), so the Suspense fallback
+ * renders the same markup (no layout shift).
  */
 
 export interface FilterBarProps {
@@ -60,7 +63,36 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
   const active = activeFilterCount(value);
   const chosen = keys.flatMap((key) => (value[key] as readonly string[]).map((item) => ({ key, item })));
   const restActive = chosen.filter(({ key }) => key !== primary).length;
-  const clear = () => onChange(emptyFilters());
+  const countRef = useRef<HTMLParagraphElement>(null);
+  const chosenRef = useRef<HTMLUListElement>(null);
+  // The button that had focus goes away ("Wis filters", a chosen chip): once the new filters are rendered, focus moves
+  // to a stable place (QA round 4, WCAG 2.4.3), never to <body>. The count is a live region, so it also says the new
+  // number. Applied in a layout effect for exactly the filters the press asked for: the URL (and so `value`) follows
+  // in a transition, which can take longer than a frame on a phone.
+  const pendingFocus = useRef<{ filters: string; target: number | "count" } | null>(null);
+  const filtersKey = facetsKey(value);
+  useLayoutEffect(() => {
+    const pending = pendingFocus.current;
+    if (!pending || pending.filters !== filtersKey) return;
+    pendingFocus.current = null;
+    const chips = pending.target === "count" ? [] : visibleChips(chosenRef.current);
+    const next = typeof pending.target === "number" ? chips[Math.min(pending.target, chips.length - 1)]?.querySelector("button") : null;
+    if (next) next.focus();
+    else countRef.current?.focus({ preventScroll: true });
+  }, [filtersKey]);
+  const clear = () => {
+    const next = emptyFilters();
+    pendingFocus.current = { filters: facetsKey(next), target: "count" };
+    onChange(next);
+  };
+  /** Removes a chosen chip and moves focus to the chip that takes its place, the one before it, or the count. */
+  const removeChosen = (key: FacetKey, item: string) => {
+    const chipId = `${key}-${item}`;
+    const index = visibleChips(chosenRef.current).findIndex((chip) => chip.dataset.chip === chipId);
+    const next = toggleFilter(value, key, item as Facets[FacetKey][number]);
+    pendingFocus.current = { filters: facetsKey(next), target: Math.max(index, 0) };
+    onChange(next);
+  };
   const openSheet = () => setSheetOpen(true);
   const sheetIcon = <SlidersHorizontal aria-hidden="true" className="size-[18px]" strokeWidth={1.5} />;
 
@@ -126,7 +158,13 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
             </div>
           ) : null}
           <div className="flex min-h-11 flex-wrap items-center gap-x-5 gap-y-1 lg:ml-auto lg:shrink-0">
-            <p aria-live="polite" aria-atomic="true" className="tabular tekst-klein text-tekst-2">
+            <p
+              ref={countRef}
+              tabIndex={-1}
+              aria-live="polite"
+              aria-atomic="true"
+              className="tabular tekst-klein text-tekst-2"
+            >
               {collectionCopy.count(count)}
             </p>
             {active > 0 ? (
@@ -145,11 +183,16 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
         </div>
 
         {chosen.length > 0 ? (
-          <ul role="list" aria-label={copy.activeLabel} className={cn("mt-2 flex flex-wrap gap-2", restActive === 0 && "lg:hidden")}>
+          <ul
+            ref={chosenRef}
+            role="list"
+            aria-label={copy.activeLabel}
+            className={cn("mt-2 flex flex-wrap gap-2", restActive === 0 && "lg:hidden")}
+          >
             {chosen.map(({ key, item }) => (
               // From lg the first facet's chips are in the row above; only the other facets' choices show here.
-              <li key={`${key}-${item}`} className={cn("shrink-0", key === primary && "lg:hidden")}>
-                <Chip pressed onClick={() => onChange(toggleFilter(value, key, item as Facets[FacetKey][number]))}>
+              <li key={`${key}-${item}`} data-chip={`${key}-${item}`} className={cn("shrink-0", key === primary && "lg:hidden")}>
+                <Chip pressed onClick={() => removeChosen(key, item)}>
                   {facetValueLabel(key, item)}
                 </Chip>
               </li>
@@ -171,4 +214,16 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
       </div>
     </>
   );
+}
+
+/** The chosen chips' list items that are visible at this width (from lg the first facet's are hidden). */
+function visibleChips(list: HTMLUListElement | null): HTMLElement[] {
+  return Array.from(list?.children ?? []).filter(
+    (child): child is HTMLElement => child instanceof HTMLElement && child.getClientRects().length > 0,
+  );
+}
+
+/** The chosen values per facet as one string, independent of their order. */
+function facetsKey(value: Facets): string {
+  return FACET_KEYS.map((key) => [...(value[key] as readonly string[])].sort().join(",")).join("|");
 }

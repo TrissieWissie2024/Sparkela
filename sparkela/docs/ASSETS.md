@@ -20,7 +20,7 @@ Bronnen: brief §5 (beeld), plan §17.2, beslissingen 60, 119, 122, 127 en 131.
 
 - **Alleen eigen beeld.** Foto's en video's van Linde of van Sparkela, of klantfoto's met schriftelijke toestemming. Nooit foto's van de leverancier, van andere webshops of van internet, ook niet tijdelijk (brief §2.2). Dezelfde stukken worden elders verkocht; eigen beeld is wat Sparkela onderscheidt.
 - **Geen tekst in het beeld.** Koppen, prijzen en knoppen zet de site er zelf overheen of naast. Tekst in een foto is niet te lezen voor schermlezers en niet aan te passen.
-- **Exacte maat en verhouding.** Lever elk bestand precies op de maat uit de tabel. De site schaalt sitebeeld niet zelf (Vercel doet geen beeldbewerking): de browser krijgt het bestand zoals het is. De verhouding is vast, dus er wordt niets afgesneden als de maat klopt.
+- **Exacte maat en verhouding.** Lever elk bestand precies op de maat uit de tabel. De site schaalt sitebeeld niet zelf (Vercel doet geen beeldbewerking): de browser krijgt het bestand zoals het is. De verhouding is vast: op de plek waarvoor een sleutel bedoeld is (de eerste plek in de kolom "Waar") staat de foto heel. Een paar sleutels komen ook op een tweede plek met een andere vorm (een collectiebanner, een stylingtegel, een stackkaart naast tekst); daar toont de site een uitsnede uit het midden. Welke plekken dat zijn en wat er dan zichtbaar blijft, staat in §4.7. Houd het onderwerp daarom in de veilige zone van §4.7.
 - **Sitebeeld als WebP**, sRGB, kwaliteit ongeveer 80. Houd een bestand liefst onder 400 kB (de hero desktop onder 600 kB), want de pagina moet ook op een telefoon met een matige verbinding snel laden (Lighthouse mobiel 90+).
 - **Productfoto's als JPEG of PNG**, nooit WebP of AVIF (§3).
 - **Bestandsnamen exact zoals in de tabel**: kleine letters, geen spaties, dezelfde map. Een andere naam vindt de site niet.
@@ -62,14 +62,14 @@ Alle bestanden staan onder `sparkela/public/`. De kolom "Bestand" is het pad van
 | `hero.desktop` | `/images/hero/hero-desktop.webp` | 16:9 | 2400 × 1350 | Home, hero vanaf 1024 px breed | Grote draagfoto, liggend. Linde rechts in beeld, oorbellen en armbanden scherp, ruimte links voor de kop. |
 | `hero.mobiel` | `/images/hero/hero-mobiel.webp` | 4:5 | 1200 × 1500 | Home, hero op telefoon en tablet | Zelfde shoot als de desktopversie, staand uitgesneden. Gezicht en oorbellen in de bovenste helft. |
 | `home.statement` | `/images/home/statement.webp` | 4:5 | 1200 × 1500 | Home, blok "Statement of subtiel?" | Draagfoto met grote, chunky stukken. Eén duidelijk statement, rustige achtergrond. |
-| `home.subtiel` | `/images/home/subtiel.webp` | 4:5 | 1200 × 1500 | Home, blok "Statement of subtiel?" | Draagfoto met de subtiele lijn: mini hoops, fijne ketting, dun armbandje. |
-| `linde.portret` | `/images/linde/portret.webp` | 4:5 | 1200 × 1500 | Home ("Over Linde") en `/over-sparkela` | Portret van Linde met haar favoriete stukken, daglicht, ontspannen. |
+| `home.subtiel` | `/images/home/subtiel.webp` | 4:5 | 1200 × 1500 | Home, blok "Statement of subtiel?"; ook de banner van `/collections/subtiel` (uitsnede, §4.7) | Draagfoto met de subtiele lijn: mini hoops, fijne ketting, dun armbandje. |
+| `linde.portret` | `/images/linde/portret.webp` | 4:5 | 1200 × 1500 | Home ("Over Linde") en `/over-sparkela`; ook in de stylingtegels van de Spark Finder, de ringmaat en de cadeaukaarten (collecties en de home-tabs ringen en kettingen, uitsnede, §4.7) | Portret van Linde met haar favoriete stukken, daglicht, ontspannen. Kader ruim, met het gezicht net boven het midden (§4.7). |
 | `linde.wachtlijst` | `/images/linde/wachtlijst.webp` | 4:5 | 1200 × 1500 | `/wachtlijst` | Staande foto van Linde voor de wachtlijstpagina, op een donkere of rustige achtergrond. |
-| `club.hero` | `/images/club/club.webp` | 4:5 | 1200 × 1500 | `/sparkela-club` | Groepsfoto of duo met sieraden, vrolijk en informeel. |
+| `club.hero` | `/images/club/club.webp` | 4:5 | 1200 × 1500 | `/sparkela-club`; ook de stylingtegel van `/collections/limited` (uitsnede, §4.7) | Groepsfoto of duo met sieraden, vrolijk en informeel. |
 
 ### 4.2 Shop per moment
 
-Op de home (tegels met de naam van het moment eroverheen) en in het megamenu "Shop per moment".
+Op de home (tegels met de naam van het moment eroverheen) en in het megamenu "Shop per moment". Vanaf 768 px breed ook als banner bovenaan de collectie van dat moment (`/collections/festival` enzovoort), als liggende uitsnede (§4.7).
 
 | Sleutel | Bestand | Verhouding | Maat (px) | Wat fotograferen |
 | --- | --- | --- | --- | --- |
@@ -81,7 +81,7 @@ Op de home (tegels met de naam van het moment eroverheen) en in het megamenu "Sh
 
 ### 4.3 Stacks
 
-Op `/stacks` en waar een stack wordt uitgelicht (bijvoorbeeld de kaart in het mobiele menu). Elke foto toont de drie stukken van de stack samen gedragen, oorbellen en pols in één beeld.
+Op `/stacks` en waar een stack wordt uitgelicht (bijvoorbeeld de kaart in het mobiele menu en de stylingtegels "Maak er een stack van" in de collecties). Elke foto toont de drie stukken van de stack samen gedragen, oorbellen en pols in één beeld. Op een telefoon staat de foto heel; vanaf een tablet staat hij naast de tekst van de stack en vult hij de hoogte daarvan (uitsnede, §4.7).
 
 | Sleutel | Bestand | Verhouding | Maat (px) | De drie stukken |
 | --- | --- | --- | --- | --- |
@@ -128,9 +128,23 @@ De koppeling foto → product staat in `content/home.ts` (`home.photoStrip.items
 
 | Sleutel | Bestand | Verhouding | Maat (px) | Waar |
 | --- | --- | --- | --- | --- |
-| `collecties.<handle>` | `/images/collecties/<handle>.webp` | 4:5 | 1200 × 1500 | Optioneel beeld in de banner van een collectie (bijvoorbeeld `collecties.oorbellen`) |
+| `collecties.<handle>` | `/images/collecties/<handle>.webp` | 16:9 | 1200 × 675 | Optioneel beeld in de banner van een collectie (bijvoorbeeld `collecties.oorbellen`), vanaf 768 px breed |
 
-Deze sleutels staan nog niet in `content/assets.ts`: een collectie heeft standaard geen bannerbeeld. Wil je er één, dan voegt de ontwikkelaar de sleutel toe en zet hij hem bij de collectie in `content/collections.ts` (`bannerImage`).
+Deze sleutels staan nog niet in `content/assets.ts`: een collectie heeft standaard geen eigen bannerbeeld (de collecties per moment en "Subtiel en klassiek" lenen hun foto van §4.1 en §4.2, als uitsnede). De banner is 16:9 en hooguit 370 px breed, dus een eigen bannerfoto is liggend. Wil je er één, dan voegt de ontwikkelaar de sleutel toe en zet hij hem bij de collectie in `content/collections.ts` (`bannerImage`).
+
+### 4.7 Uitsneden en veilige zone
+
+Op deze plekken toont de site een andere vorm dan de foto zelf heeft. De foto wordt dan vanuit het midden bijgesneden (`object-cover`), nooit vervormd.
+
+| Plek | Sleutels | Vorm op de site | Wat blijft zichtbaar van een 4:5-foto |
+| --- | --- | --- | --- |
+| Collectiebanner (vanaf 768 px) | `momenten.*`, `home.subtiel` | 16:9 | de hele breedte, het middelste 45% van de hoogte |
+| Stylingtegel in één cel (telefoon) | `linde.portret`, `club.hero`, `stacks.*` | 4:5 | alles |
+| Stylingtegel met de foto links (tablet, een tegel van 2 cellen) | idem | smaller dan 4:5 (tot 0,43 : 1) | de hele hoogte, het middelste 55% tot 80% van de breedte |
+| Stylingtegel over een hele rij (desktop) | idem | 16 : 10 | de hele breedte, het middelste 50% van de hoogte |
+| Stackkaart naast de tekst (`/stacks` vanaf tablet, de droppagina) | `stacks.*` | 0,57 : 1 tot 1 : 1, volgt de lengte van de tekst | bij 0,57 het middelste 70% van de breedte, bij 1 : 1 het middelste 80% van de hoogte |
+
+**Veilige zone.** Zet wat er echt toe doet (gezicht, oorbellen, polsen, de stack) in het middelste vak van de foto: tussen 25% en 75% van de hoogte en tussen 20% en 80% van de breedte. Dan staat het op elke plek in beeld. Lucht aan de randen mag wegvallen. Bij `linde.portret` betekent dat: kader ruimer dan voor een gewoon portret, met het gezicht net boven het midden in plaats van in het bovenste derde.
 
 ## 5. Video's
 

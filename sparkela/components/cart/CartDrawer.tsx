@@ -58,6 +58,7 @@ export function noticeText(notice: CartNotice): string {
 export function CartDrawer() {
   const { cart, hydrated, isOpen, setOpen, closeCart, removeLine, lastError, setNote } = useCart();
   const listRef = useRef<HTMLUListElement>(null);
+  const checkoutRef = useRef<HTMLDivElement>(null);
   const emptyHeadingId = `${useId()}-empty`;
 
   // Close on navigation (links inside the drawer, the back button); the first render is not a change.
@@ -73,6 +74,10 @@ export function CartDrawer() {
   const empty = hydrated && lines.length === 0;
   // The totals already say why a code does not count (CartTotals), so that notice is not repeated at the top.
   const notices = (cart?.notices ?? []).filter((notice) => notice.kind !== "code-not-combined");
+  // One message per fact (QA round 2): a capped add shows the notice with the title and the number, not also the
+  // generic error (the line's own hint explains the grey "+").
+  const shownError =
+    lastError === "quantity-capped" && notices.some((notice) => notice.kind === "quantity-capped") ? null : lastError;
   // Something to pack: a gift message and the launch gift only make sense then (same rule as gift wrap).
   const physical = cart?.giftWrap.available ?? false;
   const strayNote = hydrated && cart !== null && !physical && lines.length > 0 && cart.note !== "";
@@ -109,14 +114,19 @@ export function CartDrawer() {
       footer={
         hydrated && cart && !empty ? (
           <div className="flex flex-col gap-3">
-            <CartTotals cart={cart} />
-            <CheckoutButton />
+            {/* After "Verwijderen" focus goes to "Afrekenen", not to the dialog (QA round 2). */}
+            <CartTotals cart={cart} onCodeRemoved={() => checkoutRef.current?.querySelector("button")?.focus()} />
+            <div ref={checkoutRef}>
+              <CheckoutButton />
+            </div>
           </div>
         ) : undefined
       }
       bodyClassName="flex flex-col"
     >
-      <div className="flex min-h-full flex-1 flex-col">
+      {/* Grows to fill the body but never shrinks below its content, so the body's bottom padding stays under the
+          payment badges (QA round 2: they sat on the sticky footer's border). */}
+      <div className="flex shrink-0 grow flex-col">
         {!hydrated ? (
           <div className="flex flex-1 items-center justify-center py-10">
             <Spinner label={sharedCopy.ui.loading} />
@@ -127,12 +137,12 @@ export function CartDrawer() {
           <>
             <CartProgressBars progress={cart.progress} />
 
-            {lastError || notices.length > 0 ? (
+            {shownError || notices.length > 0 ? (
               <ul className="mt-4 flex flex-col gap-2">
-                {lastError ? (
+                {shownError ? (
                   <li className="flex items-start gap-2.5 rounded-kaart bg-fout-vlak px-4 py-3 text-sm text-tekst">
                     <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-fout" strokeWidth={2} />
-                    {cartCopy.errors[lastError]}
+                    {cartCopy.errors[shownError]}
                   </li>
                 ) : null}
                 {notices.map((notice, index) => (

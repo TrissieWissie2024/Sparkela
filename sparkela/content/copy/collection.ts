@@ -61,6 +61,11 @@ export interface CollectionCopy {
     count: (n: number) => string;
     none: (query: string) => string;
     noneHint: string;
+    /** No jewellery, but a page matches (QA round 2): heading and the line above the page links. */
+    noneProducts: (query: string) => string;
+    noneProductsHint: string;
+    /** Live region when only pages match. */
+    pagesCount: (n: number) => string;
     suggestionsTitle: string;
     suggestionsLabel: string;
     /** Pages next to the collections (what the product search cannot find: gift cards, stacks, the finder). */
@@ -194,6 +199,9 @@ export const collectionCopy: CollectionCopy = {
     count: (n) => (n === 1 ? "1 resultaat" : `${n} resultaten`),
     none: (query) => `Niets gevonden voor “${query}”`,
     noneHint: "Check de spelling of probeer een ander woord. Of begin hieronder.",
+    noneProducts: (query) => `Geen sieraden voor “${query}”`,
+    noneProductsHint: "Misschien zoek je een van deze pagina's.",
+    pagesCount: (n) => (n === 1 ? "1 pagina gevonden" : `${n} pagina's gevonden`),
     suggestionsTitle: "Waar wil je beginnen?",
     suggestionsLabel: "Collecties en pagina's",
     more: {
@@ -256,7 +264,7 @@ export const collectionCopy: CollectionCopy = {
       { title: "Geen verzendkosten", text: "Er gaat niets met de post, dus je betaalt alleen het bedrag." },
     ],
     productLink: { label: "Meer over de cadeaukaart", href: "/products/cadeaukaart" },
-    faqTitle: "Vragen over cadeaukaarten",
+    faqTitle: "Goed om te weten",
     crossTitle: "Liever zelf iets uitkiezen?",
     crossIntro: "Kleine cadeaus en kant-en-klare stacks, klaar om in te pakken.",
   },

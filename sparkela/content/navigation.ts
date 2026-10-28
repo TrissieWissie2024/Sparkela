@@ -46,7 +46,7 @@ const momentDescriptions: Record<Moment, string> = {
   festival: "Groot, kleurig en klaar om te dansen",
   "date-night": "Een beetje glans voor een avond uit",
   "kantoor-maar-niet-saai": "Net genoeg spark voor een werkdag",
-  strand: "Licht, zonnig en vakantieproof",
+  strand: "Licht, zonnig en klaar voor de vakantie",
   feestdagen: "Goud en glitter voor de feestdagen",
 };
 
@@ -72,7 +72,7 @@ const giftGroup: NavGroup = {
   links: [
     { ...link.onder25, description: "Kleine cadeautjes met een spark" },
     { ...link.stacks, description: "Drie stuks van Linde, met stack-korting" },
-    { ...link.cadeaukaarten, description: "Digitaal, direct in de mail" },
+    { ...link.cadeaukaarten, description: "Digitaal, direct in je mail" },
   ],
 };
 

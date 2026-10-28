@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleAlert } from "lucide-react";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent, type RefObject } from "react";
 
 import { cn } from "@/lib/cn";
 import { normalizeDiscountCode } from "@/lib/pricing";
@@ -17,16 +17,19 @@ import { Button } from "@/components/ui/Button";
  * when the code really counts; a code that does not count now (the stack discount is higher, only gift cards) gets a
  * neutral line, and the totals say why (QA round 1: no green "toegevoegd" above "telt niet mee").
  */
-export function DiscountCodeField({ className }: { className?: string }) {
+export function DiscountCodeField({ className, inputRef: givenRef }: { className?: string; inputRef?: RefObject<HTMLInputElement | null> }) {
   const copy = pagesCopy.checkout.discount;
-  const { applyDiscountCode, pending } = useCart();
+  const { applyDiscountCode, pending, cart } = useCart();
   const id = useId();
   const inputId = `${id}-code`;
   const errorId = `${id}-error`;
-  const inputRef = useRef<HTMLInputElement>(null);
+  const ownRef = useRef<HTMLInputElement>(null);
+  const inputRef = givenRef ?? ownRef;
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [added, setAdded] = useState<{ text: string; counts: boolean } | null>(null);
+  const [addedState, setAdded] = useState<{ code: string; text: string; counts: boolean } | null>(null);
+  // The confirmation only while the code is still in the cart ("Verwijderen" in the totals removes it, QA round 2).
+  const added = addedState && cart?.discountCodes.some((entry) => entry.code === addedState.code) ? addedState : null;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +51,7 @@ export function DiscountCodeField({ className }: { className?: string }) {
     setCode("");
     const state = result.cart?.discountCodes.find((entry) => entry.code === wanted);
     const counts = state?.applicable ?? true;
-    setAdded({ text: counts ? copy.added(wanted) : copy.addedNotCounted(wanted), counts });
+    setAdded({ code: wanted, text: counts ? copy.added(wanted) : copy.addedNotCounted(wanted), counts });
   }
 
   return (

@@ -109,7 +109,19 @@ export function NavDisclosure({ group, images, closeSignal, className }: NavDisc
       if (rootRef.current && event.target instanceof Node && !rootRef.current.contains(event.target)) close();
     };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    // Escape closes an open panel wherever focus is (QA round 2, WCAG 1.4.13): a panel that hover opened covers the
+    // page while focus is still on the body. Focus only returns to the button when it was inside this group.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const inside = rootRef.current?.contains(document.activeElement) ?? false;
+      close();
+      if (inside) buttonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open, close]);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);

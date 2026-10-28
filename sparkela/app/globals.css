@@ -181,6 +181,14 @@
     scroll-padding-top: calc(var(--header-hoogte) + 16px);
   }
 
+  /* Below lg a collection's filter and sort row (4.375rem) is sticky under the header: focus scrolling lands below
+     both, so a card's button never hides behind the row (WCAG 2.4.11, QA round 2). Not for a route Activity hides. */
+  @media (width < 64rem) {
+    html:has([data-sticky-filterbar]:not([hidden] *, [data-inline-hidden] *)) {
+      scroll-padding-top: calc(var(--header-hoogte) + 4.375rem + 16px);
+    }
+  }
+
   /* Pages never set overflow on an ancestor of the sticky header (plan §4.6). */
   body {
     background-color: var(--pagina);

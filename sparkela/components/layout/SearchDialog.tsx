@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useDeferredValue, useId, useMemo, useRef, useState, type FormEvent } from "react";
 
 import type { NavItem } from "@/lib/types";
-import { defaultVariant, searchProducts } from "@/lib/catalog";
+import { defaultVariant, searchPages, searchProducts } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { priceDisplay } from "@/lib/pricing";
 import { productPath } from "@/lib/paths";
 import { chromeCopy } from "@/content/copy/chrome";
+import { sharedCopy } from "@/content/copy/shared";
 import { mainNav } from "@/content/navigation";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
 import { ProductThumb } from "@/components/cart/ProductThumb";
@@ -38,7 +39,7 @@ export function searchPageHref(query: string): string {
 }
 
 export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
-  const { products } = useCatalog();
+  const { searchable } = useCatalog();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const deferred = useDeferredValue(query);
@@ -47,7 +48,8 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const inputId = `${id}-q`;
   const statusId = `${id}-status`;
 
-  const results = useMemo(() => searchProducts(products, deferred), [products, deferred]);
+  const results = useMemo(() => searchProducts(searchable, deferred), [searchable, deferred]);
+  const pages = useMemo(() => searchPages(sharedCopy.searchPages, deferred), [deferred]);
   const trimmed = deferred.trim();
   const top = results.slice(0, SEARCH_DIALOG_LIMIT);
   const quickLinks = mainNav.filter((item): item is Extract<NavItem, { kind: "link" }> => item.kind === "link");
@@ -128,8 +130,32 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         </form>
 
         <p id={statusId} role="status" aria-live="polite" className="sr-only">
-          {trimmed ? (results.length > 0 ? chromeCopy.search.count(results.length) : chromeCopy.search.none(trimmed)) : ""}
+          {trimmed
+            ? results.length > 0
+              ? chromeCopy.search.count(results.length)
+              : pages.length > 0
+                ? `${chromeCopy.search.noneProducts(trimmed)}. ${chromeCopy.search.pagesCount(pages.length)}.`
+                : chromeCopy.search.none(trimmed)
+            : ""}
         </p>
+
+        {trimmed && pages.length > 0 ? (
+          <div className="mt-6">
+            {results.length === 0 ? (
+              <p className="mb-4 font-semibold break-words text-tekst [overflow-wrap:anywhere]">{chromeCopy.search.noneProducts(trimmed)}</p>
+            ) : null}
+            <p className="label-caps text-tekst-2">{sharedCopy.searchPagesTitle}</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {pages.map((page) => (
+                <li key={page.href}>
+                  <Link href={page.href} onClick={close} className={buttonClasses({ variant: "outline", size: "sm" })}>
+                    {page.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {trimmed ? (
           results.length > 0 ? (
@@ -166,7 +192,7 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                 {chromeCopy.search.all(results.length)}
               </Link>
             </div>
-          ) : (
+          ) : pages.length > 0 ? null : (
             <div className="mt-6">
               <p className="font-semibold break-words text-tekst [overflow-wrap:anywhere]">{chromeCopy.search.none(trimmed)}</p>
               <p className="tekst-klein mt-1 text-tekst-2">{chromeCopy.search.noneHint}</p>

@@ -108,10 +108,12 @@ export function PhotoStrip({ content, products, divider = false, className }: Ph
                       the span escapes the row and the phone page scrolls sideways. The link's name comes from its content ("Bekijk Lola chunky hoops"), not from an aria-label that
                       would differ from the visible text (WCAG 2.5.3); the caption shows which product the photo opens. */}
                   <span className="sr-only">{content.itemLabel(item.title)}</span>
-                  {/* The name under the photo, as the video row above captions its clips. */}
+                  {/* The name under the photo, as the video row above captions its clips. QA round 2: a step smaller while
+                      eight tiles share a narrow row (110 px at 1024), and a word that is still wider than its tile
+                      hyphenates instead of being clipped; at most two lines (line-clamp sets its own display). */}
                   <span
                     aria-hidden="true"
-                    className="mt-2.5 line-clamp-2 block text-sm leading-snug font-semibold text-tekst decoration-1 underline-offset-4 group-hover/foto:underline"
+                    className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold [overflow-wrap:anywhere] hyphens-auto text-tekst decoration-1 underline-offset-4 group-hover/foto:underline lg:max-xl:text-[0.8125rem]"
                   >
                     {item.title}
                   </span>

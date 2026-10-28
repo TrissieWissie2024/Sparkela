@@ -82,6 +82,24 @@ test("quick add on a card: one variant goes straight in, several open a choice l
   await expect(card.getByRole("button", { name: /^(Kies uitvoering|Toegevoegd): Noor dikke ringetjes$/ })).toBeFocused();
 });
 
+test("the choice list closes when focus leaves it, so the trigger and the title are never hidden under it", async ({ page }) => {
+  await gotoHydrated(page, "/collections/oorbellen");
+  const card = page.getByRole("main").getByRole("article").filter({ has: page.getByRole("heading", { name: "Lola chunky hoops" }) });
+  const trigger = card.getByRole("button", { name: "Kies uitvoering: Lola chunky hoops" });
+  const choice = card.getByRole("dialog", { name: "Kies een uitvoering van Lola chunky hoops" });
+  await trigger.click();
+  await expect(choice).toBeVisible();
+  // Shift+Tab from the first option: focus on "Kies", the list closed (QA round 2, WCAG 2.4.11).
+  await page.keyboard.press("Shift+Tab");
+  await expect(trigger).toBeFocused();
+  await expect(choice).toBeHidden();
+  // A press outside closes it too, without moving focus into the list.
+  await trigger.click();
+  await expect(choice).toBeVisible();
+  await page.getByRole("main").getByRole("heading", { level: 1 }).click();
+  await expect(choice).toBeHidden();
+});
+
 test("a ring has no preselected size: the add asks for one first", async ({ page }) => {
   await gotoHydrated(page, "/products/nina-chunky-ring");
   const main = page.getByRole("main");

@@ -116,7 +116,7 @@ export function Countdown({
 
   return (
     <span id={id} suppressHydrationWarning className={cn("inline-flex items-center gap-1", tones[tone], className)}>
-      <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block font-semibold"
+      <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block text-left font-semibold"
         style={{ minWidth: `${((8 + prefix.length) * INTER_SEMIBOLD_ZERO_EM).toFixed(3)}em` }}>
         {text}
       </span>

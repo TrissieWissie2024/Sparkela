@@ -25,6 +25,11 @@ export interface LogoProps {
   className?: string;
   /** Accessible name. Default: the brand name from content/site.ts. */
   title?: string;
+  /**
+   * Leave out the free space left and right (it stays above and below): for a logo whose letters must line up with
+   * the text column it stands in, where the column's own margin is the free space (the footer, QA round 2).
+   */
+  trimInline?: boolean;
 }
 
 /** From this width the spark is drawn (brief §3: at least 70 px wide; narrower logos drop the spark). */
@@ -59,13 +64,17 @@ function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-/** Size and viewBox of a logo that is `width` px wide (the ink), with the height of the S as free space around it. */
-export function logoLayout(width: number): LogoLayout {
+/**
+ * Size and viewBox of a logo that is `width` px wide (the ink), with the height of the S as free space around it
+ * (only above and below with `trimInline`).
+ */
+export function logoLayout(width: number, { trimInline = false }: { trimInline?: boolean } = {}): LogoLayout {
   const withSpark = width >= LOGO_SPARK_MIN_WIDTH;
   const box = withSpark ? LOGO_BOX : WORDMARK_BOX;
   const scale = width / box.width;
   const pad = CLEAR_SPACE;
-  const outer = { x: box.x - pad, y: box.y - pad, width: box.width + 2 * pad, height: box.height + 2 * pad };
+  const padX = trimInline ? 0 : pad;
+  const outer = { x: box.x - padX, y: box.y - pad, width: box.width + 2 * padX, height: box.height + 2 * pad };
   return {
     withSpark,
     viewBox: [outer.x, outer.y, outer.width, outer.height].map(round).join(" "),
@@ -80,11 +89,11 @@ export function logoLayout(width: number): LogoLayout {
  * outline, another angle or stretching (brief §3); the colours come from the variant. The Monogram never stands in the
  * same header, lockup or block as this wordmark.
  */
-export function Logo({ variant = "header", width = LOGO_DEFAULT_WIDTH, className, title }: LogoProps) {
+export function Logo({ variant = "header", width = LOGO_DEFAULT_WIDTH, className, title, trimInline = false }: LogoProps) {
   if (process.env.NODE_ENV !== "production" && width < LOGO_MIN_WIDTH) {
     console.warn(`Logo: ${width}px is narrower than ${LOGO_MIN_WIDTH}px; use <Monogram> at this size (brief §3).`);
   }
-  const layout = logoLayout(width);
+  const layout = logoLayout(width, { trimInline });
   const fills = VARIANT_FILLS[variant];
 
   return (

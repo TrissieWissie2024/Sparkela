@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { Cart, DiscountApplication } from "@/lib/types";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { cartCopy } from "@/content/copy/cart";
 import { sharedCopy } from "@/content/copy/shared";
 import { VatNotice } from "@/components/time/VatNotice";
@@ -22,6 +22,11 @@ import { useCart } from "./useCart";
  * Amounts always come from the cart: lib/pricing.ts locally, Shopify's own cart otherwise; nothing is computed here.
  * A code that came in through the popup is its own row with "Verwijderen"; a stored code that does not count right
  * now (stack discount higher, unknown) shows why. The demo checkout uses the same component.
+ *
+ * QA round 2: a code that beats the stack discount says so under its row (the mirror of "Je stack-korting is hoger"),
+ * and a code that takes the order just under free shipping explains why the total went up (the amounts follow
+ * Shopify: free shipping counts after discounts, brief §7). "Verwijderen" announces the removal politely and hands
+ * focus to `onCodeRemoved` (the code field in the checkout, "Afrekenen" in the drawer), never to <body>.
  */
 
 function Row({ label, value, note, className }: { label: ReactNode; value: ReactNode; note?: ReactNode; className?: string }) {
@@ -58,12 +63,40 @@ function discountLabel(discount: DiscountApplication): string {
   return discount.title;
 }
 
-export function CartTotals({ cart, className }: { cart: Cart; className?: string }) {
+export interface CartTotalsProps {
+  cart: Cart;
+  className?: string;
+  /** Called after a code was removed (its button is gone): move focus to a sensible next place. */
+  onCodeRemoved?: (code: string) => void;
+}
+
+/** The note under an applied code's row, or null (QA round 2). */
+export function codeRowNote(cart: Cart, discount: DiscountApplication): string | null {
+  if (discount.kind !== "code") return null;
+  const stackApplied = cart.discounts.some((entry) => entry.source === "stack" && entry.amount.cents > 0);
+  if (!stackApplied && cart.progress.stack.reached) return cartCopy.totals.codeBeatsStack;
+  const { freeShipping } = cart.progress;
+  if (freeShipping.applies && !freeShipping.reached && discount.amount.cents >= freeShipping.remaining.cents) {
+    return cartCopy.totals.codeBelowFreeShipping(formatMoneyShort(freeShipping.threshold), formatMoney(freeShipping.remaining));
+  }
+  return null;
+}
+
+export function CartTotals({ cart, className, onCodeRemoved }: CartTotalsProps) {
   const { removeDiscountCode, pending } = useCart();
+  const [removed, setRemoved] = useState("");
   const { totals } = cart;
   const discounts = cart.discounts.filter((discount) => discount.amount.cents > 0);
   const appliedCodes = new Set(discounts.flatMap((discount) => (discount.code ? [discount.code] : [])));
   const idleCodes = cart.discountCodes.filter((state) => !appliedCodes.has(state.code) && !state.applicable);
+
+  const remove = async (code: string) => {
+    if (pending) return;
+    const result = await removeDiscountCode(code);
+    if (!result.ok) return;
+    setRemoved(cartCopy.totals.codeRemoved(code));
+    requestAnimationFrame(() => onCodeRemoved?.(code));
+  };
 
   const removeButton = (code: string) => (
     <Button
@@ -72,7 +105,7 @@ export function CartTotals({ cart, className }: { cart: Cart; className?: string
       aria-label={cartCopy.totals.removeCodeLabel(code)}
       aria-disabled={pending || undefined}
       onClick={() => {
-        if (!pending) void removeDiscountCode(code);
+        void remove(code);
       }}
       className="text-xs!"
     >
@@ -94,6 +127,7 @@ export function CartTotals({ cart, className }: { cart: Cart; className?: string
                 {discount.kind === "code" && discount.code ? removeButton(discount.code) : null}
               </span>
             }
+            note={codeRowNote(cart, discount)}
             value={<span className="text-succes">{formatMoney(-discount.amount.cents)}</span>}
           />
         ))}
@@ -129,6 +163,10 @@ export function CartTotals({ cart, className }: { cart: Cart; className?: string
           className="mt-2 border-t border-rand pt-2.5"
         />
       </dl>
+
+      <p role="status" className="sr-only">
+        {removed}
+      </p>
 
       {totals.savings.cents > 0 || totals.shipping.kind !== "none" ? (
         <div className="mt-1 flex items-baseline justify-between gap-4 text-xs leading-snug text-tekst-2">

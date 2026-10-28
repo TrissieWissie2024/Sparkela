@@ -64,6 +64,8 @@ export interface CartCopy {
   };
   upsell: {
     title: string;
+    /** With only gift cards in the tas: a voucher has no look to finish (QA round 2, as the gift card's product page). */
+    giftCardTitle: string;
     listLabel: string;
   };
   totals: {
@@ -85,6 +87,12 @@ export interface CartCopy {
     removeCodeLabel: (code: string) => string;
     /** Why a stored code does not count right now (DiscountCodeState.reason). */
     codeReasons: { "not-combinable": string; unknown: string; "not-eligible": string };
+    /** Under a code row when the code beats the stack discount (QA round 2, the mirror of codeReasons). */
+    codeBeatsStack: string;
+    /** Under a code row when the code takes the order just under free shipping (QA round 2). */
+    codeBelowFreeShipping: (threshold: string, remaining: string) => string;
+    /** Polite announcement after "Verwijderen". */
+    codeRemoved: (code: string) => string;
   };
   discount: {
     notApplicable: string;
@@ -179,6 +187,7 @@ export const cartCopy: CartCopy = {
   },
   upsell: {
     title: "Maak de look af",
+    giftCardTitle: "Of kies zelf een spark",
     listLabel: "Stukken die erbij passen",
   },
   totals: {
@@ -198,6 +207,10 @@ export const cartCopy: CartCopy = {
       unknown: "Deze code kennen we niet.",
       "not-eligible": "Deze code werkt niet voor wat er nu in je tas zit.",
     },
+    codeBeatsStack: "Je code levert meer op dan de stack-korting, dus we rekenen met je code.",
+    codeBelowFreeShipping: (threshold, remaining) =>
+      `Met je code kom je net onder ${threshold}. Nog ${remaining} en je verzending is weer gratis.`,
+    codeRemoved: (code) => `Code ${code} verwijderd.`,
   },
   discount: {
     notApplicable: "Deze code werkt niet voor wat er nu in je tas zit.",
@@ -207,7 +220,7 @@ export const cartCopy: CartCopy = {
     codeInvalid: (code) => `De code ${code} kennen we niet.`,
     lineRemoved: (title) =>
       title ? `${title} is niet meer te koop en staat niet meer in je tas.` : "Een stuk is niet meer te koop en staat niet meer in je tas.",
-    quantityCapped: (title, max) => `Van ${title} kun je er nu maximaal ${max} bestellen.`,
+    quantityCapped: (title, max) => `Van ${title} hebben we er nu ${max}. Die ${max === 1 ? "zit" : "zitten"} al in je tas.`,
     notYetAvailable: (title) => `${title} is nog niet te koop.`,
   },
   errors: {

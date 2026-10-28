@@ -82,16 +82,14 @@ export function HeaderView({ feature }: { feature: MobileNavFeature | null }) {
             <SearchButton placement="mobile" />
           </div>
 
-          <Link
-            href="/"
-            aria-label={chromeCopy.header.home}
-            style={logoVars}
-            className="mx-(--logo-trim-sm) flex items-center justify-center xs:mx-(--logo-trim-md) xl:mr-0 xl:ml-(--logo-trim-xl) xl:justify-self-start"
-          >
+          {/* The trim (the logo's free space as negative margin) sits on the logo, not on the link, and the logo takes
+              no pointer events: the link's target is the letters' own width, so it never reaches into the account
+              button between 380 and 400 px (QA round 2). */}
+          <Link href="/" aria-label={chromeCopy.header.home} style={logoVars} className="flex min-h-11 items-center justify-center xl:justify-self-start">
             <Logo
               variant="header"
               width={HEADER_LOGO_WIDTHS.xl}
-              className="h-auto w-(--logo-w-sm) origin-center xs:w-(--logo-w-md) xl:w-(--logo-w-xl) xl:origin-left motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out group-data-[compact=true]/header:scale-[0.8667]"
+              className="pointer-events-none mx-(--logo-trim-sm) h-auto w-(--logo-w-sm) origin-center xs:mx-(--logo-trim-md) xs:w-(--logo-w-md) xl:mr-0 xl:ml-(--logo-trim-xl) xl:w-(--logo-w-xl) xl:origin-left motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out group-data-[compact=true]/header:scale-[0.8667]"
             />
           </Link>
 

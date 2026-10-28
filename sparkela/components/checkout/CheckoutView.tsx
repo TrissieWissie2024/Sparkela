@@ -45,8 +45,8 @@ import { OrderSummary } from "./OrderSummary";
  *   left and the overview right (sticky under the header).
  *
  * `initial` sets the start state (CheckoutView.test.tsx renders `placed` with an empty cart); the page passes nothing.
- * It renders the page header too (QA round 1): once the order is placed the intro "Controleer je bestelling en vul je
- * gegevens in." no longer applies, so it goes.
+ * It renders the page header too (QA round 1). The intro "Controleer je bestelling en vul je gegevens in." only shows
+ * with a filled cart, under the demo notice (QA round 2): not while loading, not above an empty cart, not after placing.
  */
 
 export interface CheckoutViewProps {
@@ -80,7 +80,7 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
 
   if (state.status === "placed" && order) {
     return (
-      <CheckoutFrame placed>
+      <CheckoutFrame>
         <DemoNotice />
         <div className="mt-8 md:mt-10">
           <CheckoutPlaced order={order} headingRef={headingRef} />
@@ -116,6 +116,9 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
   return (
     <CheckoutFrame>
       <DemoNotice />
+      {/* Only here, where there is something to check (QA round 2: not above "Je tas is leeg"). Below the notice, so
+          the header is the same in every state and nothing shifts when the cart turns out empty or filled. */}
+      <p className="mt-5 max-w-[40rem] text-tekst-2">{pagesCopy.checkout.intro}</p>
       <div className="mt-8 grid gap-10 md:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 xl:gap-x-12">
         <OrderSummary
           cart={shown}
@@ -135,12 +138,12 @@ export function CheckoutView({ initial }: CheckoutViewProps = {}) {
   );
 }
 
-/** The page header and the container around every state; the intro only while there is something to check. */
-function CheckoutFrame({ placed = false, children }: { placed?: boolean; children: ReactNode }) {
+/** The page header (the same in every state) and the container around every state. */
+function CheckoutFrame({ children }: { children: ReactNode }) {
   const copy = pagesCopy.checkout;
   return (
     <>
-      <PageHeader title={copy.title} intro={placed ? undefined : copy.intro} />
+      <PageHeader title={copy.title} />
       <Container className="pb-16 md:pb-24">{children}</Container>
     </>
   );

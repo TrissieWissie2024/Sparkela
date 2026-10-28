@@ -1,6 +1,6 @@
 TODO: laten controleren
 
-Op sparkela.nl gebruiken we zo weinig cookies als mogelijk. Hier lees je welke cookies en welke opslag in je browser we gebruiken, waarvoor en hoe lang.
+Op sparkela.nl gebruiken we zo weinig mogelijk cookies. Hier lees je welke cookies en welke opslag in je browser we gebruiken, waarvoor en hoe lang.
 
 ## Wat zijn cookies?
 
@@ -13,7 +13,7 @@ Sommige cookies en opslag zijn nodig om de site te laten werken. Daar hoeven we 
 - **Je winkelwagen**: zodat je producten in je winkelwagen blijven staan als je verder kijkt of later terugkomt.
 - **Early access**: als je als Club-lid de early-access-link van een drop opent, onthoudt een cookie dat je de drop {{vroegeToegangUren}} uur eerder mag zien.
 - **Preview**: alleen voor het team van Sparkela, om de shop te bekijken voordat hij open is.
-- **Je keuzes op deze site**: of je je al hebt aangemeld en wanneer je de knop ‘Kies je spark’ zag, zodat die niet steeds terugkomt, en je keuze voor statistiekcookies.
+- **Je keuzes op deze site**: of je je al hebt aangemeld en wanneer je de knop “Kies je spark” zag, zodat die niet steeds terugkomt, en je keuze voor statistiekcookies.
 
 ## Statistieken: alleen met je toestemming
 

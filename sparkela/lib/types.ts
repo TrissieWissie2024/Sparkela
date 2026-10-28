@@ -192,7 +192,8 @@ export interface CollectionDefinition {
   seo: { title: string; description: string };
   rule: CollectionRule;
   bannerImage: AssetKey | null;
-  stylingTile: { afterIndex: number; title: string; text: string; image: AssetKey; href: string } | null;
+  /** `eyebrow` names what the tile is (QA round 2: not every tile is a styling tip); default "Stylingtip". */
+  stylingTile: { afterIndex: number; eyebrow?: string; title: string; text: string; image: AssetKey; href: string } | null;
 }
 export interface Collection extends CollectionDefinition { products: Product[] }
 /** What a collection page gets from lib/shop-data.ts getShopCollection(). */

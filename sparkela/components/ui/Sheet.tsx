@@ -208,15 +208,19 @@ export function Sheet({
               background,
             )}
           >
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <Dialog.Title className={cn(hideTitle ? "sr-only" : "kop-3 truncate")}>{title}</Dialog.Title>
-              {headerExtra}
+            {/* A top sheet is as wide as the page: title and close button line up with its centred 44rem column
+                (the search form), not with the screen's corners (QA round 2). */}
+            <div className={cn("flex min-w-0 flex-1 items-center gap-3", isTop && "mx-auto w-full max-w-[44rem]")}>
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <Dialog.Title className={cn(hideTitle ? "sr-only" : "kop-3 truncate")}>{title}</Dialog.Title>
+                {headerExtra}
+              </div>
+              <Dialog.Close asChild>
+                <Button variant="ghost" size="sm" iconOnly aria-label={closeLabel} className="-mr-2.5">
+                  <X aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />
+                </Button>
+              </Dialog.Close>
             </div>
-            <Dialog.Close asChild>
-              <Button variant="ghost" size="sm" iconOnly aria-label={closeLabel} className="-mr-2.5">
-                <X aria-hidden="true" className="size-[22px]" strokeWidth={1.5} />
-              </Button>
-            </Dialog.Close>
           </div>
 
           {description ? (

@@ -547,6 +547,27 @@ export function searchProducts<T extends Searchable>(items: T[], query: string):
   return scored.sort((a, b) => a.score - b.score || a.item.featuredRank - b.item.featuredRank).map((entry) => entry.item);
 }
 
+/** Shortest query word that matches a keyword it is the start of ("verz" finds "verzenden"). */
+const PAGE_PREFIX_MIN = 4;
+
+/**
+ * The pages whose keywords match the query (QA round 2; sharedCopy.searchPages): a query word of at least 3 letters
+ * matches a keyword that it starts with ("retourneren" → "retour"), or, from PAGE_PREFIX_MIN letters, a keyword
+ * that starts with it ("cade" → "cadeau"). In the order given; an empty query finds nothing.
+ */
+export function searchPages<T extends { keywords: string }>(pages: readonly T[], query: string): T[] {
+  const words = normalizeSearchText(query.slice(0, MAX_QUERY_LENGTH))
+    .split(" ")
+    .filter((word) => word.length >= 3);
+  if (words.length === 0) return [];
+  return pages.filter((page) => {
+    const keywords = normalizeSearchText(page.keywords).split(" ");
+    return words.some((word) =>
+      keywords.some((keyword) => word.startsWith(keyword) || (word.length >= PAGE_PREFIX_MIN && keyword.startsWith(word))),
+    );
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /* Home                                                                        */
 /* -------------------------------------------------------------------------- */

@@ -27,7 +27,7 @@ test("the withdrawal form validates and falls back to email without mail keys", 
   const name = form.getByRole("textbox", { name: "Je naam" });
   const order = form.getByRole("textbox", { name: "Bestelnummer" });
   const email = form.getByRole("textbox", { name: "E-mailadres voor de bevestiging" });
-  const products = form.getByRole("textbox", { name: "Welke producten? (optioneel)" });
+  const products = form.getByRole("textbox", { name: "Welke producten?" });
   const submit = page.getByRole("button", { name: "Herroeping bevestigen" });
   await expect(submit).toHaveCount(1);
 

@@ -64,7 +64,7 @@ Spreken we samen iets anders af, dan geldt die afspraak. Zijn er naast deze voor
 
 - Je hebt {{retourDagen}} dagen bedenktijd. In die tijd kun je de koop zonder reden herroepen.
 - De bedenktijd begint op de dag nadat je het product hebt ontvangen. Krijg je één bestelling in meer pakketjes, dan begint hij op de dag nadat je het laatste pakketje hebt ontvangen.
-- Herroepen doe je met het formulier op sparkela.nl/herroepen. Je vindt de link "{{herroepLink}}" onderaan elke pagina. Je krijgt direct een ontvangstbevestiging per e-mail. Je mag ook het modelformulier voor herroeping gebruiken of ons een duidelijke e-mail sturen op {{email}}.
+- Herroepen doe je met het formulier op sparkela.nl/herroepen. Je vindt de link “{{herroepLink}}” onderaan elke pagina. Je krijgt direct een ontvangstbevestiging per e-mail. Je mag ook het modelformulier voor herroeping gebruiken of ons een duidelijke e-mail sturen op {{email}}.
 - Tijdens de bedenktijd ga je zorgvuldig met het product om. Je mag het bekijken en passen zoals je dat in een winkel zou doen, maar je draagt het niet. Is een product meer gebruikt dan nodig was om het te bekijken, dan mogen we de waardevermindering van het terug te betalen bedrag aftrekken.
 - Stuur het product binnen 14 dagen nadat je hebt herroepen terug, goed verpakt en met alles wat erbij hoorde. Het retouradres mailen we je na je herroeping.
 - [Kiezen en laten controleren: de kosten van het terugsturen zijn voor jou, of Sparkela betaalt ze.]

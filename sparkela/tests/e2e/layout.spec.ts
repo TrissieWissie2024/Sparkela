@@ -144,7 +144,14 @@ async function layoutShift(page: Page): Promise<{ total: number; shifts: Array<{
 }
 
 // The confirmation page in both first states: without a token (the new sign-up) and with one (the button).
-const CLS_ROUTES = [...SHOP_ROUTES, "/nieuwsbrief/bevestigen", "/nieuwsbrief/bevestigen?t=voorbeeld"];
+// A search deep link with results and without (QA round 2: the footer jumped out of view when the results came in).
+const CLS_ROUTES = [
+  ...SHOP_ROUTES,
+  "/nieuwsbrief/bevestigen",
+  "/nieuwsbrief/bevestigen?t=voorbeeld",
+  "/zoeken?q=goud",
+  "/zoeken?q=xyzzy",
+];
 
 test.describe("no layout shift", () => {
   for (const path of CLS_ROUTES) {
@@ -194,7 +201,11 @@ test.describe("no layout shift when the fonts arrive late", () => {
     ["/products/holiday-ster-oorbellen", 200],
     ["/products/jet-vonk-oorbellen", 200],
     ["/collections/oorbellen", 200],
+    // Two-column cards whose spec line wrapped only in Inter (QA round 2: narrow cards put each part on its own line).
+    ["/collections/kettingen", 200],
     ["/sparkela-club", 200],
+    // The confirm page's own H1, which took one line in Unbounded and two in the fallback (QA round 2).
+    ["/nieuwsbrief/bevestigen?t=voorbeeld", 200],
     ["/bestaat-niet", 404],
   ];
 
@@ -227,9 +238,11 @@ test("the phone header shows menu, search, logo, account and the bag side by sid
   const account = banner.getByRole("link", { name: "Account" });
   await expect(cartButton(page)).toHaveText("Tas (0)");
 
-  // At 390 px all five; below the xs breakpoint the account icon steps aside so the logo keeps its size.
+  // At 380 to 400 px all five; below the xs breakpoint the account icon steps aside so the logo keeps its size.
   for (const [width, parts] of [
+    [380, [menu, search, logo, account, cartButton(page)]],
     [390, [menu, search, logo, account, cartButton(page)]],
+    [399, [menu, search, logo, account, cartButton(page)]],
     [320, [menu, search, logo, cartButton(page)]],
   ] as const) {
     await page.setViewportSize({ width, height: 844 });
@@ -242,11 +255,11 @@ test("the phone header shows menu, search, logo, account and the bag side by sid
       expect(box.x + box.width, `${width} px: right edge`).toBeLessThanOrEqual(width);
       boxes.push(box);
     }
-    // Side by side, left to right. The logo link carries the logo's clear space, so neighbouring 44 px targets may
-    // touch it by a pixel or two; anything more is a real overlap.
+    // Side by side, left to right, without sharing a pixel: the logo link is only as wide as the letters (QA round 2,
+    // the logo's clear space is a margin on the logo itself).
     for (let i = 1; i < boxes.length; i += 1) {
       const gap = boxes[i].x - (boxes[i - 1].x + boxes[i - 1].width);
-      expect(gap, `${width} px: parts ${i - 1} and ${i}`).toBeGreaterThanOrEqual(-2);
+      expect(gap, `${width} px: parts ${i - 1} and ${i}`).toBeGreaterThanOrEqual(0);
     }
   }
 });
@@ -313,4 +326,57 @@ test("the footer leaves its Club block out on /sparkela-club, also across client
   await expect(page.getByRole("main").getByRole("form", { name: "Aanmelden voor de Sparkela Club" })).toBeVisible();
   await expect(footerClub(page)).toBeHidden();
   await expect(page.getByRole("form", { name: "Aanmelden voor de Sparkela Club" })).toHaveCount(1);
+});
+
+/* -------------------------------------------------------------------------- */
+/* Product card spec line                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The spec line hides the separator of a part that starts a line by clipping (QA round 1); a part that wraps inside
+ * itself must still show every letter (QA round 2: "zilverkleurig" read "verkleurig" at 390 px). No character of a
+ * visible spec part may start left of, or end right of, its <p>.
+ */
+test("no product card spec line loses letters to its clip", async ({ page }) => {
+  for (const path of ["/collections/alle", "/zoeken?q=staal"]) {
+    await gotoHydrated(page, path);
+    const clipped = await page.evaluate(() => {
+      const found: string[] = [];
+      for (const p of document.querySelectorAll("article p")) {
+        const parts = p.querySelector("[data-spec-parts]");
+        const box = p.getBoundingClientRect();
+        if (!parts || box.width === 0) continue;
+        const walker = document.createTreeWalker(parts, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          const text = node as Text;
+          for (let i = 0; i < text.length; i += 1) {
+            const range = document.createRange();
+            range.setStart(text, i);
+            range.setEnd(text, i + 1);
+            const rect = range.getBoundingClientRect();
+            if (rect.width > 0 && (rect.left < box.left - 0.5 || rect.right > box.right + 0.5)) found.push(text.data);
+          }
+        }
+      }
+      return [...new Set(found)];
+    });
+    expect(clipped, path).toEqual([]);
+  }
+});
+
+/**
+ * A megamenu panel opened by hovering covers the top of the page; Escape closes it without moving the pointer, also
+ * while focus is still on the body (QA round 2, WCAG 1.4.13).
+ */
+test("a hover-opened megamenu panel closes on Escape", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The megamenu is the desktop navigation (from xl).");
+  await gotoHydrated(page, "/");
+  for (const name of ["Shop per moment", "Cadeaus"]) {
+    const trigger = page.getByRole("banner").getByRole("button", { name, exact: true });
+    await trigger.hover();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Escape");
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await page.mouse.move(10, 600);
+  }
 });

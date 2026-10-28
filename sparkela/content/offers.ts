@@ -53,8 +53,8 @@ export const campaigns: Campaign[] = [
     // Exclusive end: the gift runs up to and including 30 November.
     endsAt: "2026-12-01T00:00:00+01:00",
     promo: {
-      message: "We zijn live. Bij elke bestelling krijg je een cadeautje van ons.",
-      short: "Cadeautje bij elke bestelling",
+      message: "We zijn live. Bij elke bestelling met sieraden zit een cadeautje van ons.",
+      short: "Cadeautje bij je sieraden",
       href: "/collections/nieuw",
       linkLabel: "Shop nieuw",
     },

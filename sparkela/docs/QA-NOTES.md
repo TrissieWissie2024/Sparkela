@@ -198,3 +198,64 @@ Bijgewerkte of nieuwe e2e-checks: de koopknop heet "In je tas" (`mainAddToCart`)
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
 
+
+## 3. QA-ronde 2: fixer (28 oktober 2026)
+
+Zeven lenzen (design mobiel en desktop, toegankelijkheid, performance, copy en compliance, functioneel, volledigheid) leverden 54 bevestigde bevindingen; de specregel kwam vier keer terug (in drie lenzen plus de late-font-meting). Alle zijn opgepakt; wat bewust anders of niet is gedaan staat in beslissing 220. Alles is gecontroleerd op `npm run build:test` en `npm run start:test` (testklok 27 november 2026) met eigen Playwright-scripts op 390 × 844 en 1440 × 900, en waar de bevinding daarom vroeg op 320, 360, 380 tot 400, 430, 768, 1024, 1280 × 800, 1366 × 768 en 1920 × 1080. De beslissingen staan in `docs/DECISIONS.md` 218 tot 220; plan §2, §4.6, §5.6, §7.3, §13, §14.3, §14.5, §14.7, §14.8, §14.10, §14.18, §17.1, §17.2 en §19.2 en `docs/ASSETS.md` §2 en §4 zijn bijgewerkt.
+
+### 3.1 Wat er is opgelost (hoog en middel eerst)
+
+| Bevinding | Oplossing | Controle |
+| --- | --- | --- |
+| Specregel knipte de tweede regel van een afgebroken deel af ("goud- of / verkleurig", "euraccent", "helpje", "rguld staal") | Hangende inspringing per deel (de punt `indent-0`); onder 12rem staat elk deel op een eigen regel | per teken gemeten op `/`, `/collections/alle`, `/collections/kettingen`, `/zoeken?q=staal` en de 404 op 320, 360, 390, 430, 768, 1024, 1280 en 1440: 0 afgeknipte tekens; nieuwe e2e-check |
+| QuickAdd-lijst bleef open boven "Kies" en de titel na Shift+Tab; een korte lijst liet de titel uitpiepen | Sluit bij focus buiten en bij een tik of klik erbuiten; ligt tegen de kaart en bedekt het hele tekstvak, "In tas" onderaan | Lola en Nina op 390 en 1440: Shift+Tab → focus op "Kies", lijst dicht; klik op label of legend → blijft open; klik buiten → dicht; nieuwe e2e-check |
+| Zoeken: na Terug was het veld leeg (`/zoeken?q=armband` met de lege staat) | Verborgen route negeert URL-wijzigingen buiten `/zoeken`, leest de echte URL bij zichtbaar worden | typen → resultaat → Terug, ook na verfijnen en Enter: veld en 6 resultaten terug op 390 en 1440; nieuwe e2e-spec `search.spec.ts` |
+| Zoeken vond geen cadeaukaart, stack of retour | Cadeaukaart in `searchable`, paginachips via `searchPages` | "cadeaukaart", "cadeau", "giftcard" → de kaart plus chip Cadeaukaarten; "stack" → chip Stacks van Linde; "retour", "verzending" → chip Verzenden en retourneren |
+| Footerwoordmerk ingesprongen (letters op 52 px, rest op 20 px) | `Logo trimInline` | 390: woordmerk 20 tot 370 px, tagline en Club-kop op 20 px; 1440: woordmerk vanaf 132 px; geen horizontale scroll |
+| Intro van de ringmaatgids stond vast boven de scrollende tabel | `descriptionInBody` standaard; vervaging onderaan zolang de body overloopt | 390: intro scrolt mee, haarlijn onder de titel |
+| Favorieten op desktop: strookje van 16 px van de vijfde kaart, midden in de lucht afgesneden | Vanaf `md` 0,5rem uitloop (minder dan de gap) | 1280, 1440 en 1920: vier kaarten vullen de container, de vijfde begint buiten de rij |
+| Focus verdween onder de sticky filterrij | `scroll-padding-top` telt de rij mee onder `lg` | omgekeerde Tab-wandeling over `/collections/oorbellen` en `/collections/alle` op 390 met de pill zichtbaar: geen enkele stop bedekt |
+| Tegel "Niet gevonden wat je zocht?" scrolde op 320 px zijwaarts, tikvlakken overlapten | Tekstlinks die afbreken, elk 44 px | 320 en 360: 0 px overloop, links 48 en 44 px hoog binnen de tegel |
+| Megamenu dat met hover openging, sloot niet op Esc | Document-luisteraar voor Esc zolang het paneel open is | "Shop per moment" en "Cadeaus": Esc → dicht, focus blijft op de body; met toetsenbord geopend: focus terug op de knop; nieuwe e2e-check |
+| Zoek-deeplink: footer sprong uit beeld (CLS 0,19) | Hoogte gereserveerd met een zoekterm (fallback en view) | `?q=goud`, `?q=hoops`, `?q=xyzzy` op 390, 768, 1440 en 1920: CLS 0; beide in `CLS_ROUTES` |
+| Placeholders lazen de alt-tekst van een foto die er niet is | Naam = zichtbare tekst ("FOTO: Sparkela Club") | `/sparkela-club` en de home: alle namen beginnen met "FOTO:"; unit-test |
+| ASSETS.md beloofde "niets afgesneden" | §2 aangepast, tweede plekken in "Waar", nieuwe §4.7 met uitsneden en veilige zone; `collecties.<handle>` 16:9 | docs |
+| "Vakantieproof" in het megamenu | "Klaar voor de vakantie"; content-guard weigert `-proof` en "bestand tegen" | content-guard |
+
+De lage bevindingen (eyebrow en kruimelpad op stacks, cadeaukaarten en Spark Finder, countdown links in zijn doos, "(optioneel)" zoals op contact, één soort aanhalingstekens, tikvlakken van de mailadressen, stylingtegel na een filter, onderschriften van de fotostrook op 1024, betaalbadges boven de sticky totalen, Club-kop per zin, de popup op laptophoogte, focus na "Verwijderen" van een code, de cadeaukaarten-FAQ, de zoekdialoog in zijn kolom, stille tas na de demo-bestelling, de drawer na "In je tas" als transition, de bevestigings-H1, `sizes` van een grid met vier kolommen, de checkout-intro, de eyebrows van stylingtegels, de feestdagenzin, het lanceringscadeau, de upsell bij alleen cadeaukaarten, de copy-polish, één melding bij de voorraadgrens, de uitleg onder de coderij in twee gevallen, het PDP-vinkje cadeauverpakking, uitverkocht zonder verzendbelofte en de logolink in de header) staan per punt in beslissing 218(n) en 219.
+
+### 3.2 Metingen
+
+| Meting | Vóór | Na |
+| --- | --- | --- |
+| Kaarten met afgeknipte specletters op `/collections/alle`, 390 px | 8 van 24 | 0 |
+| H1 van `/stacks`, `/cadeaukaarten`, `/spark-finder` (390 / 1440) | 180 / 196 tot 200 px | 212 / 228 px, gelijk aan contact en de Club |
+| Gat tussen timer-icoon en tijd in de promobalk (390) | 19 px | gelijk aan de dropbanner (tekst links in zijn doos) |
+| Ruimte tussen betaalbadges en sticky totalen in de drawer | 0 px | 20 px (390 en 1440) |
+| Popup omgedraaid met beide foutregels, 1366 × 768 en 1280 × 800 | "Nee, bedankt" afgesneden | alles in beeld zonder scrollen (body 654 px in 654 px) |
+| "In je tas" op de Lola-PDP, Event Timing bij 4× CPU | 312 tot 496 ms | 88 tot 104 ms (390), 96 tot 136 ms (1440) |
+| CLS met late fonts (woff2 1,5 s vertraagd) | `/collections/kettingen` 390: 0,0025; `/nieuwsbrief/bevestigen?t=` 1440: 0,0040 tot 0,0079 | 0 op kettingen, subtiel en alle (360 tot 1024); bevestigen hooguit 0,0001; `/collections/alle` 1440: 0,00012 |
+| Logolink tegen de accountknop (380 tot 400 px) | 1,7 tot 6,7 px overlap | 6,9 tot 16,9 px vrij; e2e op 380, 390 en 399 px |
+| Ritme van gefilterde collecties (1440: `?vibe=retro`, `?type=ringen`) | rijen 4 + 2, 2 van 4 | elke rij vol (tegel sluit af), ook op 1024 en 390 |
+
+### 3.3 Toegankelijkheid
+
+- axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) op 390 en 1440: `/zoeken?q=stack`, `/zoeken?q=cadeaukaart`, de uitverkochte Isa-PDP, `/stacks`, `/spark-finder`, `/herroepen`, `/cadeaukaarten`, `/collections/alle?vibe=retro` en een open QuickAdd-lijst: geen overtredingen. De volledige a11y-spec is groen.
+- Na de demo-bestelling hoort een schermlezer alleen "Je demo-bestelling is geplaatst"; na "Verwijderen" van een code "Code WELKOM10 verwijderd." met de focus op het codeveld (checkout) of "Afrekenen" (drawer).
+- 0 px horizontale scroll en geen consolefouten op de home, `/collections/oorbellen`, de Lola-PDP, `/stacks`, `/cadeaukaarten`, `/spark-finder`, `/herroepen`, `/veelgestelde-vragen`, `/checkout` en `/zoeken?q=hoops` (390 en 1440).
+
+### 3.4 Mechanische controles (eindstand)
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 80 bestanden geslaagd, 1 overgeslagen; 1438 tests geslaagd, 4 overgeslagen |
+| `npm run build:test` | groen, geen waarschuwingen; `ƒ` alleen de zes `/api/*`-routes en de proxy |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 363 geslaagd, 23 overgeslagen, 0 mislukt, 4,2 minuten |
+
+Nieuwe of bijgewerkte e2e-checks: `search.spec.ts` (Terug na een resultaat; cadeaukaart en paginachips), QuickAdd sluit bij focus buiten en klik buiten, geen afgeknipte specletters, megamenu sluit op Esc na hover, de telefoonheader op 380, 390 en 399 px zonder gedeelde pixel, `/collections/kettingen` en `/nieuwsbrief/bevestigen?t=voorbeeld` met late fonts, `/zoeken?q=goud` en `?q=xyzzy` in de CLS-routes, het promobericht en de label "Welke producten?". Nieuwe unit-tests in `components/qa-round2.test.tsx`: zoeken (cadeaukaart, `searchPages`), `logoLayout(…, { trimInline })`, de naam van een placeholder, de hangende specregel, `GRID_CARD_SIZES` en `codeRowNote`; bijgewerkt: footer (Club-kop per zin), countdown, cadeaukaart-FAQ, gefilterde collectie met tegel, de content-guard (aanhalingstekens, `-proof`).
+
+### 3.5 Servers
+
+Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.

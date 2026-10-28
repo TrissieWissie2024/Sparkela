@@ -31,15 +31,25 @@ type StylingTileContent = NonNullable<CollectionDefinition["stylingTile"]>;
  * leaves empty. Each one points somewhere that fits the collection: the Spark Finder, the stacks (only where the pieces
  * count for the stack discount: earrings and bracelets), the ring size, the Club or the gift cards.
  */
-function tile(title: string, text: string, image: StylingTileContent["image"], href: string): StylingTileContent {
-  return { afterIndex: STYLING_TILE_AFTER, title, text, image, href };
+function tile(eyebrow: string, title: string, text: string, image: StylingTileContent["image"], href: string): StylingTileContent {
+  return { afterIndex: STYLING_TILE_AFTER, eyebrow, title, text, image, href };
 }
 
+/** Eyebrows of the tiles (QA round 2): what the tile is, so a Club or gift card pointer never reads as a styling tip. */
+const EYEBROW = {
+  styling: "Stylingtip",
+  finder: "Spark Finder",
+  club: "Sparkela Club",
+  gifts: "Cadeautip",
+  size: "Goed om te weten",
+} as const;
+
 const finderTile = (title: string) =>
-  tile(title, "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.", "linde.portret", "/spark-finder");
+  tile(EYEBROW.finder, title, "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.", "linde.portret", "/spark-finder");
 
 const stacksTile = (image: StylingTileContent["image"]) =>
   tile(
+    EYEBROW.styling,
     "Maak er een stack van",
     `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits} stuks krijg je ${stackDiscount.percent}% stack-korting.`,
     image,
@@ -47,8 +57,9 @@ const stacksTile = (image: StylingTileContent["image"]) =>
   );
 
 const giftCardTile = tile(
+  EYEBROW.gifts,
   "Liever zelf laten kiezen?",
-  "Geef een cadeaukaart. Dan kiest de ontvanger zelf een spark, en de kaart staat meteen in de mail.",
+  "Geef een cadeaukaart. Dan kiest de ontvanger zelf een spark. Je krijgt de kaart direct in je mail.",
   "linde.portret",
   "/cadeaukaarten",
 );
@@ -66,6 +77,7 @@ export const collections: CollectionDefinition[] = [
     bannerImage: null,
     stylingTile: {
       afterIndex: STYLING_TILE_AFTER,
+      eyebrow: EYEBROW.finder,
       title: "Twijfel je nog?",
       text: "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.",
       image: "linde.portret",
@@ -143,6 +155,7 @@ export const collections: CollectionDefinition[] = [
     rule: { kind: "type", type: "ringen" },
     bannerImage: null,
     stylingTile: tile(
+      EYEBROW.size,
       "Welke ringmaat heb je?",
       "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
       "linde.portret",
@@ -172,6 +185,7 @@ export const collections: CollectionDefinition[] = [
     rule: { kind: "drop" },
     bannerImage: null,
     stylingTile: tile(
+      EYEBROW.club,
       "Als eerste bij de volgende drop",
       `In de Sparkela Club hoor je het eerst wanneer er een drop komt, en je shopt ${EARLY_ACCESS_HOURS} uur eerder.`,
       "club.hero",

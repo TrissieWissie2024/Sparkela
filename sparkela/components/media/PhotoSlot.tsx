@@ -12,8 +12,9 @@ import { sharedCopy } from "@/content/copy/shared";
  *   always with `sizes`, and `preload` for the LCP image (not `priority`, Next 16). The global loader
  *   (lib/image-loader.ts) serves the pre-sized file.
  * - Otherwise a tidy placeholder in the same ratio: a flat surface with "FOTO: {label}" in Inter 12 px in the middle.
- *   No gradient, no icon. Screen readers get the same name the photo would have (role="img"); a decorative slot
- *   (`alt=""`) is hidden.
+ *   No gradient, no icon. Screen readers get what is on screen, "FOTO: {label}" (role="img"), never the alt text of
+ *   the photo that is not there yet (QA round 2, WCAG 1.1.1; revises decision 172); a decorative slot (`alt=""`) is
+ *   hidden. The asset's alt text is only used on the supplied image.
  *
  * `tone` is the placeholder surface: "vlak" (default, also on white cards), "kaart" (white with a hairline, on vlak
  * sections) or "donker" (on donker sections). Port of CORVANE components/media/PhotoSlot.tsx with the brief's plain
@@ -87,11 +88,11 @@ export function PhotoSlot({
     );
   }
 
-  const name = alt ?? known?.alt ?? label;
+  const text = sharedCopy.ui.photoPlaceholder(label);
   return (
     <SlotPlaceholder
-      text={sharedCopy.ui.photoPlaceholder(label)}
-      name={name}
+      text={text}
+      name={alt === "" ? "" : text}
       tone={tone}
       className={cn(frame, className)}
     />

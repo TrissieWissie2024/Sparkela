@@ -228,6 +228,9 @@ export function EmailCapture() {
         anchor="top"
         descriptionInBody
         onCloseAutoFocus={handleCloseAutoFocus}
+        // On a short screen (a laptop, below 820 px high) a tighter rhythm, so the turned card, the form with both
+        // error lines and "Nee, bedankt" fit without scrolling (QA round 2).
+        bodyClassName="[@media(max-height:820px)]:pb-4! [@media(max-height:820px)]:[&>p:first-child]:mb-3!"
         title={onCode ? popup.reward.title : copy.title}
         description={
           onCode ? undefined : (
@@ -251,9 +254,11 @@ export function EmailCapture() {
               {chosen === null ? popup.chooseHint : popup.chosenLine}
             </p>
 
-            {chosen !== null ? <SubscribeForm source="popup" onSuccess={handleSignedUp} className="mt-4" /> : null}
+            {chosen !== null ? (
+              <SubscribeForm source="popup" onSuccess={handleSignedUp} className="mt-4 [@media(max-height:820px)]:mt-3" />
+            ) : null}
 
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-center [@media(max-height:820px)]:mt-1">
               <Button variant="link" size="md" onClick={close}>
                 {popup.dismiss}
               </Button>

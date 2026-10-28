@@ -40,9 +40,10 @@ import { QuickAdd } from "./QuickAdd";
  * - The card is a size container. Narrower than 14.5rem (two columns on a phone, three on a tablet) the price sits
  *   above a full-width QuickAdd, so every card in a row ends the same way; wider cards put them side by side. The
  *   card has no fixed height and clips nothing. QuickAdd's choice list opens as an overlay inside the card (QA round
- *   1, decision 216a): anchored to the bottom of the card's text area, as wide as it (100cqw of the card minus its
- *   padding), growing upward over the photo. So the card never changes height, its row neighbours never stretch,
- *   and a scroll row (overflow-x) never clips it. It needs a width from its parent (grid cell or carousel slide).
+ *   1, decision 216a): anchored to the bottom of the card's text area, as wide as it, covering at least the whole
+ *   text area and growing upward over the photo (QA round 2). So the card never changes height, its row neighbours
+ *   never stretch, and a scroll row (overflow-x) never clips it. It needs a width from its parent (grid cell or
+ *   carousel slide).
  */
 
 export interface ProductCardProps {
@@ -90,11 +91,14 @@ const SIDE_PADDING = "px-3 @min-[15rem]:px-4";
 const QUICK_ADD_CLASSES = "ml-auto @max-[14.5rem]:ml-0 @max-[14.5rem]:w-full @max-[14.5rem]:[&>button]:w-full";
 
 /**
- * The choice list as an overlay (decision 216a): QuickAdd's wrapper ends at the right and bottom edge of the card's
- * text area, so the panel is anchored there and is as wide as the text area (the card's width minus the side padding
- * of SIDE_PADDING), growing upward over the price, the name and the photo. z-20 keeps it above the vibe chip.
+ * The choice list as an overlay (decision 216a): QuickAdd places it against the card (panelInCard), inset by the side
+ * padding and anchored to the bottom of the card's text area, growing upward. QA round 2: it covers at least the whole
+ * text area, up to the photo's lower edge (the photo is 4:5 of the card's width, 125cqw), so a short list (two
+ * colours) never leaves the top of the title peeking out above it; its "In tas" sits at the bottom, where the card's
+ * own button was. z-20 keeps it above the vibe chip.
  */
-const QUICK_ADD_PANEL = "absolute right-0 bottom-0 z-20 w-[calc(100cqw-1.5rem)] @min-[15rem]:w-[calc(100cqw-2rem)]";
+const QUICK_ADD_PANEL =
+  "absolute inset-x-3 bottom-3 z-20 min-h-[calc(100%-125cqw-0.75rem)] @min-[15rem]:inset-x-4 @min-[15rem]:bottom-4 @min-[15rem]:min-h-[calc(100%-125cqw-1rem)]";
 
 export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SIZES, preload = false, className }: ProductCardProps) {
   const Heading = `h${headingLevel}` as const;
@@ -138,7 +142,7 @@ export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SI
           )}
         >
           <Price display={display} from={from} size="md" />
-          <QuickAdd product={product} size="sm" className={QUICK_ADD_CLASSES} panelClassName={QUICK_ADD_PANEL} />
+          <QuickAdd product={product} size="sm" className={QUICK_ADD_CLASSES} panelClassName={QUICK_ADD_PANEL} panelInCard />
         </div>
       </div>
     </article>
@@ -151,18 +155,23 @@ export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SI
 
 /**
  * The spec line ("Verguld staal · 45 mm") as parts with a separator that never dangles (QA round 1): every part but
- * the first has a "·" before it in the gap, and the list is shifted left by one gap inside a clipping box, so the
- * separator of whichever part starts a line falls outside the box. No line ends or starts with a dot. Screen readers
- * get the text as written (the visual parts are aria-hidden).
+ * the first has a "·" before it, and the list is shifted left by the dot's width inside a clipping box, so the
+ * separator of whichever part starts a line falls outside the box. No line ends or starts with a dot.
+ *
+ * QA round 2: each part has a hanging indent (padding 1.1em, text-indent -1.1em; the dot itself resets the indent), so
+ * a part that wraps inside itself ("Staal, goud- of / zilverkleurig") continues flush with the box and never loses its
+ * first letters to the clip. On a narrow card (below 12rem: two columns on a phone) every part starts its own line, so
+ * where the line breaks never depends on the font (no shift when Inter arrives after the first paint).
+ * Screen readers get the text as written (the visual parts are aria-hidden).
  */
 function SpecLine({ text }: { text: string }) {
   const parts = text.split(/\s*·\s*/u).filter(Boolean);
   return (
     <p className="tekst-klein mt-1 overflow-hidden text-tekst-2">
       <span className="sr-only">{text}</span>
-      <span aria-hidden="true" className="-ml-[1.1em] flex flex-wrap">
+      <span aria-hidden="true" data-spec-parts="" className="-ml-[1.1em] flex flex-wrap @max-[12rem]:flex-col">
         {parts.map((part, index) => (
-          <span key={index} className="min-w-0 before:inline-block before:w-[1.1em] before:text-center before:content-['·']">
+          <span key={index} className={SPEC_PART}>
             {part}
           </span>
         ))}
@@ -170,6 +179,10 @@ function SpecLine({ text }: { text: string }) {
     </p>
   );
 }
+
+/** One part of the spec line: a hanging indent, with the dot in the first 1.1em (see SpecLine). */
+const SPEC_PART =
+  "min-w-0 pl-[1.1em] -indent-[1.1em] before:inline-block before:w-[1.1em] before:indent-0 before:text-center before:content-['·']";
 
 /* -------------------------------------------------------------------------- */
 /* Media                                                                       */

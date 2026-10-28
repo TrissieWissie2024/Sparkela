@@ -52,5 +52,6 @@ export function VideoSlot({ assetKey, label, tone = "vlak", className }: VideoSl
     );
   }
 
-  return <SlotPlaceholder text={sharedCopy.ui.videoPlaceholder(label)} name={label} tone={tone} className={cn(frame, className)} />;
+  const text = sharedCopy.ui.videoPlaceholder(label);
+  return <SlotPlaceholder text={text} name={text} tone={tone} className={cn(frame, className)} />;
 }

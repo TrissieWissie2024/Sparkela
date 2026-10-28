@@ -98,7 +98,7 @@ export function placedOrderFrom(cart: Cart, orderRef: string, email: string): Pl
 
 /** The cart actions emptyCart() needs (a subset of useCart()). */
 export interface CartClearer {
-  removeLine(lineId: string): Promise<CartResult>;
+  removeLine(lineId: string, options?: { announce?: boolean }): Promise<CartResult>;
   removeDiscountCode(code: string): Promise<CartResult>;
   setGiftWrap(enabled: boolean): Promise<CartResult>;
   setNote(note: string): Promise<CartResult>;
@@ -117,7 +117,8 @@ export async function emptyCart(cart: Cart, actions: CartClearer): Promise<boole
   if (cart.giftWrap.selected) await run(() => actions.setGiftWrap(false));
   for (const state of cart.discountCodes) await run(() => actions.removeDiscountCode(state.code));
   if (cart.note) await run(() => actions.setNote(""));
-  for (const line of cart.lines) await run(() => actions.removeLine(line.id));
+  // Silently: right after "Je demo-bestelling is geplaatst" a screen reader must not hear "Verwijderd: …" per line.
+  for (const line of cart.lines) await run(() => actions.removeLine(line.id, { announce: false }));
   return ok;
 }
 

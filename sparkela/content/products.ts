@@ -620,7 +620,7 @@ export const products: LocalProductInput[] = [
   {
     handle: giftCards.productHandle,
     title: "Cadeaukaart",
-    description: "Twijfel je over een cadeau? Met een cadeaukaart kiest de ander zelf. Hij komt direct in de mail.",
+    description: "Twijfel je over een cadeau? Met een cadeaukaart kiest de ander zelf. Hij komt direct in je mail.",
     tags: ["type:cadeaukaart"],
     // Digital: no GPSR metafields; the product page shows pdpCopy.gpsr.digital (decision 116).
     metafields: { nikkelvrij: null, laagstePrijs30d: null, bestseller: false, lindesFavoriet: false },

@@ -16,7 +16,7 @@ TODO: laten controleren
 
 ## Feestdagen
 
-Op deze dagen versturen we niet. Bestel je op of vlak voor zo'n dag, dan gaat je bestelling de eerstvolgende werkdag de deur uit.
+Op deze dagen versturen we niet. Bestel je op zo'n dag, of de werkdag ervoor na {{cutoff}} uur, dan gaat je bestelling de eerstvolgende werkdag de deur uit.
 
 <!-- slot -->
 
@@ -30,7 +30,7 @@ Je hebt {{retourDagen}} dagen bedenktijd. In die tijd mag je je bestelling, of e
 
 ## Zo herroep en retourneer je
 
-1. Vul het formulier in op [sparkela.nl/herroepen](/herroepen). Je vindt de link "{{herroepLink}}" onderaan elke pagina. Je krijgt direct een ontvangstbevestiging per mail.
+1. Vul het formulier in op [sparkela.nl/herroepen](/herroepen). Je vindt de link “{{herroepLink}}” onderaan elke pagina. Je krijgt direct een ontvangstbevestiging per mail.
 2. We mailen je het adres waar je de producten naartoe stuurt.
 3. Stuur de producten binnen 14 dagen nadat je hebt herroepen terug, goed verpakt en met alles wat erbij hoorde. Bewaar het verzendbewijs.
 4. [Kiezen en laten controleren: de kosten van het terugsturen zijn voor jou, of Sparkela betaalt ze.]

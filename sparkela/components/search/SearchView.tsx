@@ -1,14 +1,16 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type FormEvent, type RefObject } from "react";
 
-import { searchProducts } from "@/lib/catalog";
+import { searchPages, searchProducts } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { collectionPath } from "@/lib/paths";
 import { collections } from "@/content/collections";
 import { collectionCopy } from "@/content/copy/collection";
+import { sharedCopy } from "@/content/copy/shared";
 import { useCatalog } from "@/components/catalog/CatalogProvider";
 import { clearQueryMark, SEARCH_QUERY_ATTRIBUTE } from "@/components/collection/collectionQueryScript";
 import { stylingTilePlacement } from "@/components/collection/filterParams";
@@ -27,7 +29,19 @@ import { Chip } from "@/components/ui/Chip";
  * with history.replaceState 400 ms after typing stops and at once on Enter, without a server round trip. A new `q`
  * from elsewhere (the header's search dialog navigates here) replaces the field; the echo of our own write does not,
  * so fast typing is never overwritten. The number of results is announced in a polite live region.
+ *
+ * Back from a result (QA round 2): Cache Components keep this route alive (hidden) while a product page shows, and
+ * useSearchParams then follows the product page's URL. The field ignores URL changes while the pathname is not
+ * /zoeken, and whenever the route is shown again (its effects run again) it re-reads the real URL, so Back always
+ * brings the query and the results back. While there is a query, the view reserves at least a viewport of height, as
+ * the fallback does on a deep link, so the footer never jumps out of view when the results arrive (CLS 0).
  */
+
+/** The search page's path (the GET form's target and the page this view lives on). */
+export const SEARCH_PATH = "/zoeken";
+
+/** Reserve while there is a query (here and on the fallback's wrapper): keeps the footer below the fold. */
+export const SEARCH_QUERY_RESERVE = "min-h-[calc(100svh-var(--header-hoogte))]";
 
 /** Delay before the URL follows the field, in ms (a UI timer, not a time boundary). */
 const URL_DELAY_MS = 400;
@@ -37,8 +51,11 @@ const SUGGESTED = collections.filter((collection) => collection.handle !== "limi
 
 export function SearchView() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  // While another route shows (this one hidden by Activity), its search params are not ours.
+  const onSearchPage = pathname === SEARCH_PATH;
   const urlQuery = searchParams?.get("q") ?? "";
-  const { products } = useCatalog();
+  const { searchable } = useCatalog();
   const [query, setQuery] = useState(urlQuery);
   const [seenUrlQuery, setSeenUrlQuery] = useState(urlQuery);
   const [written, setWritten] = useState<string | null>(null);
@@ -49,16 +66,28 @@ export function SearchView() {
   const resultsId = `${id}-results`;
 
   // A new ?q= that we did not write ourselves (a navigation from the search dialog) replaces the field.
-  if (urlQuery !== seenUrlQuery) {
+  if (onSearchPage && urlQuery !== seenUrlQuery) {
     setSeenUrlQuery(urlQuery);
     if (urlQuery !== written && urlQuery !== query.trim()) setQuery(urlQuery);
   }
 
   const deferred = useDeferredValue(query);
   const trimmed = deferred.trim();
-  const results = useMemo(() => searchProducts(products, deferred), [products, deferred]);
+  const results = useMemo(() => searchProducts(searchable, deferred), [searchable, deferred]);
+  const pages = useMemo(() => searchPages(sharedCopy.searchPages, deferred), [deferred]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
+  // Runs on mount and every time the route is shown again (Back from a product): the field follows the real URL.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (window.location.pathname !== SEARCH_PATH) return;
+      const real = new URLSearchParams(window.location.search).get("q") ?? "";
+      setSeenUrlQuery(real);
+      setWritten(real);
+      setQuery((current) => (current.trim() === real.trim() ? current : real));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
   // The real view is on screen: the fallback's pre-paint mark (a deep link with ?q=) is no longer needed.
   useEffect(() => clearQueryMark(SEARCH_QUERY_ATTRIBUTE), []);
 
@@ -90,11 +119,13 @@ export function SearchView() {
   const status = trimmed
     ? results.length > 0
       ? collectionCopy.search.count(results.length)
-      : collectionCopy.search.none(trimmed)
+      : pages.length > 0
+        ? `${collectionCopy.search.noneProducts(trimmed)}. ${collectionCopy.search.pagesCount(pages.length)}.`
+        : collectionCopy.search.none(trimmed)
     : "";
 
   return (
-    <>
+    <div className={cn(trimmed && SEARCH_QUERY_RESERVE)}>
       <SearchForm
         value={query}
         onChange={onChange}
@@ -110,6 +141,7 @@ export function SearchView() {
         {status}
       </p>
 
+      {trimmed && results.length > 0 && pages.length > 0 ? <SearchPageLinks pages={pages} className="mt-8 md:mt-10" /> : null}
       {trimmed ? (
         results.length > 0 ? (
           <section aria-labelledby={resultsId} className="mt-10 md:mt-14">
@@ -131,6 +163,13 @@ export function SearchView() {
               </li>
             </ul>
           </section>
+        ) : pages.length > 0 ? (
+          <div className="mt-10 md:mt-14">
+            <h2 className="kop-3 text-tekst [overflow-wrap:anywhere]">{collectionCopy.search.noneProducts(trimmed)}</h2>
+            <p className="mt-2 max-w-[36rem] text-tekst-2">{collectionCopy.search.noneProductsHint}</p>
+            <SearchPageLinks pages={pages} hideTitle className="mt-5" />
+            <SearchSuggestions className="mt-10" />
+          </div>
         ) : (
           <div className="mt-10 md:mt-14">
             <h2 className="kop-3 text-tekst [overflow-wrap:anywhere]">{collectionCopy.search.none(trimmed)}</h2>
@@ -141,7 +180,7 @@ export function SearchView() {
       ) : (
         <SearchSuggestions className="mt-10 md:mt-14" />
       )}
-    </>
+    </div>
   );
 }
 
@@ -177,7 +216,7 @@ function SearchForm({ value, onChange, onSubmit, onClear, inputRef, describedBy 
   const controlled = value !== undefined;
 
   return (
-    <form role="search" action="/zoeken" method="get" onSubmit={onSubmit} className="max-w-[44rem]">
+    <form role="search" action={SEARCH_PATH} method="get" onSubmit={onSubmit} className="max-w-[44rem]">
       <label htmlFor={inputId} className="tekst-klein block font-semibold text-tekst">
         {copy.label}
       </label>
@@ -223,23 +262,60 @@ function SearchForm({ value, onChange, onSubmit, onClear, inputRef, describedBy 
   );
 }
 
-/** The tile at the end of the results (QA round 1: no ragged last row): the Spark Finder and all jewellery. */
-function SearchMoreTile() {
+/**
+ * The tile at the end of the results (QA round 1: no ragged last row): the Spark Finder and all jewellery. The links
+ * wrap inside a half-width tile (QA round 2: no sideways scroll at 320 px or with extra text spacing) and are each
+ * 44 px tall, without overlapping touch areas.
+ */
+function SearchMoreTile({ className }: { className?: string }) {
   const copy = collectionCopy.search.more;
   return (
-    <div className="flex h-full min-h-[12rem] flex-col justify-center rounded-kaart border border-rand bg-vlak p-4 md:p-6">
+    <div className={cn("flex h-full min-h-[12rem] flex-col justify-center rounded-kaart border border-rand bg-vlak p-4 md:p-6", className)}>
       <p className="kop-4 text-tekst">{copy.title}</p>
       <p className="tekst-klein mt-1.5 text-tekst-2">{copy.text}</p>
-      <ul role="list" className="mt-3 flex flex-col items-start">
+      <ul role="list" className="mt-2 flex flex-col items-start">
         {copy.links.map((link) => (
-          <li key={link.href}>
-            <Button href={link.href} variant="link" size="sm">
+          <li key={link.href} className="max-w-full">
+            <Link
+              href={link.href}
+              className="inline-flex min-h-11 max-w-full items-center py-1 text-sm font-semibold text-link underline decoration-1 underline-offset-4 hover:text-link-hover hover:decoration-2"
+            >
               {link.label}
-            </Button>
+            </Link>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * Pages that match the query (sharedCopy.searchPages, QA round 2), as link chips. `hideTitle`: under "Geen sieraden
+ * voor …" and its hint the visible "Pagina's" would repeat the hint, so it is only read out.
+ */
+function SearchPageLinks({
+  pages,
+  hideTitle = false,
+  className,
+}: {
+  pages: ReadonlyArray<{ label: string; href: string }>;
+  hideTitle?: boolean;
+  className?: string;
+}) {
+  const id = useId();
+  return (
+    <section aria-labelledby={id} className={className}>
+      <h2 id={id} className={hideTitle ? "sr-only" : "label-caps text-tekst-2"}>
+        {sharedCopy.searchPagesTitle}
+      </h2>
+      <ul role="list" className={cn("flex flex-wrap gap-2", !hideTitle && "mt-3")}>
+        {pages.map((page) => (
+          <li key={page.href} className="shrink-0">
+            <Chip href={page.href}>{page.label}</Chip>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

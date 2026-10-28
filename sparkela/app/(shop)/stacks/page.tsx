@@ -5,6 +5,7 @@ import { useId } from "react";
 import { pageMetadata } from "@/lib/seo";
 import { getVisibleStacks } from "@/lib/shop-data";
 import { collectionCopy } from "@/content/copy/collection";
+import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { faq } from "@/content/faq";
 import { home } from "@/content/home";
@@ -45,6 +46,7 @@ function StacksContent({ items }: { items: Awaited<ReturnType<typeof getVisibleS
   return (
     <>
       <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.gifts}
         title={copy.title}
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}

@@ -34,7 +34,7 @@ import {
  * - The cards are rendered on the server and arrive as `cards` (one node per handle). Filtering and sorting reorder
  *   keyed <li>s, so DOM and Tab order follow the visible order and each card keeps its state (an open QuickAdd list).
  * - The optional styling tile sits at stylingTilePlacement() while no filter is active, spanning the cells the last
- *   row would leave empty.
+ *   row would leave empty; with a filter it closes the grid at the end in the same way (QA round 2).
  *
  * useSearchParams needs <Suspense>. The page renders CollectionViewFallback (the same layout, unfiltered, "uitgelicht")
  * as its fallback, so the static HTML holds the whole grid for crawlers and visitors without JavaScript; a deep link
@@ -112,8 +112,14 @@ function CollectionLayout({
 }: CollectionLayoutProps) {
   const visible = applyFilterState(products, state);
   const filtered = hasActiveFilters(state.filters);
+  // Unfiltered: the tile at its place. Filtered (QA round 2): at the end, filling the cells the last row leaves empty
+  // (or a row of its own), so a filtered grid never ends in a ragged row either.
   const tile =
-    stylingTile !== null && stylingTileAfter !== null && !filtered ? stylingTilePlacement(products.length, stylingTileAfter) : null;
+    stylingTile === null || stylingTileAfter === null
+      ? null
+      : filtered
+        ? { ...stylingTilePlacement(visible.length, visible.length), index: visible.length }
+        : stylingTilePlacement(products.length, stylingTileAfter);
   const clear = () => onFiltersChange?.(emptyFilters());
 
   // One flat list of keyed items, so a reorder moves the existing <li>s (and the tile) instead of remounting them.

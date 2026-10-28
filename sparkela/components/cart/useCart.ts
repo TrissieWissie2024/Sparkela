@@ -38,7 +38,8 @@ export interface CartContextValue {
   addToCart(lines: CartLineInput[], options?: AddToCartOptions): Promise<CartResult>;
   /** 0 or less removes the line. */
   updateQuantity(lineId: string, quantity: number): Promise<CartResult>;
-  removeLine(lineId: string): Promise<CartResult>;
+  /** Announces the removal, unless `announce: false` (emptying the cart after the demo order, QA round 2). */
+  removeLine(lineId: string, options?: { announce?: boolean }): Promise<CartResult>;
   applyDiscountCode(code: string): Promise<CartResult>;
   removeDiscountCode(code: string): Promise<CartResult>;
   setGiftWrap(enabled: boolean): Promise<CartResult>;

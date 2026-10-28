@@ -7,6 +7,7 @@ import { collectionPath, pageMetadata } from "@/lib/seo";
 import { getCatalogProducts } from "@/lib/shop-data";
 import { collections } from "@/content/collections";
 import { collectionCopy } from "@/content/copy/collection";
+import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { faq } from "@/content/faq";
 import { giftCards } from "@/content/offers";
@@ -27,10 +28,10 @@ import { Container } from "@/components/ui/Container";
 const copy = collectionCopy.giftCards;
 
 /**
- * FAQ items on this page (content/faq.ts ids): three existing answers that matter next to a gift card (QA round 1: a
- * single "Kan ik een cadeaukaart kopen?" repeated what the page says).
+ * FAQ items on this page (content/faq.ts ids), in this order: how a gift card works, paying and the welcome code (QA
+ * round 2: gift wrap does not apply to an emailed card; QA round 1: "Kan ik een cadeaukaart kopen?" repeated the page).
  */
-const FAQ_IDS = ["welkomstcode", "betalen", "cadeauverpakking"];
+const FAQ_IDS = ["cadeaukaart-gebruiken", "betalen", "welkomstcode"];
 
 const HOW_ICONS = [Gift, Mail, ReceiptEuro];
 
@@ -46,7 +47,7 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
   const howId = useId();
   const faqId = useId();
   const crossId = useId();
-  const faqItems = faq.filter((item) => FAQ_IDS.includes(item.id));
+  const faqItems = FAQ_IDS.map((id) => faq.find((item) => item.id === id)).filter((item) => item !== undefined);
   const underLimit = collections.find((collection) => collection.handle === "onder-25");
   const crossLinks = [
     ...(underLimit ? [{ label: underLimit.title, href: collectionPath(underLimit.handle) }] : []),
@@ -55,7 +56,12 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
 
   return (
     <>
-      <PageHeader title={copy.title} intro={copy.intro} breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]} />
+      <PageHeader
+        eyebrow={pagesCopy.pageEyebrows.gifts}
+        title={copy.title}
+        intro={copy.intro}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+      />
       <Container className="pb-16 md:pb-24">
         <section aria-labelledby={chooseId}>
           <h2 id={chooseId} className="kop-2 text-tekst">

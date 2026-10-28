@@ -23,8 +23,9 @@ import { keepLocalEscape, overlayClasses, useReturnFocus } from "./Sheet";
  * When the body overflows (the ring size guide on a phone), it becomes a focusable region (tabIndex 0, role="region",
  * an inset focus ring, named sharedCopy.ui.dialogBody: the title would repeat the dialog's own name), so keyboard users can scroll it (WCAG 2.1.1); a body that fits
  * adds no tab stop. Once the body is scrolled, a hairline appears under the title row, so content sliding under it
- * reads as scrolled content (QA round 1). `descriptionInBody` puts the description at the top of the scrolling body
- * instead of under the title (the popup), so only the title row stays fixed.
+ * reads as scrolled content (QA round 1). The description sits at the top of the scrolling body (`descriptionInBody`,
+ * the default since QA round 2: the ring size guide's intro no longer stays fixed over its scrolling table), so only
+ * the title row stays fixed; `descriptionInBody={false}` keeps it under the title.
  */
 
 export type ModalSize = "sm" | "md" | "lg";
@@ -46,7 +47,7 @@ export interface ModalProps {
   hideTitle?: boolean;
   description?: ReactNode;
   hideDescription?: boolean;
-  /** Render the description at the top of the scrolling body, so only the title row stays fixed. */
+  /** Render the description at the top of the scrolling body, so only the title row stays fixed. Default true. */
   descriptionInBody?: boolean;
   headerExtra?: ReactNode;
   footer?: ReactNode;
@@ -70,7 +71,10 @@ const widths: Record<ModalSize, string> = {
 /** Vertical placement; horizontal centring (mx-auto) is shared. */
 const anchors: Record<ModalAnchor, string> = {
   center: "my-auto max-h-[calc(100dvh-2rem)]",
-  top: "mt-[max(1rem,calc(50dvh-22rem))] mb-auto max-h-[calc(100dvh-max(1rem,calc(50dvh-22rem))-1rem)]",
+  // On a short screen (a laptop, below 820 px high) the top margin is 1rem, so the dialog gets 16 px more (QA round 2).
+  top:
+    "mt-[max(1rem,calc(50dvh-22rem))] mb-auto max-h-[calc(100dvh-max(1rem,calc(50dvh-22rem))-1rem)] " +
+    "[@media(max-height:820px)]:mt-4 [@media(max-height:820px)]:max-h-[calc(100dvh-2rem)]",
 };
 
 /** Whether the element scrolls vertically; follows size changes of the element and of its children. */
@@ -111,7 +115,7 @@ export function Modal({
   hideTitle = false,
   description,
   hideDescription = false,
-  descriptionInBody = false,
+  descriptionInBody = true,
   headerExtra,
   footer,
   closeLabel = sharedCopy.ui.close,
@@ -132,6 +136,7 @@ export function Modal({
   const titleId = useId();
   const [bodyRef, overflowing] = useOverflowing();
   const [scrolled, setScrolled] = useState(false);
+  const [atEnd, setAtEnd] = useState(false);
 
   return (
     <Dialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -192,12 +197,18 @@ export function Modal({
             </Dialog.Description>
           ) : null}
 
+          {/* The body and, while it overflows and is not scrolled to its end, a fade over its last 2.5rem: content cut
+              off at the dialog's bottom edge reads as "there is more" (QA round 2, the popup's error state on a laptop). */}
+          <div className="relative flex min-h-0 flex-1 flex-col">
           <div
             ref={bodyRef}
             {...(overflowing ? { tabIndex: 0, role: "region", "aria-label": sharedCopy.ui.dialogBody } : {})}
             onScroll={(event) => {
-              const next = event.currentTarget.scrollTop > 2;
+              const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+              const next = scrollTop > 2;
               setScrolled((current) => (current === next ? current : next));
+              const end = scrollTop + clientHeight >= scrollHeight - 2;
+              setAtEnd((current) => (current === end ? current : end));
             }}
             className={cn(
               "min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:-outline-offset-2",
@@ -217,6 +228,15 @@ export function Modal({
               </Dialog.Description>
             ) : null}
             {children}
+          </div>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-t to-transparent transition-opacity duration-150",
+              dark ? "from-donker" : "from-pagina",
+              overflowing && !atEnd ? "opacity-100" : "opacity-0",
+            )}
+          />
           </div>
 
           {footer ? (

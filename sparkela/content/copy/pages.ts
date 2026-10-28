@@ -22,7 +22,8 @@ export interface PageLink {
 
 export interface PagesCopy {
   /** Eyebrows above the H1 of the service and legal pages, as in the footer columns (QA round 1: one header pattern). */
-  pageEyebrows: { service: string; legal: string; shop: string };
+  /** Eyebrows of pages that have no own one: service, legal, the shop and the Cadeaus menu group (QA round 2). */
+  pageEyebrows: { service: string; legal: string; shop: string; gifts: string };
   about: {
     title: string;
     metaDescription: string;
@@ -73,6 +74,8 @@ export interface PagesCopy {
   finder: {
     metaDescription: string;
     eyebrow: string;
+    /** Last crumb of the page's breadcrumbs (QA round 2). */
+    breadcrumb: string;
     /** "Vraag 1 van 3" above every question. */
     progress: (step: number, total: number) => string;
     /** Accessible name of the three-segment progress bar. */
@@ -196,7 +199,7 @@ export interface PagesCopy {
 }
 
 export const pagesCopy: PagesCopy = {
-  pageEyebrows: { service: "Klantenservice", legal: "Juridisch", shop: "Shop" },
+  pageEyebrows: { service: "Klantenservice", legal: "Juridisch", shop: "Shop", gifts: "Cadeaus" },
   about: {
     title: "Over Sparkela",
     metaDescription: "Sparkela maakt chunky sieraden met een spark, gekozen en gestyled door Linde. Lees waar we voor staan.",
@@ -305,6 +308,7 @@ export const pagesCopy: PagesCopy = {
     metaDescription:
       "Drie vragen, nog geen minuut. De Spark Finder laat zien welke sieraden van Sparkela bij jouw vibe passen.",
     eyebrow: "Persoonlijk advies",
+    breadcrumb: "Spark Finder",
     progress: (step, total) => `Vraag ${step} van ${total}`,
     progressLabel: "Voortgang van de Spark Finder",
     next: "Volgende",

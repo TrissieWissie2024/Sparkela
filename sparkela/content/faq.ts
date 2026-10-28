@@ -29,7 +29,7 @@ export const faq: FaqItem[] = [
     id: "nikkelvrij",
     question: "Zijn de sieraden nikkelvrij?",
     answer:
-      'Bij elk product staat het materiaal. Staat er "nikkelvrij", dan heeft onze leverancier dat voor dat product bevestigd.',
+      'Bij elk product staat het materiaal. Staat er “nikkelvrij”, dan heeft onze leverancier dat voor dat product bevestigd.',
     category: "sieraden",
     onHome: true,
     onProduct: true,
@@ -65,7 +65,7 @@ export const faq: FaqItem[] = [
     id: "retourneren",
     question: "Kan ik retourneren?",
     answer:
-      'Ja, binnen 14 dagen. Oorbellen en piercings kun je om hygiënische redenen alleen retourneren met ongebroken hygiënezegel. Herroepen kan via "Hier de overeenkomst herroepen" onderaan elke pagina.',
+      'Ja, binnen 14 dagen. Oorbellen en piercings kun je om hygiënische redenen alleen retourneren met ongebroken hygiënezegel. Herroepen kan via “Hier de overeenkomst herroepen” onderaan elke pagina.',
     category: "retour",
     onHome: true,
     onProduct: true,
@@ -93,6 +93,15 @@ export const faq: FaqItem[] = [
     id: "cadeauverpakking",
     question: "Kunnen jullie mijn bestelling als cadeau inpakken?",
     answer: `Ja. Zet in je tas het vinkje bij cadeauverpakking aan, voor ${formatMoney(giftWrap.price)}. In december is inpakken gratis. Je kunt er ook een cadeauboodschap bij schrijven.`,
+    category: "cadeaus",
+    onHome: false,
+    onProduct: false,
+  },
+  {
+    // QA round 2: what /cadeaukaarten and the gift card's own page answer (only the facts of pdpCopy giftCard terms).
+    id: "cadeaukaart-gebruiken",
+    question: "Hoe werkt een cadeaukaart?",
+    answer: `Je krijgt hem direct in je mail, als code. Je besteedt hem in de webshop van Sparkela, en wat je niet in één keer gebruikt, blijft op de kaart staan. Hij telt niet mee voor gratis verzending of de stack-korting van ${stackDiscount.percent}%.`,
     category: "cadeaus",
     onHome: false,
     onProduct: false,

@@ -10,7 +10,7 @@ import { expect, gotoHydrated, promoBar, SECOND, test } from "./fixtures";
 
 test.use({ clockAt: null });
 
-const CAMPAIGN_MESSAGE = "We zijn live. Bij elke bestelling krijg je een cadeautje van ons.";
+const CAMPAIGN_MESSAGE = "We zijn live. Bij elke bestelling met sieraden zit een cadeautje van ons.";
 
 test("the launch gift shows with its countdown", async ({ page }) => {
   await page.clock.install({ time: Date.parse("2026-11-28T12:00:00+01:00") });

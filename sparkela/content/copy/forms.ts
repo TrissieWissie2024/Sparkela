@@ -88,6 +88,8 @@ export interface FormsCopy {
     mailtoIntro: string;
     /** Under the intro on /herroepen, above the form. */
     hygieneTitle: string;
+    /** After site.hygieneRule (which names earrings): the title names piercings too (QA round 2). */
+    hygienePiercings: string;
   };
   contact: {
     title: string;
@@ -238,7 +240,7 @@ export const formsCopy: FormsCopy = {
       productsHint: "Laat dit leeg als je de hele bestelling herroept.",
     },
     submit: "Herroeping bevestigen",
-    productsLabel: "Welke producten? (optioneel)",
+    productsLabel: "Welke producten?",
     sending: "Je herroeping wordt verstuurd.",
     receipt: {
       title: "We hebben je herroeping ontvangen",
@@ -264,6 +266,7 @@ export const formsCopy: FormsCopy = {
     mailtoSubject: (orderNumber) => `Herroeping bestelling ${orderNumber}`,
     mailtoIntro: "Hierbij herroep ik de overeenkomst over de bestelling hieronder.",
     hygieneTitle: "Let op bij oorbellen en piercings",
+    hygienePiercings: "Dat geldt ook voor piercings.",
   },
   contact: {
     title: "Contact",

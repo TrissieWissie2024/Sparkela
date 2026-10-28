@@ -71,7 +71,7 @@ export interface HomeContent {
     /** The styling tile that fills a row a short tab leaves open (D1, StylingTile of the collections). */
     tile: { title: string; text: string; image: AssetKey; href: string };
     /** A type tab's own tile: rings and necklaces do not count for the stack discount (fix 7-9). */
-    tileByTab: Partial<Record<"alles" | JewelryType, { title: string; text: string; image: AssetKey; href: string }>>;
+    tileByTab: Partial<Record<"alles" | JewelryType, { eyebrow?: string; title: string; text: string; image: AssetKey; href: string }>>;
   };
   howToStack: { title: string; steps: [HomeStep, HomeStep, HomeStep]; link: HomeLink };
   favorites: {
@@ -190,12 +190,14 @@ export const home: HomeContent = {
     },
     tileByTab: {
       ringen: {
+        eyebrow: "Goed om te weten",
         title: "Welke ringmaat heb je?",
         text: "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
         image: "linde.portret",
         href: "/veelgestelde-vragen",
       },
       kettingen: {
+        eyebrow: "Spark Finder",
         title: "Welke ketting past bij jou?",
         text: "Doe de Spark Finder. Drie vragen, en Linde laat zien welke stukken bij jouw vibe passen.",
         image: "linde.portret",

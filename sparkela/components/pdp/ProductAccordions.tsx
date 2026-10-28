@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Product } from "@/lib/types";
 import { materialForVariant, needsHygieneSeal } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
+import { chromeCopy } from "@/content/copy/chrome";
 import { pdpCopy } from "@/content/copy/pdp";
 import { site } from "@/content/site";
 import { Accordion, type AccordionItem } from "@/components/ui/Accordion";
@@ -279,7 +280,7 @@ function DigitalSafety() {
               <span className="flex flex-col">
                 <span>{company.legalName}</span>
                 <span>{company.address}</span>
-                <span>{company.kvk}</span>
+                <span>{chromeCopy.footer.kvk(company.kvk)}</span>
                 <span>{site.email}</span>
               </span>
             ),

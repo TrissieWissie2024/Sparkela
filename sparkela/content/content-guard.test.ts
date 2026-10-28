@@ -197,6 +197,9 @@ const CLAIM_WORDS = [
   "getest",
   "geteste",
   "dermatologisch\\p{L}*",
+  // QA round 2: "-proof" words ("vakantieproof", "zweetproof") and "bestand tegen" read as durability claims.
+  "\\p{L}*proof",
+  "bestand tegen",
 ];
 
 /** Rule 2: existing jewellery brands, shops and designers, plus the reference wording (brief §2.9). Not complete. */
@@ -285,6 +288,8 @@ const RULES: Rule[] = [
   { name: "long dash (U+2014)", test: (text) => text.includes("\u2014") },
   { name: "en dash between words", test: (text) => new RegExp("\\p{L}\\s*\\u2013\\s*\\p{L}", "u").test(text) },
   { name: 'formal "u" or "uw"', test: (text) => new RegExp("(?:^|[^\\p{L}\\p{N}])(?:u|uw)\\s", "iu").test(text) },
+  // QA round 2: one quote style in visible copy, the typographic “…” (and ‘…’ inside it), never a straight ".
+  { name: "straight double quote (use “…”)", test: (text) => text.includes('"') },
   // Rule 12: words of the sister project.
   { name: "CORVANE word", test: (text) => CORVANE_WORDS.test(text) },
 ];
@@ -783,7 +788,9 @@ describe("content guard: verbatim copy (rule 11, plan §5.2)", () => {
       ],
       ["cadeaukaart", "Kan ik een cadeaukaart kopen?", "Ja, digitaal voor €15, €25 of €50. Hij komt direct in je mail."],
     ];
-    expect(faq.slice(0, brief.length).map((item) => [item.id, item.question, item.answer])).toEqual(brief);
+    // Word for word; only the quote marks are typographic on the site (“…”, QA round 2), straight in the brief.
+    const straightQuotes = (text: string) => text.replace(/[“”]/g, '"');
+    expect(faq.slice(0, brief.length).map((item) => [item.id, item.question, straightQuotes(item.answer)])).toEqual(brief);
   });
 });
 

@@ -27,6 +27,11 @@ export interface CatalogValue {
   giftWrap: CatalogProduct | null;
   /** Handle "cadeaukaart". */
   giftCard: CatalogProduct | null;
+  /**
+   * What search looks through: `products` plus the gift card (QA round 2: "cadeaukaart" must find it), never the gift
+   * wrap or a drop product before its public start.
+   */
+  searchable: CatalogProduct[];
 }
 
 /** The context value for a list of catalog entries (exported for tests and for providers outside React). */
@@ -40,15 +45,18 @@ export function createCatalogValue(entries: readonly CatalogProduct[]): CatalogV
     }
   }
   const byHandle = (handle: string) => handles.get(handle) ?? null;
+  const products = sortProducts(
+    entries.filter((product) => product.listable),
+    "uitgelicht",
+  );
+  const giftCard = byHandle(giftCards.productHandle);
   return {
-    products: sortProducts(
-      entries.filter((product) => product.listable),
-      "uitgelicht",
-    ),
+    products,
     byHandle,
     byVariantId: (variantId) => variants.get(variantId) ?? null,
     giftWrap: byHandle(giftWrap.productHandle),
-    giftCard: byHandle(giftCards.productHandle),
+    giftCard,
+    searchable: giftCard && !giftCard.tags.verborgen ? [...products, giftCard] : products,
   };
 }
 

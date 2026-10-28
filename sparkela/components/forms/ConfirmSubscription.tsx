@@ -73,7 +73,9 @@ function ConfirmHeading({
 }) {
   return (
     <>
-      <h1 ref={headingRef} tabIndex={-1} className="kop-1 mt-8 md:mt-10">
+      {/* At most 12em wide (QA round 2): each state's title wraps the same in Unbounded and in its fallback, so a late
+          font never changes the line count and moves the form ("Bevestig je aanmelding" is always two lines). */}
+      <h1 ref={headingRef} tabIndex={-1} className="kop-1 mt-8 max-w-[12em] md:mt-10">
         {title}
       </h1>
       <p className="tekst-groot mt-4 text-tekst-2-op-donker">{intro}</p>

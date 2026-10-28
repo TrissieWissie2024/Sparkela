@@ -57,6 +57,10 @@ export interface ChromeCopy {
     count: (count: number) => string;
     none: (query: string) => string;
     noneHint: string;
+    /** No jewellery, but a page matches (QA round 2). */
+    noneProducts: (query: string) => string;
+    /** Live region when only pages match. */
+    pagesCount: (count: number) => string;
     /** Link to /zoeken?q= under the top results. */
     all: (count: number) => string;
     /** Quick links while the field is empty. */
@@ -141,6 +145,8 @@ export const chromeCopy: ChromeCopy = {
     count: (count) => (count === 1 ? "1 resultaat" : `${count} resultaten`),
     none: (query) => `Niets gevonden voor “${query}”`,
     noneHint: "Probeer een ander woord, zoals oorbellen, armband of date night.",
+    noneProducts: (query) => `Geen sieraden voor “${query}”`,
+    pagesCount: (count) => (count === 1 ? "1 pagina gevonden" : `${count} pagina's gevonden`),
     all: (count) => (count === 1 ? "Bekijk het resultaat" : `Bekijk alle ${count} resultaten`),
     quickLinksTitle: "Snel naar",
   },

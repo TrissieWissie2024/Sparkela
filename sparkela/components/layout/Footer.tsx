@@ -10,6 +10,7 @@ import { CookieSettingsButton } from "@/components/consent/ConsentSlots";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { VatNotice } from "@/components/time/VatNotice";
 import { Container } from "@/components/ui/Container";
+import { SentenceLines } from "@/components/ui/SentenceLines";
 
 import { PaymentBadges } from "./PaymentBadges";
 
@@ -31,7 +32,10 @@ import { PaymentBadges } from "./PaymentBadges";
  *    <a href="/herroepen">Hier de overeenkomst herroepen</a> (exactly this label and target, on every page) and the
  *    copyright with the year as a literal from content.
  * 5. The wordmark, the container width on phones and at most 36rem from md (decorative: the name is in the copyright
- *    line; it keeps its built-in free space, brief §3).
+ *    line). QA round 2: its free space is trimmed left and right (Logo trimInline), so its letters run from the
+ *    column's edge like every other footer line and the tagline under it; the container gutter is the free space on
+ *    the sides, as in the header and on /nieuwsbrief/bevestigen (decisions 161, 216n), and it keeps its free space
+ *    above and below (brief §3).
  * Task pages (checkout, search, account, contact) mark themselves with data-compacte-footer: app/globals.css then shows only
  * the compact legal row (legalNav), the withdrawal link, the company details and the VAT line, like MiniFooter.
  * Hidden in print. Port of CORVANE components/layout/Footer.tsx.
@@ -54,8 +58,9 @@ export function Footer() {
           className="grid grid-cols-1 gap-6 pt-12 pb-12 md:gap-8 md:pt-20 md:pb-16 lg:grid-cols-12 lg:items-start lg:gap-x-8"
         >
           <div className="lg:col-span-5">
+            {/* One sentence per line (QA round 2): never "Als eerste bij elke / drop. Plus 10% op / …". */}
             <h2 className="kop-2 text-tekst-op-donker">
-              {site.club.title}
+              <SentenceLines text={site.club.title} />
             </h2>
             <p className="mt-3 max-w-[30rem] text-tekst-2-op-donker md:mt-4">{copy.clubIntro}</p>
           </div>
@@ -131,7 +136,11 @@ export function Footer() {
                 {copy.kvk(company.kvk)} · {copy.vatId(company.vatId)}
               </span>
               <span>
-                <a href={`mailto:${site.email}`} className="text-tekst-op-donker underline underline-offset-4 hover:decoration-2">
+                {/* A standalone link: a 44 px target around the text line (QA round 2), the line rhythm unchanged. */}
+                <a
+                  href={`mailto:${site.email}`}
+                  className="relative text-tekst-op-donker underline underline-offset-4 before:absolute before:-inset-x-1 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-[''] hover:decoration-2"
+                >
                   {site.email}
                 </a>
               </span>
@@ -151,14 +160,14 @@ export function Footer() {
           </div>
         </div>
 
-        {/* The logo carries its own free space (decision 161), so the padding around it stays small. */}
+        {/* The logo carries its own free space above and below (decision 161), so the padding around it stays small. */}
         {/* The lead tagline (site.taglines[0], brief §3) beside the wordmark: from md it fills the row's right side. */}
         <div
           data-footer-wordmark
           className="flex flex-col gap-1 pt-6 pb-6 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-8 md:pb-4"
         >
           <div aria-hidden="true" className="w-full max-w-[36rem]">
-            <Logo variant="op-donker" width={600} className="h-auto w-full" />
+            <Logo variant="op-donker" width={600} trimInline className="h-auto w-full" />
           </div>
           <p className="label-caps text-tekst-2-op-donker">{site.taglines[0]}</p>
         </div>

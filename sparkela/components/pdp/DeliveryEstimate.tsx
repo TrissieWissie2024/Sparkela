@@ -1,9 +1,13 @@
-import { Package } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
+import type { JewelryType, ProductType } from "@/lib/types";
 import type { ShipLabelEntry } from "@/lib/dates";
 import { cn } from "@/lib/cn";
+import { collectionPath } from "@/lib/paths";
 import { pdpCopy } from "@/content/copy/pdp";
+import { sharedCopy } from "@/content/copy/shared";
 import { ShipLabel } from "@/components/layout/ShipLabel";
 import { Flag } from "@/components/ui/Flag";
 
@@ -27,6 +31,27 @@ export function DeliveryEstimate({ schedule, className }: { schedule: ShipLabelE
         <ShipLabel schedule={schedule} field="estimateText" />
       </Line>
       <Line icon={<Flag decorative />}>{pdpCopy.delivery.carrier}</Line>
+    </Panel>
+  );
+}
+
+/**
+ * Instead of the delivery card when nothing of the piece is for sale (QA round 2): "Vóór 16.00 besteld, vandaag
+ * verstuurd" under a disabled "Uitverkocht" read as a mistake. A short line and a link to the piece's type collection.
+ */
+export function SoldOutNote({ type, className }: { type: ProductType | null; className?: string }) {
+  const jewelry = type !== null && type in sharedCopy.vocab.type ? (type as JewelryType) : null;
+  const label = jewelry ? sharedCopy.vocab.type[jewelry] : null;
+  return (
+    <Panel className={className}>
+      <p className="text-sm leading-5 text-tekst-2">{pdpCopy.delivery.soldOut}</p>
+      <Link
+        href={collectionPath(jewelry ?? "alle")}
+        className="group inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-link underline decoration-1 underline-offset-4 hover:text-link-hover hover:decoration-2"
+      >
+        {pdpCopy.delivery.soldOutLink(label)}
+        <ArrowRight aria-hidden="true" className="size-4 motion-safe:transition-transform group-hover:translate-x-0.5" strokeWidth={1.75} />
+      </Link>
     </Panel>
   );
 }

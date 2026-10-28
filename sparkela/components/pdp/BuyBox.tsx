@@ -61,7 +61,9 @@ function errorText(code: CartErrorCode): string {
 
 export function BuyBox({ product, stackCandidates, defaultStack, stackName = null, children, className }: BuyBoxProps) {
   const [choice, update] = usePdpChoice(product.handle);
-  const { addToCart, setGiftWrap } = useCart();
+  const { addToCart, setGiftWrap, cart } = useCart();
+  /** The gift wrap is per order: once it is in the cart, the tick here shows that (QA round 2). */
+  const wrapInCart = cart?.giftWrap.selected === true;
   const buttonRef = useRef<HTMLButtonElement>(null);
   /** One add at a time, from the main button or the sticky bar (a double tap never adds twice). */
   const addingRef = useRef(false);
@@ -154,7 +156,14 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
       ) : null}
 
       {product.isGiftCard || !product.availableForSale ? null : (
-        <GiftWrapCheckbox value={giftWrapOn} onChange={(giftWrap) => update({ giftWrap })} />
+        <GiftWrapCheckbox
+          value={giftWrapOn || wrapInCart}
+          inCart={wrapInCart}
+          onChange={(giftWrap) => {
+            update({ giftWrap });
+            if (wrapInCart && !giftWrap) void setGiftWrap(false);
+          }}
+        />
       )}
 
       <div className="flex flex-col gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Plus, X } from "lucide-react";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 
 import type { CatalogProduct, Variant } from "@/lib/types";
 import { defaultVariant } from "@/lib/catalog";
@@ -27,6 +27,10 @@ import { Button, buttonClasses } from "@/components/ui/Button";
  *   the card never grows and its row never stretches; inside the card's own box no scroll row clips it.
  *   "In tas" closes the list and puts focus back on "Kies" before the add, so the cart drawer records "Kies" as the
  *   element to return to (WCAG 2.4.3; the panel's own button is gone by then). "Kies" then says "Toegevoegd".
+ *   Like a popover, the list also closes when focus leaves it (Shift+Tab to "Kies" or the card title, which it would
+ *   otherwise cover: WCAG 2.4.11) and on a pointer press outside it, without moving focus (QA round 2). A press on
+ *   "Kies" while the list is open closes it (and does not reopen it). With `panelInCard` (the product card) the
+ *   wrapper is not positioned, so the list is placed against the card itself and can cover the card's whole text area.
  * - Rings (size tiles on the product page): no size is preselected; "In tas" stays aria-disabled with "Kies eerst je
  *   maat." until one is chosen, and "Welke maat heb ik?" links to the product page with the size guide.
  * - The gift card: the link "Kies bedrag" to its product page.
@@ -46,6 +50,11 @@ export interface QuickAddProps {
   panelClassName?: string;
   /** Called after a successful add (the cart upsell moves focus when its card disappears). */
   onAdded?: () => void;
+  /**
+   * The choice list is positioned against the nearest positioned ancestor outside QuickAdd (the product card), not
+   * against QuickAdd's own wrapper. The wrapper keeps z-10 as a flex item, so it still sits above the card's link.
+   */
+  panelInCard?: boolean;
 }
 
 /** How long the button says "Toegevoegd", in ms (a UI timer, not a time boundary). */
@@ -71,6 +80,7 @@ export function QuickAdd({
   className,
   panelClassName = "mt-2",
   onAdded,
+  panelInCard = false,
 }: QuickAddProps) {
   const { addToCart } = useCartActions();
   const mode = quickAddMode(product);
@@ -83,7 +93,10 @@ export function QuickAdd({
   const [hint, setHint] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const firstRadioRef = useRef<HTMLInputElement>(null);
+  /** Whether the list was open when the pointer went down on "Kies" (the press itself may already close it). */
+  const pressedWhileOpen = useRef(false);
   const id = useId();
   const panelId = `${id}-panel`;
   const legendId = `${id}-legend`;
@@ -98,6 +111,17 @@ export function QuickAdd({
     if (firstRadioRef.current) firstRadioRef.current.focus();
     else document.getElementById(panelId)?.querySelector<HTMLInputElement>("input[type=radio]:not(:disabled)")?.focus();
   }, [open, panelId]);
+
+  // A pointer press outside QuickAdd closes the list (touch browsers do not move focus on a tap on plain content).
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const wrapper = wrapperRef.current;
+      if (wrapper && event.target instanceof Node && !wrapper.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [open]);
 
   const title = product.title;
   const classes = cn("relative z-10", className);
@@ -187,8 +211,16 @@ export function QuickAdd({
     closePanel();
   };
 
+  // Focus left the list (not a switch to another window): close it and leave focus where it went.
+  const onPanelBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const next = event.relatedTarget;
+    if (next instanceof Node && event.currentTarget.contains(next)) return;
+    if (typeof document.hasFocus === "function" && !document.hasFocus()) return;
+    setOpen(false);
+  };
+
   return (
-    <div className={cn("relative z-10", fullWidth && "w-full", className)}>
+    <div ref={wrapperRef} className={cn(!panelInCard && "relative", "z-10", fullWidth && "w-full", className)}>
       <button
         ref={buttonRef}
         type="button"
@@ -196,9 +228,14 @@ export function QuickAdd({
         aria-controls={open ? panelId : undefined}
         aria-busy={adding || undefined}
         aria-label={added ? cartCopy.quickAdd.addedLabel(title) : cartCopy.quickAdd.chooseLabel(title)}
+        onPointerDown={() => {
+          pressedWhileOpen.current = open;
+        }}
         onClick={() => {
           setHint(false);
-          setOpen((value) => !value);
+          const wasOpen = pressedWhileOpen.current;
+          pressedWhileOpen.current = false;
+          setOpen((value) => (wasOpen ? false : !value));
         }}
         className={buttonClasses({ variant: "primair", size, fullWidth })}
       >
@@ -212,8 +249,11 @@ export function QuickAdd({
           aria-modal="false"
           data-escape-local=""
           aria-label={cartCopy.quickAdd.panelLabel(title)}
+          // Focusable but not a Tab stop: a press on its plain content keeps focus inside the list (no blur close).
+          tabIndex={-1}
           onKeyDown={onPanelKeyDown}
-          className={cn("rounded-kaart border border-rand bg-kaart p-3 text-tekst shadow-zwevend", panelClassName)}
+          onBlur={onPanelBlur}
+          className={cn("flex flex-col rounded-kaart border border-rand bg-kaart p-3 text-tekst shadow-zwevend outline-none", panelClassName)}
         >
           <div className="flex items-start justify-between gap-2">
             <fieldset className="min-w-0 flex-1" aria-describedby={hint ? hintId : undefined}>
@@ -280,6 +320,9 @@ export function QuickAdd({
               </a>
             </p>
           ) : null}
+          {/* At least 0.75rem, and more in a list that is taller than its content (the product card's overlay), so
+              "In tas" sits at the bottom. */}
+          <span aria-hidden="true" className="min-h-3 flex-1" />
           <Button
             variant="primair"
             size="sm"
@@ -300,7 +343,6 @@ export function QuickAdd({
               buttonRef.current?.focus();
               void add(selectedVariant.id);
             }}
-            className="mt-3"
           >
             {cartCopy.quickAdd.add}
           </Button>

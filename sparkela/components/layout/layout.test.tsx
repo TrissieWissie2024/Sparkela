@@ -90,7 +90,7 @@ describe("AnnouncementBar (plan §12.3)", () => {
     const variants = variantsOf(html);
     expect(variants).toHaveLength(promoSchedule(TEST_NOW, PROMO_SCHEDULE_DAYS).length);
     expect(variants[0].hidden).toBe(false);
-    expect(variants[0].inner).toContain(escape("We zijn live. Bij elke bestelling krijg je een cadeautje van ons."));
+    expect(variants[0].inner).toContain(escape("We zijn live. Bij elke bestelling met sieraden zit een cadeautje van ons."));
     expect(variants[0].inner).toContain("t/m 30 november");
     expect(variants[0].inner).toContain("Eindigt op maandag 30 november om middernacht");
     expect(variants[0].inner).toContain('href="/collections/nieuw"');
@@ -226,7 +226,8 @@ describe("Footer (plan §2.5, §13.5; brief §2.8, §2.10)", () => {
   });
 
   it("starts with the Club sign-up: the promise, the consent sentence on an unchecked box and the privacy link", () => {
-    expect(html).toContain(escape(site.club.title));
+    // One sentence per line (QA round 2), the text unchanged.
+    for (const sentence of site.club.title.split(/(?<=\.)\s+/)) expect(html).toContain(`<span class="block">${escape(sentence)}</span>`);
     expect(html).toContain(escape(site.consentText));
     expect(html).toContain(`href="${site.privacyLink.href}"`);
     expect(html).not.toMatch(/type="checkbox"[^>]*checked=""/);

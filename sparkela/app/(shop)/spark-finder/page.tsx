@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 import { pageMetadata } from "@/lib/seo";
 import { pagesCopy } from "@/content/copy/pages";
+import { sharedCopy } from "@/content/copy/shared";
 import { quiz } from "@/content/quiz";
 import { SparkFinder } from "@/components/finder/SparkFinder";
 import { PageHeader } from "@/components/pages/PageHeader";
@@ -26,7 +27,12 @@ export const metadata: Metadata = pageMetadata({
 export default function SparkFinderPage() {
   return (
     <>
-      <PageHeader eyebrow={copy.eyebrow} title={quiz.intro.title} intro={quiz.intro.text} />
+      <PageHeader
+        eyebrow={copy.eyebrow}
+        title={quiz.intro.title}
+        intro={quiz.intro.text}
+        breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.breadcrumb }]}
+      />
       <SparkFinder variant="pagina" />
       <Container className="pb-16 md:pb-24">
         <div className="flex flex-col items-start gap-3 border-t border-rand pt-8 sm:flex-row sm:items-center sm:gap-5 md:pt-10">

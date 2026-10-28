@@ -7,7 +7,7 @@ import { Container } from "@/components/ui/Container";
 
 import { BuyBox } from "./BuyBox";
 import { CompleteTheLook } from "./CompleteTheLook";
-import { DeliveryEstimate } from "./DeliveryEstimate";
+import { DeliveryEstimate, SoldOutNote } from "./DeliveryEstimate";
 import { ProductAccordions } from "./ProductAccordions";
 import { ProductFaq } from "./ProductFaq";
 import { ProductGallery } from "./ProductGallery";
@@ -61,6 +61,8 @@ const BLOCK = "mt-10 border-t border-rand pt-8";
 
 export function ProductDetail({ product, badges, stacks, stackOptions, lookProducts, faq, claims, schedule }: ProductDetailProps) {
   const giftCard = product.isGiftCard;
+  // Nothing of the piece can be ordered: no dispatch promise under "Uitverkocht" (QA round 2).
+  const forSale = product.availableForSale && product.variants.some((variant) => variant.availableForSale);
   const meter = product.metafields.statementMeter;
   const handle = product.handle;
   const stackName = defaultStackName(handle, stackOptions.defaultPicks, stackOptions.candidates, stacks);
@@ -85,7 +87,7 @@ export function ProductDetail({ product, badges, stacks, stackOptions, lookProdu
               stackName={stackName}
               className="mt-8 border-t border-rand pt-8"
             >
-              {giftCard ? null : <DeliveryEstimate schedule={schedule} />}
+              {giftCard ? null : forSale ? <DeliveryEstimate schedule={schedule} /> : <SoldOutNote type={product.type} />}
               <TrustRow variant={giftCard ? "giftcard" : "product"} className="pt-2" />
             </BuyBox>
 

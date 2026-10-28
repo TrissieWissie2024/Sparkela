@@ -32,10 +32,19 @@ export interface ProductGridProps {
    * (404 favourites, "Maak de look af"), so no row is left with a single card.
    */
   columns?: ProductGridColumns;
-  /** next/image sizes of the cards. Default PRODUCT_CARD_SIZES. */
+  /** next/image sizes of the cards. Default: GRID_CARD_SIZES of `columns`. */
   sizes?: string;
   className?: string;
 }
+
+/**
+ * next/image sizes of a card per column layout (plan §17.1, measured widths). "2-4": four columns from md, a card is
+ * about (100vw − 64 − 72) / 4 ≈ 21 to 22vw (QA round 2: 30vw claimed 40 to 47% too much on tablets).
+ */
+export const GRID_CARD_SIZES: Record<ProductGridColumns, string> = {
+  "2-3-4": PRODUCT_CARD_SIZES,
+  "2-4": "(min-width: 1280px) 290px, (min-width: 768px) 22vw, 50vw",
+};
 
 /** Classes of the grid <ul> with the default columns; also for lists that render their own <li>s (CollectionView). */
 export const productGridClassName = "grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-3 md:gap-x-6 md:gap-y-12 xl:grid-cols-4 xl:gap-y-14";
@@ -51,7 +60,7 @@ export function ProductGrid({
   headingLevel = 3,
   priorityCount = 0,
   columns = "2-3-4",
-  sizes = PRODUCT_CARD_SIZES,
+  sizes = GRID_CARD_SIZES[columns],
   className,
 }: ProductGridProps) {
   if (products.length === 0) {

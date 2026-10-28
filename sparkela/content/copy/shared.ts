@@ -85,6 +85,14 @@ export interface SharedCopy {
    * words that should find it too.
    */
   searchSynonyms: Record<string, string>;
+  /**
+   * Pages that search offers as quick links (lib/catalog.ts searchPages, QA round 2): what the product search cannot
+   * find (stacks, shipping, the Club). `keywords` are normalised words; a query word matches one that it starts with
+   * or that starts with it (from 4 letters).
+   */
+  searchPages: Array<{ label: string; href: string; keywords: string }>;
+  /** Heading above those links, in the search dialog and on /zoeken. */
+  searchPagesTitle: string;
   vocab: {
     type: Record<JewelryType, string>;
     vibe: Record<Vibe, string>;
@@ -228,7 +236,24 @@ export const sharedCopy: SharedCopy = {
     goudkleurig: "goud",
     zilverkleurig: "zilver",
     feestdagen: "kerst kerstmis",
+    cadeaukaart: "giftcard cadeaubon tegoedbon",
   },
+  searchPages: [
+    { label: "Cadeaukaarten", href: "/cadeaukaarten", keywords: "cadeau cadeaukaart cadeaukaarten cadeaubon giftcard tegoedbon kaart" },
+    { label: "Stacks van Linde", href: "/stacks", keywords: "stack stacks setje combinatie" },
+    { label: "Spark Finder", href: "/spark-finder", keywords: "finder quiz advies" },
+    {
+      label: "Verzenden en retourneren",
+      href: "/verzenden-en-retourneren",
+      keywords: "verzenden verzending verzendkosten levering bezorging postnl retour retourneren terugsturen",
+    },
+    { label: "Herroepen", href: "/herroepen", keywords: "herroepen herroeping annuleren" },
+    { label: "Veelgestelde vragen", href: "/veelgestelde-vragen", keywords: "vraag vragen faq garantie" },
+    { label: "Sparkela Club", href: "/sparkela-club", keywords: "club nieuwsbrief welkomstcode kortingscode" },
+    { label: "Contact", href: "/contact", keywords: "contact mailen email" },
+    { label: "Over Sparkela", href: "/over-sparkela", keywords: "linde verhaal eigenaar" },
+  ],
+  searchPagesTitle: "Pagina's",
   vocab: {
     type: {
       oorbellen: "Oorbellen",

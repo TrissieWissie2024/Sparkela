@@ -87,7 +87,7 @@ export function productChipLinks(product: Pick<Product, "type" | "tags">): Produ
 /* -------------------------------------------------------------------------- */
 
 /** FAQ items that fit the gift card (the onProduct questions are about jewellery and shipping). */
-const GIFT_CARD_FAQ_IDS = ["cadeaukaart", "betalen", "welkomstcode"] as const;
+const GIFT_CARD_FAQ_IDS = ["cadeaukaart-gebruiken", "betalen", "welkomstcode"] as const;
 
 /** The questions under a product (plan §14.2 step 5): the `onProduct` items; for the gift card its own short list. */
 export function productFaqItems(product: Pick<Product, "isGiftCard">, items: readonly FaqItem[]): FaqItem[] {

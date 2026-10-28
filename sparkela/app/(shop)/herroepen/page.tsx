@@ -38,7 +38,9 @@ export default function WithdrawalPage() {
             <h2 id="herroepen-hygiene" className="font-semibold text-tekst">
               {copy.hygieneTitle}
             </h2>
-            <p className="mt-1 text-tekst-2">{site.hygieneRule}</p>
+            <p className="mt-1 text-tekst-2">
+              {site.hygieneRule} {copy.hygienePiercings}
+            </p>
           </section>
           <div className="mt-8">
             <WithdrawalForm />

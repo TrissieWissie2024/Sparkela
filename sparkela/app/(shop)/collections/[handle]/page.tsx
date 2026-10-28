@@ -86,7 +86,7 @@ export default async function CollectionPage({ params }: PageProps<"/collections
     products,
     cards,
     facets: visibleFacets(facets, definition.rule),
-    stylingTile: tile ? <StylingTile title={tile.title} text={tile.text} image={tile.image} href={tile.href} /> : null,
+    stylingTile: tile ? <StylingTile eyebrow={tile.eyebrow} title={tile.title} text={tile.text} image={tile.image} href={tile.href} /> : null,
     stylingTileAfter: tile ? tile.afterIndex : null,
     label: definition.title,
   };

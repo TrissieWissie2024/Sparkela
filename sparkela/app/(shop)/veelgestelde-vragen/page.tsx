@@ -113,8 +113,12 @@ export default function VeelgesteldeVragenPage() {
                   {copy.contact.title}
                 </h2>
                 <p className="mt-2 leading-relaxed text-tekst-2">{copy.contact.text}</p>
-                <p className="tekst-klein mt-1 flex flex-wrap gap-x-3 text-tekst-2">
-                  <a href={`mailto:${site.email}`} className="font-semibold text-link underline underline-offset-4 hover:text-link-hover">
+                <p className="tekst-klein mt-1 flex flex-wrap items-center gap-x-3 text-tekst-2">
+                  {/* A standalone link: 44 px tall (QA round 2). */}
+                  <a
+                    href={`mailto:${site.email}`}
+                    className="inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4 hover:text-link-hover"
+                  >
                     {site.email}
                   </a>
                   <span>{formsCopy.contact.responseTime}</span>

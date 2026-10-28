@@ -122,6 +122,9 @@ function UpsellRow({ max }: { max: number }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const picks = pickUpsell(products, cart, byHandle, max);
   if (picks.length === 0) return null;
+  const lines = cart?.lines ?? [];
+  const giftCardsOnly = lines.length > 0 && lines.every((line) => line.merchandise.isGiftCard);
+  const title = giftCardsOnly ? cartCopy.upsell.giftCardTitle : cartCopy.upsell.title;
 
   /** After an add the row unmounts with its focused button: put focus on the next row's button or the heading. */
   const keepFocus = () => {
@@ -135,9 +138,9 @@ function UpsellRow({ max }: { max: number }) {
   };
 
   return (
-    <section ref={sectionRef} aria-label={cartCopy.upsell.title} className="border-t border-rand pt-6 pb-2">
+    <section ref={sectionRef} aria-label={title} className="border-t border-rand pt-6 pb-2">
       <h3 ref={headingRef} tabIndex={-1} className="label-caps text-tekst-2">
-        {cartCopy.upsell.title}
+        {title}
       </h3>
       <ul role="list" aria-label={cartCopy.upsell.listLabel} className="mt-3 flex flex-col gap-2.5">
         {picks.map((product) => (

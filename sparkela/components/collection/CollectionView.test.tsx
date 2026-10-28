@@ -86,7 +86,7 @@ describe("CollectionView", () => {
     expect(html).toContain(collectionCopy.filters.open(0));
   });
 
-  it("filters and sorts by the URL, presses the chosen chips and hides the tile", () => {
+  it("filters and sorts by the URL, presses the chosen chips and closes the grid with the tile", () => {
     const html = render(<CollectionView {...props(earrings)} />, "vibe=chunky-en-bold&sort=prijs-aflopend");
     const handles = cardHandles(html);
     const expected = earrings
@@ -97,7 +97,9 @@ describe("CollectionView", () => {
     expect(html).toContain(collectionCopy.count(expected.length));
     expect(html).toContain('aria-pressed="true"');
     expect(html).toContain(collectionCopy.filters.open(1));
-    expect(html).not.toContain('href="/stacks"');
+    // QA round 2: the tile closes a filtered grid too, after the last card, so no row is left ragged.
+    expect(html).toContain('href="/stacks"');
+    expect(html.lastIndexOf('href="/stacks"')).toBeGreaterThan(html.lastIndexOf("/products/"));
     expect(html).toContain('<option value="prijs-aflopend" selected="">');
   });
 

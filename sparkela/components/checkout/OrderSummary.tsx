@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Gift } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import type { Cart } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -32,6 +32,7 @@ export function OrderSummary({ cart, className }: { cart: Cart; className?: stri
   const headingId = useId();
   const linesId = useId();
   const [linesOpen, setLinesOpen] = useState(false);
+  const codeInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <section aria-labelledby={headingId} className={cn("rounded-kaart border border-rand bg-kaart p-5 sm:p-6 md:p-7", className)}>
@@ -93,9 +94,10 @@ export function OrderSummary({ cart, className }: { cart: Cart; className?: stri
         ) : null}
       </div>
 
-      <DiscountCodeField className="border-b border-rand py-5" />
+      <DiscountCodeField inputRef={codeInputRef} className="border-b border-rand py-5" />
 
-      <CartTotals cart={cart} className="pt-5" />
+      {/* After "Verwijderen" focus goes to the code field: the natural next step (QA round 2). */}
+      <CartTotals cart={cart} className="pt-5" onCodeRemoved={() => codeInputRef.current?.focus()} />
     </section>
   );
 }

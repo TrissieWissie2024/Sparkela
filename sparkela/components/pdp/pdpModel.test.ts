@@ -207,6 +207,6 @@ describe("links of the product page", () => {
     const onProduct = productFaqItems(product("lola-chunky-hoops"), faq);
     expect(onProduct.length).toBeGreaterThan(0);
     expect(onProduct.every((item: FaqItem) => item.onProduct)).toBe(true);
-    expect(productFaqItems(product("cadeaukaart"), faq).map((item) => item.id)).toEqual(["cadeaukaart", "betalen", "welkomstcode"]);
+    expect(productFaqItems(product("cadeaukaart"), faq).map((item) => item.id)).toEqual(["cadeaukaart-gebruiken", "betalen", "welkomstcode"]);
   });
 });

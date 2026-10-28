@@ -203,20 +203,22 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
           }
           if (titles.length > 0) announce(sharedCopy.announce.added(titles.join(", ")));
           else if (!result.ok) announce(sharedCopy.announce.error);
-          if (options?.open ?? true) setOpen(true);
+          // The drawer mounts as a transition (QA round 2, INP): the button's "Toegevoegd" and "Tas (n)" paint
+          // first, the dialog's subtree right after, instead of one long task before the next paint.
+          if (options?.open ?? true) startTransition(() => setOpen(true));
         },
       ),
     [announce, lookup, run],
   );
 
   const removeLine = useCallback(
-    (lineId: string) =>
+    (lineId: string, options?: { announce?: boolean }) =>
       run(
         (cartAdapter) => cartAdapter.removeFromCart([lineId]),
         (result, before) => {
           const line = findLine(before, lineId);
           if (!result.ok) announce(sharedCopy.announce.error);
-          else if (line) announce(sharedCopy.announce.removed(line.merchandise.productTitle));
+          else if (line && (options?.announce ?? true)) announce(sharedCopy.announce.removed(line.merchandise.productTitle));
         },
       ),
     [announce, run],

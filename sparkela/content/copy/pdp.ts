@@ -133,6 +133,8 @@ export interface PdpCopy {
   giftWrap: {
     label: string;
     description: string;
+    /** The gift wrap is already in the cart (one per order, QA round 2): the tick shows on and says so. */
+    alreadyOn: string;
   };
   addToCart: {
     /** "In je tas · €19,95" (the price follows, after an aria-hidden dot). */
@@ -163,6 +165,10 @@ export interface PdpCopy {
   delivery: {
     /** Second line of the delivery card, next to the flag. */
     carrier: string;
+    /** Instead of the delivery card when nothing of the piece is for sale (QA round 2: no dispatch promise). */
+    soldOut: string;
+    /** The link under it: to the piece's type collection ("Bekijk alle armbanden"), or all jewellery. */
+    soldOutLink: (typeLabel: string | null) => string;
   };
   trust: {
     items: PdpTrustItem[];
@@ -340,6 +346,7 @@ export const pdpCopy: PdpCopy = {
   giftWrap: {
     label: "Cadeauverpakking",
     description: "Feestelijk ingepakt, klaar om te geven. Je ziet het vinkje terug in je tas.",
+    alreadyOn: "Staat al aan voor je bestelling. Eén verpakking per bestelling.",
   },
   addToCart: {
     label: "In je tas",
@@ -363,6 +370,8 @@ export const pdpCopy: PdpCopy = {
   },
   delivery: {
     carrier: `Verstuurd met ${shipping.carrier} vanuit ${nl.label}`,
+    soldOut: "Deze is nu op. Misschien vind je een andere spark die je net zo mooi vindt.",
+    soldOutLink: (typeLabel) => (typeLabel ? `Bekijk alle ${typeLabel.toLowerCase()}` : "Bekijk alle sieraden"),
   },
   trust: {
     items: [

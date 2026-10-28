@@ -1,9 +1,8 @@
-import { Fragment } from "react";
-
 import type { Crumb } from "@/lib/types";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SentenceLines } from "@/components/ui/SentenceLines";
 
 /**
  * Head of an ordinary page (plan §13.2, §14.7 to §14.17): optional breadcrumbs, then eyebrow, the page's H1 (kop-1)
@@ -30,15 +29,4 @@ export function PageHeader({ eyebrow, title, intro, breadcrumbs, sentenceLines =
       <SectionHeading level={1} eyebrow={eyebrow} title={sentenceLines ? <SentenceLines text={title} /> : title} intro={intro} />
     </Container>
   );
-}
-
-/** The title split after each full stop, one block per sentence (the text itself is unchanged). */
-function SentenceLines({ text }: { text: string }) {
-  const sentences = text.split(/(?<=\.)\s+/).filter((sentence) => sentence.length > 0);
-  return sentences.map((sentence, index) => (
-    <Fragment key={index}>
-      {index > 0 ? " " : null}
-      <span className="block">{sentence}</span>
-    </Fragment>
-  ));
 }

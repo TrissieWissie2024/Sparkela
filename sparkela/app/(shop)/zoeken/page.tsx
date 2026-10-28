@@ -35,8 +35,9 @@ export default function SearchPage() {
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
       />
       <Container className="pb-16 md:pb-24">
-        {/* Before the first paint, a deep link with ?q= marks this wrapper: the fallback's links stay invisible. */}
-        <div suppressHydrationWarning>
+        {/* Before the first paint, a deep link with ?q= marks this wrapper: the fallback's links stay invisible and the
+            wrapper reserves the same height as SearchView with a query, so the footer stays below the fold (QA round 2). */}
+        <div suppressHydrationWarning className="[&[data-search-query]]:min-h-[calc(100svh-var(--header-hoogte))]">
           <InlineScript html={SEARCH_QUERY_SCRIPT} />
           <Suspense fallback={<SearchFallback />}>
             <SearchView />

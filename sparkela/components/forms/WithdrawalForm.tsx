@@ -218,6 +218,7 @@ export function WithdrawalForm() {
           id={ids.products}
           name="products"
           label={copy.productsLabel}
+          markOptional
           multiline
           rows={4}
           maxLength={FORM_LIMITS.products}

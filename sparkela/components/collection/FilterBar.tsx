@@ -68,7 +68,11 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
     <>
       {/* Below lg: the sheet button and the sort select share one row, sticky under the header, so filters and sort
           stay in reach on a long grid (fix 7-9). */}
-      <div className="sticky top-(--header-hoogte) z-20 flex items-center gap-2 border-y border-rand bg-pagina py-3 lg:hidden">
+      {/* data-sticky-filterbar: app/globals.css adds the row's height to the scroll padding (QA round 2). */}
+      <div
+        data-sticky-filterbar=""
+        className="sticky top-(--header-hoogte) z-20 flex items-center gap-2 border-y border-rand bg-pagina py-3 lg:hidden"
+      >
         {keys.length > 0 ? (
           <Button
             variant="outline"

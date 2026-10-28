@@ -59,7 +59,7 @@ export function HowToStack({ content, headingLevel = 2, showLink = true, classNa
           ) : undefined
         }
       />
-      <ol className="mt-8 flex flex-col gap-6 md:mt-12 md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
+      <ol className="mt-8 flex flex-col gap-6 md:mt-12 md:grid md:grid-cols-3 md:gap-6">
         {content.steps.map((step, index) => (
           <li
             key={step.title}

@@ -148,6 +148,12 @@ describe("FinderResult", () => {
     expect(answerLabels({ vibe: "retro", moment: "strand", type: "verras-me" })).toEqual(["Retro", "Strand", "Verras me"]);
   });
 
+  it("marks the email step as the page's own Club form only with ownsClub (QA round 3)", () => {
+    expect(html).not.toContain("data-eigen-club");
+    const page = render(<FinderResult answers={answers} products={products} ownsClub />);
+    expect(page).toMatch(/<section aria-labelledby="[^"]+" data-eigen-club=""/);
+  });
+
   it("keeps rows full: two columns for 4 cards, three from md for 6", () => {
     expect(resultGridClassName(4)).not.toContain("md:grid-cols-3");
     expect(resultGridClassName(6)).toContain("md:grid-cols-3");

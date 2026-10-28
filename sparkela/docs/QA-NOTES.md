@@ -1,6 +1,6 @@
 # QA-notities
 
-Metingen en bevindingen uit golf 10-11 en later. Integrator 10 schreef §1; E3 (visuele QA) en F1 (oplevering) vullen aan (plan §20.2). De besluiten die hieruit volgen staan in `docs/DECISIONS.md` (212 tot en met 215, QA-ronde 1: 216 en 217).
+Metingen en bevindingen uit golf 10-11 en later. Integrator 10 schreef §1; E3 (visuele QA) en F1 (oplevering) vullen aan (plan §20.2). De besluiten die hieruit volgen staan in `docs/DECISIONS.md` (212 tot en met 215, QA-ronde 1: 216 en 217, QA-ronde 2: 218 tot en met 220, QA-ronde 3: 221 en 222).
 
 ## 1. Integrator 10 (27 oktober 2026)
 
@@ -259,3 +259,60 @@ Nieuwe of bijgewerkte e2e-checks: `search.spec.ts` (Terug na een resultaat; cade
 ### 3.5 Servers
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+
+
+## 4. QA-ronde 3: fixer (28 oktober 2026)
+
+Zes lenzen (design mobiel en desktop, toegankelijkheid, performance, copy en compliance, functioneel, volledigheid) leverden 34 bevestigde bevindingen: 1 hoog, 8 middel, de rest laag; een paar kwamen dubbel (de Spark Finder-aanmelding drie keer, de drop-teaser, "Shop nieuw", de checkoutcode en de QuickAdd-overlays twee keer). Alle zijn opgepakt; wat bewust anders of niet is gedaan staat in beslissing 222. Alles is gecontroleerd op `npm run build:test` en `npm run start:test` (testklok 27 november 2026, prelaunch met de header `x-sparkela-test-now` en `page.clock`) met eigen Playwright-scripts op 390 × 844 en 1440 × 900, en waar de bevinding daarom vroeg op 320, 360, 375 × 667, 412, 1000 × 700, 1024, 1280 × 609, 1280 × 720, 1366 × 657, 1440 × 789, 1536 × 730 en 1920 × 1080. De beslissingen staan in `docs/DECISIONS.md` 221 en 222; plan §7.3, §11.9, §13.2, §13.5, §13.9, §13.11, §13.12, §14.2, §14.6 tot en met §14.9, §14.20 en §17.1 en §17.2 en `docs/ASSETS.md` §2 en §6 zijn bijgewerkt.
+
+### 4.1 Wat er is opgelost (hoog en middel eerst)
+
+| Bevinding | Oplossing | Controle |
+| --- | --- | --- |
+| Vorige/volgende van de PDP-galerij onder de vouw terwijl ze focus hadden (1366 × 657, 1280 × 609; hoog) | Galerij alleen sticky op een scherm van minstens 42rem hoog, daar de foto gekapt zodat alles onder de header past; `scroll-mb-4` op de knoppen | Tab-wandeling op Lola, Nina en de cadeaukaart op 12 maten: elke focusstop in de galerij volledig in beeld, ring inbegrepen; 1536 × 730: galerij sticky, foto 488 px breed, onderkant op 706 van 730; nieuwe e2e-check op vier laptopmaten |
+| Popupkaart na het omdraaien: WELKOM10 8,7 px op 390, over de rand op 320 | "10%" groot (20 px, desktop 28 px) en de code in Inter-kapitalen (12 px, op 320 px 9 px); 4:3 met minstens 4,5rem | 390: kaart 91 × 72, 18 px vrij boven en onder; 320: 68 × 72, 19,5 px vrij, onderschriften naast elkaar zonder overlap (48–116, 135–185, 204–272); popup eindigt op 785 van 844 |
+| Vervaging onder in de popup lag over "Ik doe mee" en "Nee, bedankt" met focus | Onderpadding telt als einde, `scroll-pb-12`, `keepFocusClearOfFade`, vervaging weg als de body zelf focus heeft | Tab-wandeling met en zonder foutregels op 1366 × 657, 1280 × 609, 1536 × 730, 390 × 844 en 375 × 667: geen control met focus onder een zichtbare vervaging; nieuwe e2e-check |
+| "Bekijk alle N resultaten" net onder de rand van de zoeksheet | In de vaste footer van de sheet | 390 × 844: knop 653–701 in een sheet tot 717; 375 × 667: 503–551 tot 567; nieuwe e2e-check |
+| Drop-teaser bijna helemaal donker en roest (13% licht op 1440) | Roestband plus licht deel met de Club-kaart, de voordelen en "Alvast rondkijken?"; compacte footer | `/drops/love-club` 1440: 60% licht, 20% roest, 21% donker (balk en footer); 390: 62% licht, 17% roest, 21% donker; geen horizontale scroll op 320 |
+| Sitebeeld in volle mastermaat naar elk apparaat | Breedtevarianten bij de build (`scripts/build-images.mjs`), loader kiest de kleinste die past, poster 640 px | unit-tests op loader en script (schaalt naar 640, kopieert de master voor 1920 en 2400, houdt verse varianten, ruimt wezen op) |
+| Voorwaarden beloofden verzendkosten "in je winkelwagen" | Zin die voor beide providers klopt; "tas" op `/cookies` | 0 keer "winkelwagen" op `/cookies` en `/algemene-voorwaarden` |
+| Popup meldde korting bij een tas met alleen een cadeaukaart | Eigen regel met info-icoon, geen vinkje | unit-tests (lokaal en met de Shopify-vorm zonder reden) |
+
+De lage bevindingen (QuickAdd-overlays, artikelnummers, checkoutcode, "Shop nieuw", FAQ-opbouw, goten, wachtlijstbelofte, pill over de leverbalk, inline aanmelding op `/nieuwsbrief/bevestigen`, `lang="en"`, cadeauverpakking, preloads, socials, ringmaatgids, jaartal, account, Spark Finder en zoeken op "ring") staan per punt in beslissing 221(g).
+
+### 4.2 Metingen
+
+| Meting | Vóór | Na |
+| --- | --- | --- |
+| Tikvlak "Shop nieuw" op 390 en 360 px (bereikbaar) | 0 tot 37,5 px hoog | 0 tot 43,5 px; op 320 px 13,5 tot 57 (balk eindigt op 58) |
+| Linkerrand van de FAQ-vragen (1440 / 1280) | `/stacks` en `/cadeaukaarten` 540 / 460, PDP 635 / 555, home 632 / 552 | overal 635 / 555, overal met eyebrow, "Alle vragen" en contact |
+| Kaartranden op de home en `/cadeaukaarten` (1440) | favorieten 132/430/728/1026 naast de grid 132/432/732/1032; drietallen 371 en 376 px breed | favorieten en grid 132/432/732/1032; elk drietal 376 px op 132/532/932 (1280 en 1024 idem) |
+| Artikelnummers op 390 (Nina, Lola, Ivy) | "SPK-" / "015-19", "(lola-" / "chunky-hoops)" | regels breken alleen tussen codes |
+| Wachtlijstbelofte (1440, 1024, 390) | "… spark. Vanaf" / "27 november online." | twee regels, één per zin |
+| "Ik doe mee" op `/nieuwsbrief/bevestigen` (1440) | 704 × 48 | 129 × 48, formulier 544 px |
+| Pill en leverbalk op de home | 1440 × 900: pill over "Vóór 16.00 besteld?" | 1440 × 900: pill wacht, verschijnt na 200 px scrollen; 1280 × 800, 390 en 412 ongewijzigd |
+| "In je tas" met een bewaarde tas met cadeauverpakking (Nina, 1440 en 1280) | 20 px omhoog na ongeveer 300 ms | op 834 px vanaf de eerste paint, CLS 0 |
+| Zoeken "ring" / "zilver ring" | Noor ringetjes eerst / alleen Noor | Nina, Vera / lege staat met suggesties; "ringetjes" vindt Noor nog |
+| Footer op `/spark-finder` na het resultaat | tweede Club-formulier | weg zolang de finder-aanmelding er staat, terug na "Liever zonder e-mail verder" |
+
+### 4.3 Toegankelijkheid
+
+- axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) op 390 en 1440: `/drops/love-club`, `/drops/spark-friday`, `/stacks`, `/cadeaukaarten`, `/sparkela-club`, de Nina- en cadeaukaart-PDP, `/account`, `/nieuwsbrief/bevestigen`, `/spark-finder`, de home, `/collections/ringen`, `/zoeken?q=ring`, `/zoeken?q=zilver ring`, `/algemene-voorwaarden` en `/cookies`: geen overtredingen, geen consolefouten, 0 px horizontale scroll (ook op 320).
+- Focus: de galerijknoppen en de popupknoppen zijn bij focus volledig zichtbaar (zie §4.1); de Engelse tagline in de footer heeft `lang="en"`.
+
+### 4.4 Mechanische controles (eindstand)
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 82 bestanden geslaagd, 1 overgeslagen; 1455 tests geslaagd, 4 overgeslagen |
+| `npm run build:test` | groen, geen waarschuwingen; `ƒ` alleen de zes `/api/*`-routes en de proxy; de teaser blijft statisch per slug |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 371 geslaagd, 27 overgeslagen, 0 mislukt, 4,4 minuten |
+
+Nieuwe of bijgewerkte e2e-checks: de galerijknoppen in beeld bij focus op vier laptopmaten, "Bekijk alle N resultaten" in beeld op 390 × 844 en 375 × 667, de popupvervaging over geen enkele control met focus (1366 × 657), de pill die wacht zolang de leverbalk in zijn hoek staat (de bestaande pilltests, de axe-test van de popup en de popupscreenshot scrollen eerst voorbij de balk met de nieuwe helper `scrollPastPillSpot`), CLS 0 op een PDP als de bewaarde tas de cadeauverpakking al heeft, de naam van een omgedraaide kaart ("Kaart 2 van 3, jouw kaart: 10% op je eerste bestelling, code WELKOM10"), de footer zonder Club-formulier op `/spark-finder` na het resultaat en terug na overslaan, en de finder na een aanmelding zonder overslaan-link. Nieuwe unit-tests: `lib/image-loader.test.ts` (loader en `scripts/build-images.mjs`), `components/qa-round3.test.tsx` (bevestigde socials, cadeauverpakking, kaartoverlays, `ProductFaq inPage`), zoeken op type, startlabel met jaartal, `applyMessage` met alleen een cadeaukaart, de kaartvlakken, de artikelnummers, de teaser, de wachtlijstbelofte, de footer-tagline en `FinderResult ownsClub`.
+
+### 4.5 Servers
+
+Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+

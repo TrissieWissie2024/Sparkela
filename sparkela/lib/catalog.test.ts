@@ -440,6 +440,23 @@ describe("searchProducts", () => {
     expect(found("kerst")).toEqual(["ster"]);
   });
 
+  it("keeps only the type a query word names, and ranks whole words above parts of words (QA round 3)", () => {
+    const rings = [
+      makeCatalogProduct({ handle: "noor", title: "Noor dikke ringetjes", type: "oorbellen", variants: [{ title: "Goud", price: 1495 }, { title: "Zilver", price: 1495 }], featuredRank: 3 }),
+      makeCatalogProduct({ handle: "vera", title: "Vera zegelring", type: "ringen", featuredRank: 16 }),
+      makeCatalogProduct({ handle: "nina", title: "Nina chunky ring", type: "ringen", featuredRank: 15 }),
+    ];
+    const found = (query: string) => searchProducts(rings, query).map((item) => item.handle);
+    // "ring" names the type: no earrings called "ringetjes"; the whole word "ring" in a title first.
+    expect(found("ring")).toEqual(["nina", "vera"]);
+    expect(found("ringen")).toEqual(["nina", "vera"]);
+    // No ring comes in silver: nothing, instead of an earring.
+    expect(found("zilver ring")).toEqual([]);
+    // Not a type word: plain text search as before.
+    expect(found("ringetjes")).toEqual(["noor"]);
+    expect(found("oorbel")).toEqual(["noor"]);
+  });
+
   it("finds nothing for an empty query", () => {
     expect(handles("")).toEqual([]);
     expect(handles("   ")).toEqual([]);

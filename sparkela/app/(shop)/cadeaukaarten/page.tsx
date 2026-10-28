@@ -13,7 +13,7 @@ import { faq } from "@/content/faq";
 import { giftCards } from "@/content/offers";
 import { GiftCardTiles } from "@/components/giftcards/GiftCardTiles";
 import { PageHeader } from "@/components/pages/PageHeader";
-import { FaqList } from "@/components/sections/FaqList";
+import { ProductFaq } from "@/components/pdp/ProductFaq";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 
@@ -88,7 +88,7 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
           <h2 id={howId} className="kop-2 text-tekst">
             {copy.howTitle}
           </h2>
-          <ul role="list" className="mt-8 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-6 lg:gap-8">
+          <ul role="list" className="mt-8 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-6">
             {copy.how.map((point, index) => {
               const Icon = HOW_ICONS[index % HOW_ICONS.length] ?? Gift;
               return (
@@ -109,14 +109,8 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
           </ul>
         </section>
 
-        {faqItems.length > 0 ? (
-          <section aria-labelledby={faqId} className="mt-16 grid gap-8 md:mt-24 lg:grid-cols-12 lg:gap-12">
-            <h2 id={faqId} className="kop-2 text-tekst lg:col-span-4">
-              {copy.faqTitle}
-            </h2>
-            <FaqList items={faqItems} headingLevel={3} className="lg:col-span-8" />
-          </section>
-        ) : null}
+        {/* The same "Goed om te weten" block as on a product page (QA round 3). */}
+        <ProductFaq items={faqItems} headingId={faqId} inPage className="mt-16 md:mt-24" />
 
         <section
           aria-labelledby={crossId}

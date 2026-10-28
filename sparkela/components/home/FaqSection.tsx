@@ -16,7 +16,8 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  * /veelgestelde-vragen and a contact line.
  *
  * Phones: heading, questions, then the links. From lg: heading and links in the left 4 of 12 columns, the questions in
- * the right 7. Server component on --pagina; renders nothing without items.
+ * the right 7, on the same 2rem column gap as ProductFaq, so every FAQ on the site starts at the same x (QA round 3).
+ * Server component on --pagina; renders nothing without items.
  */
 
 export interface FaqSectionProps {
@@ -32,7 +33,7 @@ export function FaqSection({ items, content, className }: FaqSectionProps) {
 
   return (
     <section aria-labelledby={headingId} className={cn("bg-pagina text-tekst", className)}>
-      <Container className="sectie grid grid-cols-1 gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-10">
+      <Container className="sectie grid grid-cols-1 gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-8 lg:gap-y-10">
         <SectionHeading id={headingId} eyebrow={content.eyebrow} title={content.title} className="lg:col-span-4" />
 
         <FaqList items={items} headingLevel={3} className="lg:col-span-7 lg:col-start-6 lg:row-span-2" />

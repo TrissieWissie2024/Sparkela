@@ -138,6 +138,23 @@ describe("DropTeaser", () => {
     expect(html).toMatch(/<a href="\/drops\/love-club" class="[^"]*">Bekijk de drop/);
     expect(html).not.toContain("FOTO");
   });
+
+  it("is a roest band with a light Club section under it and the compact footer (QA round 3, brief §5)", () => {
+    const html = render(<DropTeaser drop={loveClub} />);
+    expect(html).toContain('data-compacte-footer=""');
+    expect(html.match(/data-vlak="roest"/g)).toHaveLength(1);
+    // The Club card is not inside the roest band.
+    expect(html.indexOf("data-eigen-club")).toBeGreaterThan(html.indexOf("</section>"));
+    expect(html).toContain(escape(collectionCopy.teaser.meanwhile.title));
+    for (const link of collectionCopy.teaser.meanwhile.links) expect(html).toContain(`href="${link.href}"`);
+  });
+
+  it("gives a start in another calendar year its year (QA round 3: Spark Friday on launch day)", () => {
+    const sparkFriday = drop("spark-friday");
+    const html = render(<DropTeaser drop={sparkFriday} now={TEST_NOW} />);
+    expect(html).toContain(escape(collectionCopy.teaser.startsOn(formatStartLabel(sparkFriday.startsAt, TEST_NOW))));
+    expect(formatStartLabel(sparkFriday.startsAt, TEST_NOW)).toMatch(/ 2027 om /);
+  });
 });
 
 describe("DropClub", () => {

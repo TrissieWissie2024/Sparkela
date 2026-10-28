@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/cn";
 import { pdpCopy } from "@/content/copy/pdp";
 import { GiftWrapPrice } from "@/components/cart/GiftWrapPrice";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -13,6 +14,10 @@ import { Checkbox } from "@/components/ui/Checkbox";
  *
  * QA round 2: when the cart already has the gift wrap, the tick shows on with "Staat al aan voor je bestelling", so it
  * never looks like a second wrap at +€1,95; unticking it then takes the wrap out of the cart (BuyBox).
+ *
+ * QA round 3: both descriptions sit in one grid cell and the inactive one is invisible, so the tile is as tall as the
+ * longer one in both states. A stored cart only arrives after hydration; swapping a 2-line text for a 1-line one moved
+ * "In je tas" up 20 px some 300 ms after load (CLS). Invisible text is out of the accessible description.
  */
 export function GiftWrapCheckbox({
   value,
@@ -37,7 +42,16 @@ export function GiftWrapCheckbox({
           <GiftWrapPrice className="tabular text-tekst-2" />
         </span>
       }
-      description={inCart ? pdpCopy.giftWrap.alreadyOn : pdpCopy.giftWrap.description}
+      description={
+        <span className="grid">
+          <span className={cn("[grid-area:1/1]", inCart && "invisible")} aria-hidden={inCart || undefined}>
+            {pdpCopy.giftWrap.description}
+          </span>
+          <span className={cn("[grid-area:1/1]", !inCart && "invisible")} aria-hidden={!inCart || undefined}>
+            {pdpCopy.giftWrap.alreadyOn}
+          </span>
+        </span>
+      }
     />
   );
 }

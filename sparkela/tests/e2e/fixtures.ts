@@ -166,6 +166,19 @@ export function mainAddToCart(page: Page): Locator {
  */
 export const SPARK_PILL_NAME = /^Kies je spark, 10% op je eerste bestelling$/;
 
+/**
+ * Scrolls the home's delivery bar (marked data-pill-vrij) up out of view: the Spark pill waits while that bar sits in
+ * its bottom left corner (QA round 3), which it does at 1440 × 900 without scrolling and on a phone after a short
+ * scroll. Does nothing on a page without the marker.
+ */
+export async function scrollPastPillSpot(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const bar = document.querySelector("[data-pill-vrij]");
+    if (bar) window.scrollTo(0, window.scrollY + bar.getBoundingClientRect().bottom + 1);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 export function sparkPill(page: Page): Locator {
   return page.getByRole("button", { name: SPARK_PILL_NAME });
 }

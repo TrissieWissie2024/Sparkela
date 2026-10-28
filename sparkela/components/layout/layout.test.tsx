@@ -241,18 +241,23 @@ describe("Footer (plan §2.5, §13.5; brief §2.8, §2.10)", () => {
     }
   });
 
-  it("has payment badges, socials in a new window, company details, the VAT line and the copyright", () => {
+  it("has payment badges, only confirmed socials, company details, the VAT line and the copyright", () => {
     for (const method of site.paymentMethods) expect(html).toContain(escape(method));
+    // QA round 3: an unconfirmed handle is never linked (components/qa-round3.test.tsx covers a confirmed one).
     for (const social of site.socials) {
-      expect(html).toContain(`href="${social.href}" target="_blank" rel="noopener"`);
+      if (social.confirmed) expect(html).toContain(`href="${social.href}" target="_blank" rel="noopener"`);
+      else expect(html).not.toContain(`href="${social.href}"`);
     }
-    expect(html).toContain(sharedCopy.ui.newWindow);
     expect(html).toContain(escape(site.company.legalName));
     expect(html).toContain(chromeCopy.footer.kvk(site.company.kvk));
     expect(html).toContain(chromeCopy.footer.vatId(site.company.vatId));
     expect(html).toContain(`mailto:${site.email}`);
     expect(html).toContain(escape(site.vat.before));
     expect(html).toContain(escape(chromeCopy.footer.copyright));
+  });
+
+  it("marks the English tagline as English (WCAG 3.1.2, QA round 3)", () => {
+    expect(html).toContain(`<p lang="en" class="label-caps text-tekst-2-op-donker">${site.taglines[0]}</p>`);
   });
 
   it("has no cookie settings button while analytics is off", () => {

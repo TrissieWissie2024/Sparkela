@@ -27,6 +27,13 @@ export const promoLinkClasses =
   "relative font-semibold text-tekst-op-donker underline underline-offset-4 decoration-1 hover:decoration-2 " +
   "before:absolute before:-inset-x-1 before:top-1/2 before:h-[44px] before:-translate-y-1/2 before:content-['']";
 
+/**
+ * Below lg the campaign link sits on the bar's first line, 8 px from the top of the screen: a centred 44 px target
+ * started 6 px above the screen, so only 38 px of it could be tapped (QA round 3). There the target hangs from the
+ * bar's top edge instead (0 to 44 px; the countdown line under it is not interactive).
+ */
+const campaignLinkClasses = `${promoLinkClasses} max-lg:before:-top-2 max-lg:before:translate-y-0`;
+
 export function PromoDivider({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("h-3 w-px shrink-0 bg-rand-op-donker", className)} />;
 }
@@ -35,7 +42,7 @@ export function CampaignMessage({ campaign }: { campaign: Campaign }) {
   const { promo } = campaign;
   const link =
     promo.href && promo.linkLabel ? (
-      <Link href={promo.href} className={promoLinkClasses}>
+      <Link href={promo.href} className={campaignLinkClasses}>
         {promo.linkLabel}
       </Link>
     ) : null;

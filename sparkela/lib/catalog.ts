@@ -527,21 +527,36 @@ function haystackOf(item: Searchable): string {
 
 /**
  * Search over title, type, vibe and moment (slugs and the labels of sharedCopy.vocab), the colour variants, the spec
- * line and the drop's name, plus sharedCopy.searchSynonyms (QA round 1), insensitive to case and diacritics (plan §7.3). Every word of the query must occur. Best match first: the title equals the query, starts
- * with it, contains it, contains every word; then the rest. Ties by featuredRank. An empty query finds nothing.
- * The caller passes the visible products (useCatalog().products); this function does not filter visibility.
+ * line and the drop's name, plus sharedCopy.searchSynonyms (QA round 1), insensitive to case and diacritics (plan
+ * §7.3). Every word of the query must occur. A query word that names a type (sharedCopy.searchTypeWords: "ring",
+ * "oorbellen") keeps only that type (QA round 3). Best match first: the title equals the query, starts with it,
+ * contains it as whole words, contains it inside a word ("ring" in "ringetjes"), contains every word; then the rest.
+ * Ties by featuredRank. An empty query finds nothing. The caller passes the visible products (useCatalog().products);
+ * this function does not filter visibility.
  */
 export function searchProducts<T extends Searchable>(items: T[], query: string): T[] {
   const q = normalizeSearchText(query.slice(0, MAX_QUERY_LENGTH));
   if (!q) return [];
   const words = q.split(" ");
+  const types = new Set(words.flatMap((word) => sharedCopy.searchTypeWords[word] ?? []));
   const scored: Array<{ item: T; score: number }> = [];
   for (const item of items) {
+    if (types.size > 0 && !(types as Set<string | null>).has(item.type)) continue;
     const haystack = haystackOf(item);
     if (!words.every((word) => haystack.includes(word))) continue;
     const title = normalizeSearchText(item.title);
     const score =
-      title === q ? 0 : title.startsWith(q) ? 1 : title.includes(q) ? 2 : words.every((word) => title.includes(word)) ? 3 : 4;
+      title === q
+        ? 0
+        : title.startsWith(q)
+          ? 1
+          : ` ${title} `.includes(` ${q} `)
+            ? 2
+            : title.includes(q)
+              ? 3
+              : words.every((word) => title.includes(word))
+                ? 4
+                : 5;
     scored.push({ item, score });
   }
   return scored.sort((a, b) => a.score - b.score || a.item.featuredRank - b.item.featuredRank).map((entry) => entry.item);

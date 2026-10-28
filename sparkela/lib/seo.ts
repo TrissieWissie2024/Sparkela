@@ -6,7 +6,7 @@ import { getRatingSummary, getReviews } from "@/lib/reviews";
 import type { Cents, JewelryType, Product, Variant } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
 import { shipping } from "@/content/shipping";
-import { site } from "@/content/site";
+import { confirmedSocials, site } from "@/content/site";
 
 /**
  * SEO helpers (docs/PLAN.md §18.1, brief §7): page metadata, route constants and JSON-LD. Pure functions on content
@@ -174,7 +174,7 @@ const WEBSITE_ID = absoluteUrl("/#website");
 
 /** Social profiles for sameAs: only confirmed accounts (all are placeholders at launch). */
 export function confirmedSocialProfiles(): string[] {
-  return site.socials.filter((social) => social.confirmed).map((social) => social.href);
+  return confirmedSocials.map((social) => social.href);
 }
 
 /** Sparkela as an Organization: name, url, logo, email; sameAs only for confirmed socials. */

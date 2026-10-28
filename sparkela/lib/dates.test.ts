@@ -472,6 +472,11 @@ describe("labels (cases 26, 29, 30)", () => {
 
   it("case 30: formatStartLabel", () => {
     expect(formatStartLabel("2027-02-05T19:00:00+01:00")).toBe("vrijdag 5 februari om 19.00 uur");
+    // QA round 3: with the server clock in another year the label carries the year (Spark Friday on launch day).
+    const launchDay = Date.parse("2026-11-27T12:00:00+01:00");
+    expect(formatStartLabel("2027-11-26T00:00:00+01:00", launchDay)).toBe("vrijdag 26 november 2027 om 00.00 uur");
+    expect(formatStartLabel("2026-12-04T19:00:00+01:00", launchDay)).toBe("vrijdag 4 december om 19.00 uur");
+    expect(formatCountdownSr("2027-11-26T00:00:00+01:00", "start", launchDay)).toBe("Begint op vrijdag 26 november 2027 om 00.00 uur");
     expect(formatStartLabel("2027-06-04T19:00:00+02:00")).toBe("vrijdag 4 juni om 19.00 uur");
     expect(formatStartLabel("2026-11-27T00:00:00+01:00")).toBe("vrijdag 27 november om 00.00 uur");
   });

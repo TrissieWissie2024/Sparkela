@@ -3,16 +3,21 @@
 /**
  * next/image loader for every <Image>, server components included (images.loaderFile in next.config.ts,
  * docs/PLAN.md §17.1). Vercel does no image transformations: Shopify's CDN scales product photos, and the site's own
- * files in public/ are delivered pre-sized.
+ * photos come as width variants written at build time.
  *
  * - Shopify CDN (cdn.shopify.com, or a store's /cdn/shop/ path): sets ?width= and keeps every other parameter
  *   (such as v= for cache busting, or format=). Shopify has no quality parameter, so `quality` is ignored.
- * - Local files (/images/…, /brand/…) and other URLs: appends w=<width>, so next/image does not warn that the
- *   loader ignores the width; the files themselves are already the right size.
+ * - Site photos and video posters (/images/…, /videos/…-poster.webp): the variant of lib/site-image-variants.mjs,
+ *   /_img/<step>/images/…, the smallest step of the ladder at least as wide as asked (QA round 3: before, every
+ *   device got the full master, and every `sizes` on a site photo changed nothing).
+ * - Other local files (/brand/…) and other URLs: appends w=<width>, so next/image does not warn that the loader
+ *   ignores the width.
  * - data: and blob: URLs are returned unchanged.
  *
  * `"use client"` is required: Next serialises the loader into client components (next.config images docs).
  */
+
+import { hasSiteVariants, siteVariantPath } from "./site-image-variants.mjs";
 
 interface LoaderInput {
   src: string;
@@ -51,6 +56,8 @@ export default function shopifyLoader({ src, width }: LoaderInput): string {
       return url.toString();
     }
   }
+
+  if (hasSiteVariants(src)) return siteVariantPath(src, Number(size));
 
   return withParam(src, "w", size);
 }

@@ -54,6 +54,8 @@ export interface ProductCardProps {
   sizes?: string;
   /** Preload the first photo: only the first cards above the fold (ProductGrid's priorityCount, plan §17.1). */
   preload?: boolean;
+  /** Load the first photo at once without a preload: cards in the first row on a wide screen only (QA round 3). */
+  eager?: boolean;
   className?: string;
 }
 
@@ -95,12 +97,24 @@ const QUICK_ADD_CLASSES = "ml-auto @max-[14.5rem]:ml-0 @max-[14.5rem]:w-full @ma
  * padding and anchored to the bottom of the card's text area, growing upward. QA round 2: it covers at least the whole
  * text area, up to the photo's lower edge (the photo is 4:5 of the card's width, 125cqw), so a short list (two
  * colours) never leaves the top of the title peeking out above it; its "In tas" sits at the bottom, where the card's
- * own button was. z-20 keeps it above the vibe chip.
+ * own button was. z-20 keeps it above the vibe chip. QA round 3: while it is open the badge and the vibe chip are
+ * hidden (OVERLAY_UNDER_PANEL), because they sit 8 to 12 px from the card's edge and the list 12 to 16 px, so their
+ * rounded ends peeked out beside it.
  */
 const QUICK_ADD_PANEL =
   "absolute inset-x-3 bottom-3 z-20 min-h-[calc(100%-125cqw-0.75rem)] @min-[15rem]:inset-x-4 @min-[15rem]:bottom-4 @min-[15rem]:min-h-[calc(100%-125cqw-1rem)]";
 
-export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SIZES, preload = false, className }: ProductCardProps) {
+/** The photo's overlays (badge, vibe chip) step aside while the card's choice list is open (QA round 3). */
+const OVERLAY_UNDER_PANEL = "group-has-[[data-quick-add-panel]]/kaart:invisible";
+
+export function ProductCard({
+  product,
+  headingLevel = 3,
+  sizes = PRODUCT_CARD_SIZES,
+  preload = false,
+  eager = false,
+  className,
+}: ProductCardProps) {
   const Heading = `h${headingLevel}` as const;
   const href = productPath(product.handle);
   const { display, from } = cardPrice(product);
@@ -130,7 +144,7 @@ export function ProductCard({ product, headingLevel = 3, sizes = PRODUCT_CARD_SI
         </Link>
       </Heading>
 
-      <CardMedia product={product} sizes={sizes} preload={preload} />
+      <CardMedia product={product} sizes={sizes} preload={preload} eager={eager} />
 
       <div className={cn("order-3 flex flex-1 flex-col pb-3 @min-[15rem]:pb-4", SIDE_PADDING)}>
         {product.specRegel ? <SpecLine text={product.specRegel} /> : null}
@@ -188,7 +202,7 @@ const SPEC_PART =
 /* Media                                                                       */
 /* -------------------------------------------------------------------------- */
 
-function CardMedia({ product, sizes, preload }: { product: CatalogProduct; sizes: string; preload: boolean }) {
+function CardMedia({ product, sizes, preload, eager }: { product: CatalogProduct; sizes: string; preload: boolean; eager: boolean }) {
   const [first, second] = product.images;
   const badge = cardBadge(product.badges);
   const vibe = product.tags.vibes[0];
@@ -196,7 +210,13 @@ function CardMedia({ product, sizes, preload }: { product: CatalogProduct; sizes
   return (
     // The inner radius follows the card's 16 px minus its 1 px border.
     <div className="relative order-1 overflow-hidden rounded-t-[calc(var(--hoek-kaart)_-_1px)] bg-vlak">
-      <ProductPhoto image={first ?? null} productTitle={product.title} sizes={sizes} preload={preload} />
+      <ProductPhoto
+        image={first ?? null}
+        productTitle={product.title}
+        sizes={sizes}
+        preload={preload}
+        loading={eager ? "eager" : undefined}
+      />
 
       {second ? (
         <div
@@ -210,13 +230,20 @@ function CardMedia({ product, sizes, preload }: { product: CatalogProduct; sizes
         </div>
       ) : null}
 
-      {badge ? <StatusLabel id={badge} size="kaart" className="absolute top-2.5 left-2.5 @min-[15rem]:top-3 @min-[15rem]:left-3" /> : null}
+      {badge ? (
+        <StatusLabel
+          id={badge}
+          size="kaart"
+          className={cn("absolute top-2.5 left-2.5 @min-[15rem]:top-3 @min-[15rem]:left-3", OVERLAY_UNDER_PANEL)}
+        />
+      ) : null}
 
       {vibe ? (
         <span
           className={cn(
             "absolute right-2 bottom-2 max-w-[calc(100%_-_1rem)] rounded-full border border-rand bg-kaart px-2.5 py-1",
             "text-center text-xs leading-4 font-medium text-tekst @min-[15rem]:right-3 @min-[15rem]:bottom-3",
+            OVERLAY_UNDER_PANEL,
           )}
         >
           <span aria-hidden="true">{sharedCopy.vocab.vibe[vibe]}</span>

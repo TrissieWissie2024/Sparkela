@@ -29,8 +29,8 @@ describe("WaitlistHero", () => {
   it("has one H1, the promise with the launch date from config and the reward in the sign-up title", () => {
     expect(html.match(/<h1/g)?.length).toBe(1);
     expect(html).toContain(formsCopy.waitlist.title);
-    // Day and month never break apart (decision 201).
-    expect(html).toContain(escape(formsCopy.waitlist.promise("27\u00a0november")));
+    // One sentence per line (QA round 3); day and month never break apart (decision 201).
+    expect(html).toContain(`<span class="block">Vanaf 27\u00a0november online.</span>`);
     expect(html).toContain(escape(formsCopy.waitlist.signupTitle));
   });
 
@@ -66,8 +66,16 @@ describe("WaitlistHero", () => {
     expect(html).toContain("De shop opent op vrijdag 27 november om 00.00 uur.");
   });
 
-  it("links the socials in a new window", () => {
-    for (const social of site.socials) expect(html).toContain(`href="${social.href}"`);
+  it("links only confirmed socials (QA round 3: no guessed handles before the accounts exist)", () => {
+    for (const social of site.socials) {
+      if (social.confirmed) expect(html).toContain(`href="${social.href}"`);
+      else expect(html).not.toContain(`href="${social.href}"`);
+    }
+    if (site.socials.every((social) => !social.confirmed)) expect(html).not.toContain(formsCopy.waitlist.socialsLabel);
+  });
+
+  it("puts each sentence of the promise on its own line (QA round 3: no dangling 'Vanaf')", () => {
+    expect(html).toContain('<span class="block">Chunky sieraden met een spark.</span>');
   });
 });
 

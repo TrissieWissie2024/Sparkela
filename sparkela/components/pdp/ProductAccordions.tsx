@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import type { Product } from "@/lib/types";
 import { materialForVariant, needsHygieneSeal } from "@/lib/catalog";
@@ -143,8 +143,31 @@ function detailRows(product: Product): Row[] {
     }
   }
   const codes = productCodes(product);
-  if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: codes.join(", ") });
+  if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: <Codes codes={codes} /> });
   return rows;
+}
+
+/**
+ * Article numbers (and the handle) that wrap only between each other, never at their own hyphens ("SPK-" / "015-19"
+ * split an exact code over two lines; QA round 3). The text stays as written, so copying it gives the real codes.
+ */
+function Codes({ codes, handle }: { codes: string[]; handle?: string }) {
+  return (
+    <>
+      {codes.map((code, index) => (
+        <Fragment key={code}>
+          {index > 0 ? ", " : null}
+          <span className="whitespace-nowrap">{code}</span>
+        </Fragment>
+      ))}
+      {handle ? (
+        <>
+          {" "}
+          <span className="whitespace-nowrap">{pdpCopy.accordions.safety.identificationHandle(handle)}</span>
+        </>
+      ) : null}
+    </>
+  );
 }
 
 function Care({ text }: { text: string | null }) {
@@ -203,7 +226,7 @@ function Safety({ product }: { product: Product }) {
   rows.push({
     id: "identificatie",
     term: copy.identification,
-    value: copy.identificationValue(codes.length > 0 ? codes.join(", ") : product.title, product.handle),
+    value: <Codes codes={codes.length > 0 ? codes : [product.title]} handle={product.handle} />,
   });
   if (warnings) rows.push({ id: "waarschuwingen", term: copy.warnings, value: <MultiLine text={warnings} /> });
   const incomplete = !manufacturer || !responsible || !warnings;

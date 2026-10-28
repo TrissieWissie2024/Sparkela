@@ -8,11 +8,11 @@ import { getServerNow } from "@/lib/server-clock";
 import { pagesCopy } from "@/content/copy/pages";
 import { drops } from "@/content/drops";
 import { site } from "@/content/site";
-import { Spark } from "@/components/brand/Spark";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { PhotoSlot } from "@/components/media/PhotoSlot";
 import { sharedCopy } from "@/content/copy/shared";
 import { PageHeader } from "@/components/pages/PageHeader";
+import { ClubBenefits } from "@/components/sections/ClubBenefits";
 import { Container } from "@/components/ui/Container";
 
 /**
@@ -72,27 +72,7 @@ export default async function SparkelaClubPage() {
               <SubscribeForm source="club" submitLabel={site.club.cta} layout="inline" className="mt-6" />
             </section>
 
-            <section aria-labelledby="club-voordelen">
-              <h2 id="club-voordelen" className="kop-2 text-tekst">
-                {copy.benefitsTitle}
-              </h2>
-              <ul className="mt-5 border-t border-rand">
-                {copy.benefits.map((benefit) => (
-                  <li key={benefit.title} className="flex items-start gap-4 border-b border-rand py-4 md:py-5">
-                    <span
-                      aria-hidden="true"
-                      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-roest-100 text-roest"
-                    >
-                      <Spark className="size-4" />
-                    </span>
-                    <span className="min-w-0 pt-0.5">
-                      <span className="kop-4 block text-tekst">{benefit.title}</span>
-                      <span className="tekst-klein mt-0.5 block text-tekst-2">{benefit.text}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <ClubBenefits headingId="club-voordelen" />
           </div>
 
           <div className="lg:sticky lg:top-[calc(var(--header-hoogte)+1.5rem)] lg:col-span-5">

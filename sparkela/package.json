@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/build-images.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/build-images.mjs",
     "build": "next build",
     "start": "next start",
-    "build:test": "node scripts/with-test-env.mjs next build",
+    "build:test": "node scripts/build-images.mjs && node scripts/with-test-env.mjs next build",
     "start:test": "node scripts/with-test-env.mjs next start -p 3200",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
@@ -17,6 +19,7 @@
     "test:e2e": "playwright test",
     "screenshots": "SCREENSHOTS=1 playwright test tests/e2e/screenshots.spec.ts --project=mobile --project=desktop",
     "logo": "node scripts/build-logo.mjs",
+    "images": "node scripts/build-images.mjs",
     "early-access-link": "node scripts/early-access-link.mjs",
     "capture:reference": "node scripts/capture-reference.mjs"
   },

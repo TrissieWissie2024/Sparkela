@@ -97,7 +97,6 @@ export interface CollectionCopy {
     /** After the stack price: "in plaats van €59,85". Plain text, never a struck-through price (brief §2.5). */
     insteadOf: (subtotal: string) => string;
     finder: { title: string; text: string; cta: CopyLink };
-    faqTitle: string;
   };
   giftCards: {
     title: string;
@@ -119,7 +118,6 @@ export interface CollectionCopy {
     howTitle: string;
     how: Array<{ title: string; text: string }>;
     productLink: CopyLink;
-    faqTitle: string;
     crossTitle: string;
     crossIntro: string;
   };
@@ -151,6 +149,8 @@ export interface CollectionCopy {
     startsOn: (startLabel: string) => string;
     formTitle: string;
     formText: string;
+    /** The light row under the sign-up that leads back into the shop (QA round 3). */
+    meanwhile: { title: string; links: CopyLink[] };
     metaDescription: (dropName: string) => string;
   };
 }
@@ -240,7 +240,6 @@ export const collectionCopy: CollectionCopy = {
       text: "Doe de Spark Finder. Drie vragen, en je ziet welke stukken bij jouw vibe passen.",
       cta: { label: "Naar de Spark Finder", href: "/spark-finder" },
     },
-    faqTitle: "Goed om te weten",
   },
   giftCards: {
     title: "Cadeaukaarten",
@@ -264,7 +263,6 @@ export const collectionCopy: CollectionCopy = {
       { title: "Geen verzendkosten", text: "Er gaat niets met de post, dus je betaalt alleen het bedrag." },
     ],
     productLink: { label: "Meer over de cadeaukaart", href: "/products/cadeaukaart" },
-    faqTitle: "Goed om te weten",
     crossTitle: "Liever zelf iets uitkiezen?",
     crossIntro: "Kleine cadeaus en kant-en-klare stacks, klaar om in te pakken.",
   },
@@ -288,6 +286,14 @@ export const collectionCopy: CollectionCopy = {
     startsOn: (startLabel) => `Live op ${startLabel}`,
     formTitle: `Shop ${EARLY_ACCESS_HOURS} uur eerder`,
     formText: `Word lid van de Sparkela Club. Je krijgt bij elke drop een eigen link, plus ${welcomeCode.percent}% op je eerste bestelling.`,
+    meanwhile: {
+      title: "Alvast rondkijken?",
+      links: [
+        { label: "Nieuw", href: "/collections/nieuw" },
+        { label: "Stacks van Linde", href: "/stacks" },
+        { label: "Spark Finder", href: "/spark-finder" },
+      ],
+    },
     metaDescription: (dropName) => `${dropName} komt eraan. Club-leden zijn er ${EARLY_ACCESS_HOURS} uur eerder bij.`,
   },
 };

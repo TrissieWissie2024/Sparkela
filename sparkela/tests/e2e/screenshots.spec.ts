@@ -14,6 +14,7 @@ import {
   PRELAUNCH_NOW_ISO,
   proxyTimeHeaders,
   SECOND,
+  scrollPastPillSpot,
   settleAnimations,
   sparkPill,
   test,
@@ -75,6 +76,8 @@ test.describe("popup", () => {
 
   test("popup open", async ({ page }, testInfo) => {
     await gotoHydrated(page, "/");
+    // The pill waits while the home's delivery bar is in its corner (QA round 3).
+    await scrollPastPillSpot(page);
     await page.clock.runFor(8 * SECOND);
     await sparkPill(page).click();
     await expect(page.getByRole("dialog", { name: "Kies je spark." })).toBeVisible();

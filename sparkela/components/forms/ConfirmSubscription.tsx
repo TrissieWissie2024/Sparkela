@@ -89,7 +89,8 @@ function InvalidState({ message, headingRef }: { message: string; headingRef?: R
     <div className="text-tekst-op-donker">
       <ConfirmHeading title={formsCopy.confirm.invalidTitle} intro={message} headingRef={headingRef} />
       <h2 className="kop-3 mt-10">{formsCopy.confirm.retryTitle}</h2>
-      <SubscribeForm source="club" tone="donker" className="mt-4" />
+      {/* Inline, as on the waitlist in the same kaal template: a pill button, not a 704 px roest bar (QA round 3). */}
+      <SubscribeForm source="club" tone="donker" layout="inline" className="mt-4 max-w-[34rem]" />
     </div>
   );
 }

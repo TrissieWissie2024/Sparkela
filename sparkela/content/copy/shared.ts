@@ -86,6 +86,11 @@ export interface SharedCopy {
    */
   searchSynonyms: Record<string, string>;
   /**
+   * Query words that name a jewellery type, singular and plural (QA round 3): a query with one of them only finds
+   * that type, so "ring" no longer lists earrings called "ringetjes" first and "zilver ring" finds no earring.
+   */
+  searchTypeWords: Record<string, JewelryType>;
+  /**
    * Pages that search offers as quick links (lib/catalog.ts searchPages, QA round 2): what the product search cannot
    * find (stacks, shipping, the Club). `keywords` are normalised words; a query word matches one that it starts with
    * or that starts with it (from 4 letters).
@@ -237,6 +242,16 @@ export const sharedCopy: SharedCopy = {
     zilverkleurig: "zilver",
     feestdagen: "kerst kerstmis",
     cadeaukaart: "giftcard cadeaubon tegoedbon",
+  },
+  searchTypeWords: {
+    oorbel: "oorbellen",
+    oorbellen: "oorbellen",
+    armband: "armbanden",
+    armbanden: "armbanden",
+    ketting: "kettingen",
+    kettingen: "kettingen",
+    ring: "ringen",
+    ringen: "ringen",
   },
   searchPages: [
     { label: "Cadeaukaarten", href: "/cadeaukaarten", keywords: "cadeau cadeaukaart cadeaukaarten cadeaubon giftcard tegoedbon kaart" },

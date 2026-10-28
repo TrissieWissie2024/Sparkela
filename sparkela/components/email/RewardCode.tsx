@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, Copy, ShoppingBag } from "lucide-react";
+import { Check, CircleAlert, Copy, Info, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { CartResult } from "@/lib/commerce/types";
@@ -23,7 +23,9 @@ import { Button } from "@/components/ui/Button";
  *   says so (the code box is also select-all, so one tap selects it).
  * - "Zet op mijn tas" calls useCart().applyDiscountCode(code) (the drawer has no code field, decision 69) and reports in
  *   a polite live region: on the tas, on the tas while it is still empty, on the tas but the stack discount is higher
- *   (they do not combine), or the cart's own error text.
+ *   (they do not combine), on the tas but nothing in it counts (only gift cards), or the cart's own error text. Only a
+ *   code that counts (or waits in an empty tas) gets the check; one that does not count gets the info icon and the
+ *   button keeps its bag icon (QA round 3: a tas with only a gift card was told "Je ziet de korting in je tas").
  * - Focus moves to this panel when it appears (the form that had focus is gone).
  */
 
@@ -35,15 +37,26 @@ export interface RewardCodeProps {
 
 type CopyState = "idle" | "copied" | "failed";
 
+/** What applying the code says: `ok` (the cart took it), `counts` (it gives a discount now or once the tas fills). */
+export interface ApplyMessage {
+  ok: boolean;
+  counts: boolean;
+  text: string;
+}
+
 /** What applying the code says, from the cart's answer (pure, for the tests). */
-export function applyMessage(result: CartResult, code: string = welcomeCode.code): { ok: boolean; text: string } {
+export function applyMessage(result: CartResult, code: string = welcomeCode.code): ApplyMessage {
   const copy = pagesCopy.popup.reward;
-  if (!result.ok) return { ok: false, text: cartCopy.errors[result.error] };
+  if (!result.ok) return { ok: false, counts: false, text: cartCopy.errors[result.error] };
   const cart: Cart | null = result.cart;
-  const state = cart?.discountCodes.find((entry) => normalizeDiscountCode(entry.code) === normalizeDiscountCode(code));
-  if (state && !state.applicable && state.reason === "not-combinable") return { ok: true, text: copy.notCombined(code) };
-  if (!cart || cart.lines.length === 0) return { ok: true, text: copy.appliedEmpty(code) };
-  return { ok: true, text: copy.appliedMessage(code) };
+  if (!cart || cart.lines.length === 0) return { ok: true, counts: true, text: copy.appliedEmpty(code) };
+  const state = cart.discountCodes.find((entry) => normalizeDiscountCode(entry.code) === normalizeDiscountCode(code));
+  if (state && !state.applicable) {
+    // Shopify gives no reason when no stack applies: then nothing in the tas counts for the code (gift cards only).
+    if (state.reason === "not-combinable") return { ok: true, counts: false, text: copy.notCombined(code) };
+    return { ok: true, counts: false, text: copy.notEligible(code) };
+  }
+  return { ok: true, counts: true, text: copy.appliedMessage(code) };
 }
 
 export function RewardCode({ status, onDone }: RewardCodeProps) {
@@ -55,14 +68,17 @@ export function RewardCode({ status, onDone }: RewardCodeProps) {
   const codeRef = useRef<HTMLParagraphElement>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [copyState, setCopyState] = useState<CopyState>("idle");
-  const [applied, setApplied] = useState<{ ok: boolean; text: string } | null>(null);
+  const [applied, setApplied] = useState<ApplyMessage | null>(null);
 
   useEffect(() => {
     rootRef.current?.focus({ preventScroll: true });
     return () => clearTimeout(copyTimer.current);
   }, []);
 
-  const onCart = cart?.discountCodes.some((entry) => normalizeDiscountCode(entry.code) === normalizeDiscountCode(code)) ?? false;
+  const onCartState = cart?.discountCodes.find((entry) => normalizeDiscountCode(entry.code) === normalizeDiscountCode(code));
+  const onCart = onCartState !== undefined;
+  // The check only when the code gives its discount (or waits in an empty tas).
+  const counts = onCart && (onCartState.applicable || (cart?.lines.length ?? 0) === 0);
 
   function selectCode() {
     const element = codeRef.current;
@@ -140,7 +156,7 @@ export function RewardCode({ status, onDone }: RewardCodeProps) {
           loading={pending}
           onClick={handleApply}
           iconStart={
-            showApplied ? (
+            showApplied && counts ? (
               <Check aria-hidden="true" className="size-4" strokeWidth={2.25} />
             ) : (
               <ShoppingBag aria-hidden="true" className="size-4" strokeWidth={2} />
@@ -159,10 +175,12 @@ export function RewardCode({ status, onDone }: RewardCodeProps) {
       </p>
       <p aria-live="polite" className={cn("flex items-start gap-2 text-sm leading-5 font-medium text-tekst", applied && "mt-3")}>
         {applied ? (
-          applied.ok ? (
+          !applied.ok ? (
+            <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-fout" strokeWidth={2.25} />
+          ) : applied.counts ? (
             <Check aria-hidden="true" className="mt-px size-4 shrink-0 text-succes" strokeWidth={2.25} />
           ) : (
-            <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0 text-fout" strokeWidth={2.25} />
+            <Info aria-hidden="true" className="mt-px size-4 shrink-0 text-info" strokeWidth={2.25} />
           )
         ) : null}
         {applied?.text}

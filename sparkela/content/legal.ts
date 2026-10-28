@@ -119,10 +119,10 @@ export const cookieTable: CookieTable = {
   caption: "Cookies en opslag op sparkela.nl",
   columns: { name: "Naam", purpose: "Waarvoor", duration: "Hoe lang", when: "Wanneer" },
   rows: [
-    { name: "sparkela_cart", purpose: "Onthoudt je winkelwagen in onze Shopify-winkel.", duration: "10 dagen", when: always },
+    { name: "sparkela_cart", purpose: "Onthoudt je tas in onze Shopify-winkel.", duration: "10 dagen", when: always },
     { name: "sparkela_preview", purpose: "Geeft het team toegang tot de shop vóór de lancering.", duration: "30 dagen", when: "Alleen via de preview-link van het team" },
     { name: "sparkela_ea_<drop>", purpose: "Geeft Club-leden early access tot een drop.", duration: "Tot het einde van de drop", when: "Alleen via de early-access-link uit de Club-mail" },
-    { name: storageKeys.cart, purpose: "Onthoudt je winkelwagen op dit apparaat (opslag in je browser).", duration: "Tot je hem wist", when: always },
+    { name: storageKeys.cart, purpose: "Onthoudt je tas op dit apparaat (opslag in je browser).", duration: "Tot je hem wist", when: always },
     { name: storageKeys.emailCaptureLastShown, purpose: "Onthoudt wanneer je de knop “Kies je spark” zag, zodat hij niet steeds terugkomt.", duration: "Tot je hem wist", when: always },
     { name: storageKeys.emailCaptureSubscribed, purpose: "Onthoudt dat je je al hebt aangemeld.", duration: "Tot je hem wist", when: always },
     { name: storageKeys.consent, purpose: "Onthoudt je keuze voor cookies.", duration: "Tot je hem wist", when: always },

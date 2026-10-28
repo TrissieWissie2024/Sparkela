@@ -9,18 +9,17 @@ import { Spark } from "@/components/brand/Spark";
  * components/email/RewardCards.tsx with Sparkela's card: roest with a bot-wit spark.
  *
  * - Every card is a <button> named by its content: "Kaart 1 van 3 omdraaien" (visually hidden) while face down, then
- *   "Kaart 1 van 3, jouw kaart:" plus the visible face ("WELKOM10 10% op je eerste bestelling"), fix 7-9. Every card hides the same real reward, and the modal says so
- *   before a card is turned (site.emailCapture.intro).
+ *   "Kaart 1 van 3, jouw kaart:" plus the face ("10% op je eerste bestelling, code WELKOM10"), fix 7-9 and QA round 3.
+ *   Every card hides the same real reward, and the modal says so before a card is turned (site.emailCapture.intro).
  * - Turning one flips it in 300 ms (CSS 3D, behind motion-safe: only); with reduced motion there is no transform: the
- *   back is swapped for the face at once. The face shows site.emailCapture.reveal: the code WELKOM10 and "10% op je
- *   eerste bestelling".
+ *   back is swapped for the face at once. The face shows "10%" large and the code WELKOM10 under it.
  * - The other two cards then turn as well (a little later, with motion), so the visitor sees that they hold the same
  *   reward. Their captions say "Jouw kaart" and "Zelfde beloning" (the caption line has a fixed height: no shift).
  * - After the turn the chosen card keeps focus (aria-disabled, a second press does nothing) and the other two leave
  *   the tab order, so the next Tab reaches the email field. The face is only mounted once turned, so a face-down card
  *   holds no text.
- * - Turned, the cards become a short row (4:3 instead of 3:4, no spark on the face; QA round 1), so the email field,
- *   the consent and "Ik doe mee" fit in the modal on a phone and on a 1280 × 800 laptop.
+ * - Turned, the cards become a short row (4:3 instead of 3:4, at least 4.5rem tall, no spark on the face; QA rounds 1
+ *   and 3), so the email field, the consent and "Ik doe mee" fit in the modal on a phone and on a 1280 × 800 laptop.
  */
 
 export const CARD_COUNT = 3;
@@ -53,25 +52,30 @@ function CardBack({ className }: { className?: string }) {
   );
 }
 
-/** Card face: the same reward on every card. Its text is part of the button's name (no aria-label overrides it). */
+/**
+ * Card face: the same reward on every card. Its text is part of the button's name (no aria-label overrides it).
+ * QA round 3: two visible lines only, "10%" large in Unbounded and the code in Inter label caps, so the face keeps
+ * room around its text down to 320 px (the code in 11cqw Unbounded was 8.7 px at 390 and ran past the card at 320).
+ * The rest of the reward is read out between them: "10% op je eerste bestelling, code WELKOM10".
+ */
 function CardFace({ chosen }: { chosen: boolean }) {
   // Always the compact face: it is only mounted once the cards are turned (and the row is short).
   const face = pagesCopy.popup.cardFace;
   return (
     <span
       className={cn(
-        "@container absolute inset-0 flex flex-col items-center justify-center rounded-[12px] bg-kaart px-1.5 text-center text-tekst",
+        "@container absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-[12px] bg-kaart px-1.5 text-center text-tekst sm:gap-1.5",
         "motion-safe:rotate-y-180 motion-safe:backface-hidden",
         chosen ? "ring-2 ring-tekst ring-inset" : "ring-1 ring-rand ring-inset",
       )}
     >
-      {/* Sized to the card (container units): Unbounded is wide, and the code must fit on one line at any width. */}
-      <span className="font-display text-[11cqw] leading-none font-extrabold tracking-[-0.01em] whitespace-nowrap">
+      <span className="font-display text-xl leading-none font-extrabold tracking-[-0.01em] whitespace-nowrap sm:text-[1.75rem]">
         {face.value}
-      </span>{" "}
-      {/* 7.6em is about 12 digits of Inter: em, not ch, so the line breaks stay put through the font swap. */}
-      <span className="mt-1.5 max-w-[7.6em] text-[0.6875rem] leading-[1.3] text-tekst-2 sm:mt-2 sm:text-[0.8125rem]">
-        {face.line}
+      </span>
+      <span className="sr-only">{` ${face.spoken} `}</span>
+      {/* Inter caps: about 6em wide with the tracking, so 16cqw keeps the code on one line on the narrowest card. */}
+      <span className="text-[min(0.75rem,16cqw)] leading-none font-semibold tracking-[0.04em] whitespace-nowrap text-tekst-2 uppercase sm:text-[0.8125rem]">
+        {face.code}
       </span>
     </span>
   );
@@ -97,7 +101,7 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
         const followDelay = revealed && !isChosen ? FOLLOW_DELAYS[others.indexOf(index)] : undefined;
 
         return (
-          <div key={index} className="flex min-w-0 flex-col items-center gap-2">
+          <div key={index} className="@container flex min-w-0 flex-col items-center gap-2">
             <button
               type="button"
               aria-disabled={revealed || undefined}
@@ -109,7 +113,7 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
               data-revealed={revealed || undefined}
               className={cn(
                 "group relative block w-full rounded-[12px] perspective-[1000px]",
-                revealed ? "aspect-[4/3] cursor-default" : "aspect-[3/4] cursor-pointer",
+                revealed ? "aspect-[4/3] min-h-[4.5rem] cursor-default" : "aspect-[3/4] cursor-pointer",
               )}
             >
               <span
@@ -126,11 +130,12 @@ export function SparkCards({ chosen, onChoose }: SparkCardsProps) {
                 {revealed ? <CardFace chosen={isChosen} /> : null}
               </span>
             </button>
-            {/* The button's name already carries this; the caption is for sighted visitors. */}
+            {/* The button's name already carries this; the caption is for sighted visitors. "Zelfde beloning" is about
+                7.3em of Inter: 13.5cqw keeps it inside its own column on a 320 px phone (QA round 3: it overlapped). */}
             <span
               aria-hidden="true"
               className={cn(
-                "h-4 text-center text-[0.6875rem] leading-4 whitespace-nowrap sm:text-xs",
+                "h-4 text-center text-[min(0.6875rem,13.5cqw)] leading-4 whitespace-nowrap sm:text-xs",
                 isChosen ? "font-semibold text-tekst" : "text-tekst-2",
               )}
             >

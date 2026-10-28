@@ -248,6 +248,7 @@ export function QuickAdd({
           role="dialog"
           aria-modal="false"
           data-escape-local=""
+          data-quick-add-panel=""
           aria-label={cartCopy.quickAdd.panelLabel(title)}
           // Focusable but not a Tab stop: a press on its plain content keeps focus inside the list (no blur close).
           tabIndex={-1}

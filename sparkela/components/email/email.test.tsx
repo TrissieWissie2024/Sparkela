@@ -11,7 +11,7 @@ import { welcomeCode } from "@/content/offers";
 import { site } from "@/content/site";
 import { CartActionsContext, CartStateContext, type CartContextValue } from "@/components/cart/useCart";
 import { CatalogProvider } from "@/components/catalog/CatalogProvider";
-import { lineOf, lola, noor, pieceList, resolvePiece, tess } from "@/tests/fixtures/catalog";
+import { cadeaukaart, lineOf, lola, noor, pieceList, resolvePiece, tess } from "@/tests/fixtures/catalog";
 import { TEST_NOW } from "@/tests/test-env.mjs";
 
 import { EmailCapture } from "./EmailCapture";
@@ -86,7 +86,8 @@ describe("SparkCards (decision 92)", () => {
     expect(html.match(new RegExp(`>${welcomeCode.code}<`, "g"))).toHaveLength(CARD_COUNT);
     expect(html).toContain(`<span class="sr-only">${escape(pagesCopy.popup.cardChosen(2, CARD_COUNT))} </span>`);
     expect(html).toContain(`<span class="sr-only">${escape(pagesCopy.popup.cardRevealed(1, CARD_COUNT))} </span>`);
-    expect(html).toContain(escape(pagesCopy.popup.cardFace.line));
+    expect(html.match(new RegExp(`>${pagesCopy.popup.cardFace.value}<`, "g"))).toHaveLength(CARD_COUNT);
+    expect(html).toContain(`<span class="sr-only"> ${escape(pagesCopy.popup.cardFace.spoken)} </span>`);
     expect(html).not.toMatch(/<button[^>]*aria-label/);
     expect(html.match(/aria-disabled="true"/g)).toHaveLength(CARD_COUNT);
     expect(html.match(/tabindex="-1"/g)).toHaveLength(CARD_COUNT - 1);
@@ -96,8 +97,8 @@ describe("SparkCards (decision 92)", () => {
 
   it("states the same, real reward from config", () => {
     expect(site.emailCapture.reveal).toContain(welcomeCode.code);
-    expect(pagesCopy.popup.cardFace.value).toBe(welcomeCode.code);
-    expect(pagesCopy.popup.cardFace.line).toContain(`${welcomeCode.percent}%`);
+    expect(pagesCopy.popup.cardFace.code).toBe(welcomeCode.code);
+    expect(pagesCopy.popup.cardFace.value).toBe(`${welcomeCode.percent}%`);
   });
 });
 
@@ -132,20 +133,41 @@ describe("RewardCode", () => {
     const cart = cartOf([lineOf(lola)], welcomeCode.code);
     const html = render(<RewardCode status="pending" onDone={() => {}} />, cart);
     expect(html).toContain(pagesCopy.popup.reward.applied);
+    expect(html).toContain("lucide-check");
+  });
+
+  it("keeps the bag icon (no check) when the code is on a tas with only a gift card", () => {
+    const cart = cartOf([lineOf(cadeaukaart)], welcomeCode.code);
+    const html = render(<RewardCode status="pending" onDone={() => {}} />, cart);
+    expect(html).toContain(pagesCopy.popup.reward.applied);
+    expect(html).not.toContain("lucide-check");
+    expect(html).toContain("lucide-shopping-bag");
   });
 
   it("reports what applying did", () => {
     const code = welcomeCode.code;
     expect(applyMessage({ ok: true, cart: cartOf([lineOf(lola)], code) })).toEqual({
       ok: true,
+      counts: true,
       text: pagesCopy.popup.reward.appliedMessage(code),
     });
-    expect(applyMessage({ ok: true, cart: cartOf([], code) })).toEqual({ ok: true, text: pagesCopy.popup.reward.appliedEmpty(code) });
-    expect(applyMessage({ ok: true, cart: null })).toEqual({ ok: true, text: pagesCopy.popup.reward.appliedEmpty(code) });
+    const empty = { ok: true, counts: true, text: pagesCopy.popup.reward.appliedEmpty(code) };
+    expect(applyMessage({ ok: true, cart: cartOf([], code) })).toEqual(empty);
+    expect(applyMessage({ ok: true, cart: null })).toEqual(empty);
     // Three stack pieces: the stack discount is higher than the code, so the code does not count now.
     const stack = cartOf([lineOf(lola), lineOf(noor), lineOf(tess)], code);
-    expect(applyMessage({ ok: true, cart: stack }).text).toBe(pagesCopy.popup.reward.notCombined(code));
-    expect(applyMessage({ ok: false, error: "network", cart: null })).toEqual({ ok: false, text: cartCopy.errors.network });
+    expect(applyMessage({ ok: true, cart: stack })).toEqual({ ok: true, counts: false, text: pagesCopy.popup.reward.notCombined(code) });
+    // Only a gift card in the tas (QA round 3): the code is there but gives nothing, so no "Je ziet de korting".
+    const giftCardOnly = cartOf([lineOf(cadeaukaart)], code);
+    expect(applyMessage({ ok: true, cart: giftCardOnly })).toEqual({
+      ok: true,
+      counts: false,
+      text: pagesCopy.popup.reward.notEligible(code),
+    });
+    // Shopify gives no reason when no stack applies: the same line.
+    const shopifyLike: Cart = { ...giftCardOnly, discountCodes: [{ code, applicable: false, reason: null }] };
+    expect(applyMessage({ ok: true, cart: shopifyLike }).text).toBe(pagesCopy.popup.reward.notEligible(code));
+    expect(applyMessage({ ok: false, error: "network", cart: null })).toEqual({ ok: false, counts: false, text: cartCopy.errors.network });
   });
 });
 

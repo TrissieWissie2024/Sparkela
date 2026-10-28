@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { site } from "@/content/site";
 import { storageKeys } from "@/lib/storage";
-import { DAY, SECOND, SPARK_PILL_NAME, sparkPill, TEST_NOW, waitForHydration } from "./fixtures";
+import { DAY, SECOND, SPARK_PILL_NAME, scrollPastPillSpot, sparkPill, TEST_NOW, waitForHydration } from "./fixtures";
 
 /**
  * Brief §7 "popup maximaal één keer" (docs/PLAN.md §19.2, §13.11.1, decision 37): the pill "Kies je spark" appears
@@ -82,10 +82,19 @@ async function waitPastTheDelay(page: Page) {
   await page.clock.runFor(2 * SECOND);
 }
 
+/**
+ * At 1440 × 900 the home's delivery bar ends at the fold, in the pill's corner: the pill waits until the visitor has
+ * scrolled it away (QA round 3). These tests scroll a little first, as a visitor does.
+ */
+async function scrollPastDeliveryBar(page: Page) {
+  await scrollPastPillSpot(page);
+}
+
 test("the pill shows once after 8 s, the modal reveals the reward, and a reload brings no second pill", async ({ page }) => {
   await openHome(page);
   await expect(sparkPill(page)).toBeHidden();
 
+  await scrollPastDeliveryBar(page);
   await page.clock.runFor(DELAY);
   await expect(sparkPill(page)).toBeVisible();
   await expect(sparkPill(page)).toHaveAccessibleName(SPARK_PILL_NAME);
@@ -109,10 +118,10 @@ test("the pill shows once after 8 s, the modal reveals the reward, and a reload 
 
   // Turning a card shows the real code; the other cards show the same reward.
   await cards.getByRole("button", { name: "Kaart 2 van 3 omdraaien" }).click();
-  const chosen = cards.getByRole("button", { name: "Kaart 2 van 3, jouw kaart: WELKOM10 10% op je eerste bestelling" });
+  const chosen = cards.getByRole("button", { name: "Kaart 2 van 3, jouw kaart: 10% op je eerste bestelling, code WELKOM10" });
   await expect(chosen).toBeVisible();
   await expect(chosen).toBeFocused();
-  await expect(cards.getByRole("button", { name: "Kaart 1 van 3: WELKOM10 10% op je eerste bestelling" })).toBeVisible();
+  await expect(cards.getByRole("button", { name: "Kaart 1 van 3: 10% op je eerste bestelling, code WELKOM10" })).toBeVisible();
   await expect(cards.getByText("WELKOM10")).toHaveCount(3);
 
   // Then the sign-up: email field, unchecked consent with the exact sentence, privacy link.
@@ -139,8 +148,52 @@ test("eight days after it showed, the pill comes back", async ({ page }) => {
     [storageKeys.emailCaptureLastShown, JSON.stringify(TEST_NOW - 8 * DAY)] as const,
   );
   await openHome(page);
+  await scrollPastDeliveryBar(page);
   await page.clock.runFor(DELAY);
   await expect(sparkPill(page)).toBeVisible();
+});
+
+test("on a desktop the pill waits while the delivery bar is in its corner (QA round 3)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "On a phone the delivery bar is below the fold.");
+  await openHome(page);
+  await page.clock.runFor(DELAY);
+  // The capture's code is in and mounted, so a pill that stays away stays away because of the rule.
+  await expect.poll(() => captureLoaded(page)).toBe(true);
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.clock.runFor(2 * SECOND);
+  await expect(sparkPill(page)).toBeHidden();
+  await scrollPastDeliveryBar(page);
+  await page.clock.runFor(2 * SECOND);
+  await expect(sparkPill(page)).toBeVisible();
+});
+
+test("a control that gets focus in the popup is never under its bottom fade (QA round 3)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Measured on a 1366 × 768 laptop (657 px of viewport in Chrome).");
+  await page.setViewportSize({ width: 1366, height: 657 });
+  await openHome(page);
+  // On a 657 px screen the delivery bar is still in the pill's corner after a short scroll.
+  await scrollPastPillSpot(page);
+  await waitPastTheDelay(page);
+  await sparkPill(page).click();
+  const dialog = popup(page);
+  await dialog.getByRole("button", { name: "Kaart 2 van 3 omdraaien" }).click();
+  for (const name of ["Ik doe mee", "Nee, bedankt"]) {
+    const control = dialog.getByRole("button", { name, exact: true });
+    for (let i = 0; i < 12 && !(await control.evaluate((node) => node === document.activeElement)); i += 1) {
+      await page.keyboard.press("Tab");
+    }
+    await expect(control).toBeFocused();
+    await expect
+      .poll(() =>
+        control.evaluate((node) => {
+          const fade = node.closest("[role=dialog]")?.querySelector("span[aria-hidden='true'][class*='bg-linear-to-t']");
+          if (!fade) return "no fade";
+          const covered = node.getBoundingClientRect().bottom + 4 > fade.getBoundingClientRect().top;
+          return covered && Number(getComputedStyle(fade).opacity) > 0.05 ? "under the fade" : "clear";
+        }),
+      )
+      .toBe("clear");
+  }
 });
 
 test("six days after it showed, it stays away", async ({ page }) => {

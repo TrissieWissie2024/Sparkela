@@ -12,6 +12,7 @@ import {
   PRELAUNCH_NOW_ISO,
   proxyTimeHeaders,
   SECOND,
+  scrollPastPillSpot,
   settleAnimations,
   sparkPill,
   test,
@@ -77,6 +78,8 @@ test.describe("popup", () => {
 
   test("the open popup with a turned card has no axe violations", async ({ page }) => {
     await gotoHydrated(page, "/");
+    // The pill waits while the home's delivery bar is in its corner (QA round 3): scroll past it.
+    await scrollPastPillSpot(page);
     await page.clock.runFor(8 * SECOND);
     await sparkPill(page).click();
     const dialog = page.getByRole("dialog", { name: "Kies je spark." });

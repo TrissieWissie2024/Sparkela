@@ -39,8 +39,14 @@ import { InlineScript } from "@/components/ui/InlineScript";
 export const ensureStatic = "navigation";
 export const instant = false;
 
-/** How many card photos are preloaded above the fold (plan §17.1: up to 4 in a collection). */
-const PRELOADED_CARDS = 4;
+/**
+ * Card photos above the fold (plan §17.1: "de eerste 2 (mobiel) of 4 kaarten"). Only the first row of a phone (two
+ * cards) gets a <head> preload; cards 3 and 4 load eagerly without one, so a phone does not fetch two photos below the
+ * fold ahead of the visible row, and on a wide screen, where they are in the first row, the browser still finds them
+ * at once in the HTML (QA round 3).
+ */
+const PRELOADED_CARDS = 2;
+const EAGER_CARDS = 4;
 
 export function generateStaticParams(): Array<{ handle: string }> {
   return collections.map((collection) => ({ handle: collection.handle }));
@@ -76,7 +82,13 @@ export default async function CollectionPage({ params }: PageProps<"/collections
     products.map((product, index) => [
       product.handle,
       // The page's H1 is the grid's title, so the card names are h2s (as in CORVANE).
-      <ProductCard key={product.handle} product={product} headingLevel={2} preload={index < PRELOADED_CARDS} />,
+      <ProductCard
+        key={product.handle}
+        product={product}
+        headingLevel={2}
+        preload={index < PRELOADED_CARDS}
+        eager={index < EAGER_CARDS}
+      />,
     ]),
   );
 

@@ -95,7 +95,8 @@ describe("VideoSlot", () => {
     expect(html).toContain("<video");
     expect(html).toContain('controls=""');
     expect(html).toContain('preload="none"');
-    expect(html).toContain('poster="/videos/sparkela-01-poster.webp"');
+    // The poster is fetched right away, so it is the 640 px variant (QA round 3).
+    expect(html).toContain('poster="/_img/640/videos/sparkela-01-poster.webp"');
     expect(html).toContain('src="/videos/sparkela-01.mp4"');
     expect(html).not.toMatch(/autoplay/i);
   });

@@ -7,7 +7,6 @@ import { useDeferredValue, useId, useMemo, useRef, useState, type FormEvent } fr
 
 import type { NavItem } from "@/lib/types";
 import { defaultVariant, searchPages, searchProducts } from "@/lib/catalog";
-import { cn } from "@/lib/cn";
 import { priceDisplay } from "@/lib/pricing";
 import { productPath } from "@/lib/paths";
 import { chromeCopy } from "@/content/copy/chrome";
@@ -24,6 +23,9 @@ import { Sheet } from "@/components/ui/Sheet";
  * the top 6 results while typing and a link to all results on /zoeken?q=…; Enter goes there too. It searches the
  * visible catalog in the browser (searchProducts over useCatalog().products), so it is instant, works with a static
  * site and never shows a drop before its start.
+ *
+ * "Bekijk alle N resultaten" sits in the sheet's fixed footer, under the scrolling results, so it is always in view
+ * (QA round 3: on a phone the 85dvh sheet cut it off right under the sixth result, and the list looked complete).
  *
  * The field takes focus when the dialog opens; the number of results is announced in a polite live region. Radix
  * gives the focus trap and Escape; focus returns to the search button (Sheet). Following a result closes the dialog.
@@ -55,6 +57,7 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const quickLinks = mainNav.filter((item): item is Extract<NavItem, { kind: "link" }> => item.kind === "link");
 
   const close = () => onOpenChange(false);
+  const showAll = trimmed !== "" && results.length > 0;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,7 +81,20 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         event.preventDefault();
         inputRef.current?.focus();
       }}
-      bodyClassName="pb-8"
+      bodyClassName={showAll ? undefined : "pb-8"}
+      footer={
+        showAll ? (
+          <div className="mx-auto w-full max-w-[44rem]">
+            <Link
+              href={searchPageHref(trimmed)}
+              onClick={close}
+              className={buttonClasses({ variant: "outline", size: "md", fullWidth: true })}
+            >
+              {chromeCopy.search.all(results.length)}
+            </Link>
+          </div>
+        ) : undefined
+      }
     >
       <div className="mx-auto w-full max-w-[44rem]">
         <form role="search" onSubmit={submit} action="/zoeken" method="get">
@@ -184,13 +200,6 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                   );
                 })}
               </ul>
-              <Link
-                href={searchPageHref(trimmed)}
-                onClick={close}
-                className={cn(buttonClasses({ variant: "outline", size: "md", fullWidth: true }), "mt-5")}
-              >
-                {chromeCopy.search.all(results.length)}
-              </Link>
             </div>
           ) : pages.length > 0 ? null : (
             <div className="mt-6">

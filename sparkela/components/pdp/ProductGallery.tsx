@@ -54,8 +54,19 @@ export interface ProductGalleryProps {
   title: string;
   /** Placeholder shots when there are no photos. Default all five; the gift card passes one. */
   placeholderKinds?: readonly ImageKind[];
+  /**
+   * From md, on a screen at least 42rem tall (where the PDP makes the gallery sticky): cap the photo's width so the
+   * 4:5 photo with its controls fits under the header (QA round 3). Below lg the dots sit under the photo, so the whole
+   * gallery is capped; from lg only the photo next to the thumbnails.
+   */
+  fitViewport?: boolean;
   className?: string;
 }
+
+/** fitViewport below lg: 24 px above, the 48 px dot row and 24 px below the gallery stay free. */
+const FIT_GALLERY_MD = "md:max-lg:[@media(min-height:42rem)]:max-w-[calc((100svh-var(--header-hoogte)-6rem)*0.8)]";
+/** fitViewport from lg: 24 px above and below the photo stay free. */
+const FIT_PHOTO_LG = "lg:[@media(min-height:42rem)]:max-w-[calc((100svh-var(--header-hoogte)-3rem)*0.8)]";
 
 /** next/image sizes of a slide (plan §17.1). */
 // The slide is about 46vw from md (the buy column sits next to it) and 504 px from 1280 (QA round 1: "55vw" made the
@@ -76,7 +87,7 @@ const KIND_ICONS: Record<ImageKind, LucideIcon> = {
   overig: Camera,
 };
 
-export function ProductGallery({ images, title, placeholderKinds, className }: ProductGalleryProps) {
+export function ProductGallery({ images, title, placeholderKinds, fitViewport = false, className }: ProductGalleryProps) {
   const slides = gallerySlides(images, title, placeholderKinds);
   const total = slides.length;
   const [active, setActive] = useState(0);
@@ -137,7 +148,11 @@ export function ProductGallery({ images, title, placeholderKinds, className }: P
   const scrollsByHand = !isDesktop && total > 1;
 
   return (
-    <section aria-roledescription={sharedCopy.ui.carousel} aria-label={pdpCopy.gallery.label(title)} className={className}>
+    <section
+      aria-roledescription={sharedCopy.ui.carousel}
+      aria-label={pdpCopy.gallery.label(title)}
+      className={cn(fitViewport && FIT_GALLERY_MD, className)}
+    >
       <div className="lg:grid lg:grid-cols-[4.5rem_minmax(0,1fr)] lg:gap-4 xl:grid-cols-[5rem_minmax(0,1fr)] xl:gap-5">
         {/* Thumbnails (lg+): one Tab stop, arrow keys move between them. */}
         {total > 1 ? (
@@ -174,7 +189,7 @@ export function ProductGallery({ images, title, placeholderKinds, className }: P
           </ul>
         ) : null}
 
-        <div className={cn("relative", total <= 1 && "lg:col-span-2")}>
+        <div className={cn("relative", total <= 1 && "lg:col-span-2", fitViewport && FIT_PHOTO_LG)}>
           <div
             ref={trackRef}
             onScroll={handleScroll}
@@ -247,7 +262,7 @@ export function ProductGallery({ images, title, placeholderKinds, className }: P
                 aria-label={sharedCopy.ui.showImage(index + 1, total)}
                 aria-current={selected ? "true" : undefined}
                 onClick={() => show(index)}
-                className="group flex size-11 items-center justify-center"
+                className="group flex size-11 scroll-mb-4 items-center justify-center"
               >
                 <span
                   aria-hidden="true"
@@ -319,7 +334,8 @@ function GalleryButton({
       }}
       className={cn(
         "flex size-11 items-center justify-center rounded-full border border-transparent bg-kaart/95 text-tekst shadow-hover",
-        "motion-safe:transition-[background-color,opacity] motion-safe:duration-200",
+        // A focus scroll keeps 16 px under the button, so its ring never ends on the fold (QA round 3).
+        "scroll-mb-4 motion-safe:transition-[background-color,opacity] motion-safe:duration-200",
         disabled ? "cursor-default opacity-45" : "hover:bg-kaart",
       )}
     >

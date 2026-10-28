@@ -4,7 +4,7 @@ import Link from "next/link";
 import { chromeCopy } from "@/content/copy/chrome";
 import { sharedCopy } from "@/content/copy/shared";
 import { footerNav, legalNav } from "@/content/navigation";
-import { site } from "@/content/site";
+import { confirmedSocials as socials, site } from "@/content/site";
 import { Logo } from "@/components/brand/Logo";
 import { CookieSettingsButton } from "@/components/consent/ConsentSlots";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
@@ -27,7 +27,8 @@ import { PaymentBadges } from "./PaymentBadges";
  *    and a wordmark of at most 36rem, so the dark footer no longer fills most of a short page.
  * 2. Link columns Shop / Klantenservice / Sparkela / Juridisch (footerNav): 2 columns on phones, 4 from md. The
  *    Juridisch column gets "Cookie-instellingen" only while analytics is on.
- * 3. Payment methods as neutral text badges and the socials (open in a new window, ↗, rel="noopener").
+ * 3. Payment methods as neutral text badges and the socials (open in a new window, ↗, rel="noopener"): only the
+ *    confirmed ones (confirmedSocials, QA round 3), so no guessed handle is linked before the accounts exist.
  * 4. The company details (placeholders until TODO-LAUNCH), the VAT line by date, the withdrawal link
  *    <a href="/herroepen">Hier de overeenkomst herroepen</a> (exactly this label and target, on every page) and the
  *    copyright with the year as a literal from content.
@@ -111,17 +112,19 @@ export function Footer() {
           className="flex flex-col gap-8 border-t border-rand-op-donker pt-10 md:flex-row md:items-center md:justify-between"
         >
           <PaymentBadges tone="donker" />
-          <ul aria-label={copy.socialsLabel} className="flex flex-wrap items-center gap-x-7">
-            {site.socials.map((social) => (
-              <li key={social.id}>
-                <a href={social.href} target="_blank" rel="noopener" className={linkClasses}>
-                  {social.label}
-                  <ArrowUpRight aria-hidden="true" className="ml-1 size-4 text-tekst-2-op-donker" strokeWidth={1.75} />
-                  <span className="sr-only"> {sharedCopy.ui.newWindow}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          {socials.length > 0 ? (
+            <ul aria-label={copy.socialsLabel} className="flex flex-wrap items-center gap-x-7">
+              {socials.map((social) => (
+                <li key={social.id}>
+                  <a href={social.href} target="_blank" rel="noopener" className={linkClasses}>
+                    {social.label}
+                    <ArrowUpRight aria-hidden="true" className="ml-1 size-4 text-tekst-2-op-donker" strokeWidth={1.75} />
+                    <span className="sr-only"> {sharedCopy.ui.newWindow}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <div className="mt-8 flex flex-col gap-6 tekst-klein text-tekst-2-op-donker md:mt-10 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
@@ -169,7 +172,10 @@ export function Footer() {
           <div aria-hidden="true" className="w-full max-w-[36rem]">
             <Logo variant="op-donker" width={600} trimInline className="h-auto w-full" />
           </div>
-          <p className="label-caps text-tekst-2-op-donker">{site.taglines[0]}</p>
+          {/* English inside lang="nl": marked, so a Dutch voice does not read it as Dutch (WCAG 3.1.2, QA round 3). */}
+          <p lang={site.taglineLangs[0]} className="label-caps text-tekst-2-op-donker">
+            {site.taglines[0]}
+          </p>
         </div>
         <div data-footer-compact className="hidden h-8" />
       </Container>

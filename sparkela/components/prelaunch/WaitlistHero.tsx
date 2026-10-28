@@ -5,13 +5,14 @@ import { cn } from "@/lib/cn";
 import { assets } from "@/content/assets";
 import { formsCopy } from "@/content/copy/forms";
 import { sharedCopy } from "@/content/copy/shared";
-import { site } from "@/content/site";
+import { confirmedSocials, site } from "@/content/site";
 import { Logo, logoLayout } from "@/components/brand/Logo";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { PhotoSlot, suppliedImage } from "@/components/media/PhotoSlot";
 import { TimeGate } from "@/components/time/TimeGate";
 import { buttonClasses } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { SentenceLines } from "@/components/ui/SentenceLines";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 
 /**
@@ -57,7 +58,10 @@ export function WaitlistHero({ hideMissing = site.flags.hideMissingOptionalMedia
             <h1 id={TITLE_ID} className="kop-1 mt-8 md:mt-10">
               {copy.title}
             </h1>
-            <p className="tekst-groot mt-4 max-w-[34rem] text-tekst-2-op-donker">{copy.promise(launchLabel)}</p>
+            {/* One sentence per line: "Vanaf" never dangles after the first sentence (QA round 3). */}
+            <p className="tekst-groot mt-4 max-w-[34rem] text-tekst-2-op-donker">
+              <SentenceLines text={copy.promise(launchLabel)} />
+            </p>
           </div>
 
           {photo ? (
@@ -103,24 +107,27 @@ export function WaitlistHero({ hideMissing = site.flags.hideMissingOptionalMedia
                 </div>
               }
             />
-            <nav aria-label={copy.socialsLabel} className="mt-6">
-              <ul className="flex flex-wrap gap-x-6">
-                {site.socials.map((social) => (
-                  <li key={social.id}>
-                    <a
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener"
-                      className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-tekst-op-donker underline-offset-4 hover:underline"
-                    >
-                      {social.label}
-                      <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={1.5} />
-                      <VisuallyHidden>{` ${sharedCopy.ui.newWindow}`}</VisuallyHidden>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            {/* Only confirmed accounts: this page is where social traffic lands before the launch (QA round 3). */}
+            {confirmedSocials.length > 0 ? (
+              <nav aria-label={copy.socialsLabel} className="mt-6">
+                <ul className="flex flex-wrap gap-x-6">
+                  {confirmedSocials.map((social) => (
+                    <li key={social.id}>
+                      <a
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener"
+                        className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-tekst-op-donker underline-offset-4 hover:underline"
+                      >
+                        {social.label}
+                        <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={1.5} />
+                        <VisuallyHidden>{` ${sharedCopy.ui.newWindow}`}</VisuallyHidden>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
           </div>
         </div>
       </Container>

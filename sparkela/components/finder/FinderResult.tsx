@@ -31,6 +31,11 @@ import { finderTones, type FinderTone } from "./tones";
  * Mounted only after the visitor answered the last question (never in the static HTML), so reading the sign-up state
  * once on mount is safe: a visitor who is already in the Club does not get the form again, and a sign-up made here
  * keeps showing its own success message.
+ *
+ * QA round 3: after a sign-up here the step keeps only its heading and the success message (with WELKOM10): no "Laat
+ * je e-mailadres achter" intro and no "Liever zonder e-mail verder", which would have collapsed the only place that
+ * shows the code. With `ownsClub` (the /spark-finder page) the step carries data-eigen-club while it shows, so the
+ * footer leaves out its identical Club form (app/globals.css); on the home the footer is far away.
  */
 
 export interface FinderResultProps {
@@ -44,6 +49,8 @@ export interface FinderResultProps {
   headingRef?: RefObject<HTMLHeadingElement | null>;
   onRestart?: () => void;
   config?: QuizConfig;
+  /** The page's own sign-up: mark the email step data-eigen-club so the footer drops its Club form (QA round 3). */
+  ownsClub?: boolean;
   className?: string;
 }
 
@@ -72,6 +79,7 @@ export function FinderResult({
   headingRef,
   onRestart,
   config = quiz,
+  ownsClub = false,
   className,
 }: FinderResultProps) {
   const t = finderTones[tone];
@@ -83,6 +91,7 @@ export function FinderResult({
   // Read once: the email step shows for visitors who are not in the Club yet (see above).
   const [alreadyInClub] = useState(hasSubscribed);
   const [emailOpen, setEmailOpen] = useState(true);
+  const [signedUp, setSignedUp] = useState(false);
 
   /**
    * "Liever zonder e-mail verder": the email block collapses, so the page gets shorter and would leave the visitor at
@@ -142,15 +151,34 @@ export function FinderResult({
       </div>
 
       {emailOpen && !alreadyInClub ? (
-        <section aria-labelledby={emailHeadingId} className={cn("mt-6 border-t pt-8 md:mt-8 md:pt-10", t.rule)}>
+        <section
+          aria-labelledby={emailHeadingId}
+          {...(ownsClub ? { "data-eigen-club": "" } : {})}
+          className={cn("mt-6 border-t pt-8 md:mt-8 md:pt-10", t.rule)}
+        >
           <Heading id={emailHeadingId} className={cn("kop-3", t.strong)}>
             {config.result.emailTitle}
           </Heading>
-          <p className={cn("mt-2 max-w-[36rem] text-[0.9375rem] leading-relaxed", t.soft)}>{copy.emailText}</p>
-          <SubscribeForm source="finder" quiz={answers} tone={t.surface} layout="inline" className="mt-5 max-w-[36rem]" />
-          <Button variant="link" onClick={skipEmail} className={cn("mt-5", t.surface === "donker" && "text-tekst-op-donker! hover:text-bot-wit!")}>
-            {config.result.skip}
-          </Button>
+          {signedUp ? null : (
+            <p className={cn("mt-2 max-w-[36rem] text-[0.9375rem] leading-relaxed", t.soft)}>{copy.emailText}</p>
+          )}
+          <SubscribeForm
+            source="finder"
+            quiz={answers}
+            tone={t.surface}
+            layout="inline"
+            onSuccess={() => setSignedUp(true)}
+            className={cn("max-w-[36rem]", signedUp ? "mt-4" : "mt-5")}
+          />
+          {signedUp ? null : (
+            <Button
+              variant="link"
+              onClick={skipEmail}
+              className={cn("mt-5", t.surface === "donker" && "text-tekst-op-donker! hover:text-bot-wit!")}
+            >
+              {config.result.skip}
+            </Button>
+          )}
         </section>
       ) : null}
     </div>

@@ -26,7 +26,8 @@ import { TrustRow } from "./TrustRow";
  *
  * 1. Breadcrumbs: Home › {collection of the type} › {product}.
  * 2. Grid: one column on phones (the gallery to the screen edges), two equal columns from md, 11fr / 9fr from lg with a
- *    gap of 56 px (80 from xl); from md both columns stick under the header, so the shorter one stays in view.
+ *    gap of 56 px (80 from xl); from md the buy column sticks under the header, and the gallery does too on a screen
+ *    at least 42rem tall, where its photo is capped so the whole gallery fits under the header (QA round 3).
  * 3. Left: ProductGallery.
  * 4. Right: ProductInfo · BuyBox (variant → stack → gift wrap → button, with DeliveryEstimate and TrustRow under the
  *    button) · ProductSpecs · StatementMeter · ProductAccordions, each block under a hairline.
@@ -53,8 +54,21 @@ export interface ProductDetailProps {
   schedule: ShipLabelEntry[];
 }
 
-/** From md both columns stick under the header (plan §14.2 step 2); a column taller than the screen just scrolls. */
+/**
+ * From md the buy column sticks under the header (plan §14.2 step 2). It is the taller column on every product, so it
+ * fills its grid row and simply scrolls; the sticky keeps a shorter one in view.
+ */
 const STICKY = "md:sticky md:top-[calc(var(--header-hoogte)+24px)] md:self-start";
+
+/**
+ * The gallery sticks only on a screen at least 42rem tall, and there ProductGallery `fitViewport` caps its photo so
+ * the photo, the thumbnails and previous/next all fit under the header (QA round 3). CSS sticky never scrolls a sticky
+ * box that is taller than the screen: on a 1366 × 657 laptop the bottom of the photo and its previous/next buttons
+ * stayed below the fold while the buy column scrolled past, so keyboard focus landed on buttons nobody could see
+ * (WCAG 2.4.7, 2.4.11). On a shorter screen the gallery scrolls with the page.
+ */
+const GALLERY_STICKY =
+  "md:[@media(min-height:42rem)]:sticky md:[@media(min-height:42rem)]:top-[calc(var(--header-hoogte)+24px)] md:self-start";
 
 /** Hairline and rhythm between the blocks of the buy column. */
 const BLOCK = "mt-10 border-t border-rand pt-8";
@@ -73,8 +87,13 @@ export function ProductDetail({ product, badges, stacks, stackOptions, lookProdu
         <Breadcrumbs items={productTrail(product)} className="mb-2 md:mb-4" />
 
         <div className="grid grid-cols-1 gap-y-8 md:grid-cols-2 md:gap-x-8 lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] lg:gap-x-14 xl:gap-x-20">
-          <div className={cn("-mx-5 md:mx-0", STICKY)}>
-            <ProductGallery images={product.images} title={product.title} placeholderKinds={giftCard ? ["packshot"] : undefined} />
+          <div className={cn("-mx-5 md:mx-0", GALLERY_STICKY)}>
+            <ProductGallery
+              images={product.images}
+              title={product.title}
+              placeholderKinds={giftCard ? ["packshot"] : undefined}
+              fitViewport
+            />
           </div>
 
           <div className={STICKY}>

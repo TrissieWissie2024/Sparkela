@@ -127,6 +127,26 @@ export function bodyBlocksPill(): boolean {
   return consentOpen() || stickyBarHeight() > 0;
 }
 
+/** Height of the bottom band where the pill appears: its 46 px, the 24 px offset and room around it. */
+const PILL_SPOT_HEIGHT_PX = 120;
+/** Width of the bottom left corner the pill takes (it is about 190 px wide, more with large text). */
+const PILL_SPOT_WIDTH_PX = 320;
+
+/**
+ * True while an element marked data-pill-vrij sits where the pill would appear (QA round 3): at 1440 × 900 the home's
+ * delivery bar ends exactly at the fold, and the pill covered its first and most important line ("Vóór 16.00
+ * besteld? Vandaag verstuurd."). The pill then waits until the visitor has scrolled it out of that corner.
+ */
+export function pillSpotTaken(): boolean {
+  const bottom = window.innerHeight;
+  const top = bottom - PILL_SPOT_HEIGHT_PX;
+  for (const element of Array.from(document.querySelectorAll("[data-pill-vrij]"))) {
+    const rect = element.getBoundingClientRect();
+    if (rect.height > 0 && rect.top < bottom && rect.bottom > top && rect.left < PILL_SPOT_WIDTH_PX) return true;
+  }
+  return false;
+}
+
 /** True while the visitor is typing or choosing in a form field (the pill never interrupts that). */
 export function isEditingField(): boolean {
   const active = document.activeElement;

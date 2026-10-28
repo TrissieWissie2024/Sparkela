@@ -460,15 +460,25 @@ function isMidnight(parts: ZonedParts): boolean {
 }
 
 /**
+ * "26 november", or "26 november 2027" when `now` is given and falls in another calendar year (Amsterdam): a start a
+ * year ahead without its year reads as a date in the past (QA round 3, the Spark Friday teaser on launch day).
+ */
+function startDay(parts: ZonedParts, now?: number): string {
+  const day = dayMonth(parts.isoDate);
+  return now !== undefined && getZonedParts(now).year !== parts.year ? `${day} ${parts.year}` : day;
+}
+
+/**
  * Screen reader text of a countdown, which never says "t/m" for a start (decision 135):
  * start "Begint op vrijdag 27 november om 00.00 uur"; end "Eindigt op maandag 30 november om middernacht" for an
- * end at 00.00 (the last day that is still included), else "Eindigt op zondag 28 februari om 23.59 uur".
+ * end at 00.00 (the last day that is still included), else "Eindigt op zondag 28 februari om 23.59 uur". With `now`, a
+ * start in another calendar year gets its year (formatStartLabel).
  */
-export function formatCountdownSr(target: IsoDateTime, kind: "start" | "end"): string {
+export function formatCountdownSr(target: IsoDateTime, kind: "start" | "end", now?: number): string {
   const ms = toMs(target);
   const parts = getZonedParts(ms);
   if (kind === "start") {
-    return `${DATE_WORDS_NL.startsOn} ${weekdayName(parts.isoDate)} ${dayMonth(parts.isoDate)} ${DATE_WORDS_NL.at} ${clock(parts)} ${DATE_WORDS_NL.hours}`;
+    return `${DATE_WORDS_NL.startsOn} ${weekdayName(parts.isoDate)} ${startDay(parts, now)} ${DATE_WORDS_NL.at} ${clock(parts)} ${DATE_WORDS_NL.hours}`;
   }
   if (isMidnight(parts)) {
     const lastDay = addCalendarDays(parts.isoDate, -1);
@@ -487,10 +497,13 @@ export function formatEndLabel(endsAt: IsoDateTime): string {
   return `${DATE_WORDS_NL.until} ${dayMonth(parts.isoDate)} ${clock(parts)} ${DATE_WORDS_NL.hours}`;
 }
 
-/** Fixed start label: "vrijdag 5 februari om 19.00 uur". */
-export function formatStartLabel(startsAt: IsoDateTime): string {
+/**
+ * Fixed start label: "vrijdag 5 februari om 19.00 uur". With `now` (the server clock), a start in another calendar
+ * year gets its year: "vrijdag 26 november 2027 om 00.00 uur" (QA round 3).
+ */
+export function formatStartLabel(startsAt: IsoDateTime, now?: number): string {
   const parts = getZonedParts(toMs(startsAt));
-  return `${weekdayName(parts.isoDate)} ${dayMonth(parts.isoDate)} ${DATE_WORDS_NL.at} ${clock(parts)} ${DATE_WORDS_NL.hours}`;
+  return `${weekdayName(parts.isoDate)} ${startDay(parts, now)} ${DATE_WORDS_NL.at} ${clock(parts)} ${DATE_WORDS_NL.hours}`;
 }
 
 /** Date and time of an instant: "26 november 2026 om 14.03 uur" (withdrawal receipts). */

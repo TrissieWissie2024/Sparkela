@@ -32,7 +32,11 @@ export interface FavoritesCarouselProps {
   className?: string;
 }
 
-const SLIDE = "w-[62%] shrink-0 snap-start sm:w-[40%] md:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)]";
+/**
+ * From md the row has the product grid's 1.5rem gutter (QA round 3: 1rem put its card edges 2 to 6 px off the
+ * lanceringscollectie right above), so three or four slides line up with the grid's columns.
+ */
+const SLIDE = "w-[62%] shrink-0 snap-start sm:w-[40%] md:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]";
 
 /** next/image sizes of a card at the slide widths above. */
 const CARD_SIZES = "(min-width: 1280px) 290px, (min-width: 768px) 33vw, (min-width: 640px) 40vw, 62vw";
@@ -67,7 +71,7 @@ export function FavoritesCarousel({ products, useSalesTitle, className }: Favori
           label={title}
           className="mt-8 md:mt-12"
           itemClassName={SLIDE}
-          listClassName="-mx-5 scroll-px-5 px-5 md:-mx-2 md:scroll-px-2 md:px-2"
+          listClassName="-mx-5 scroll-px-5 px-5 md:-mx-2 md:scroll-px-2 md:px-2 md:gap-6"
           items={products.map((product) => (
             <ProductCard key={product.handle} product={product} headingLevel={3} sizes={CARD_SIZES} />
           ))}

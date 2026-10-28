@@ -20,10 +20,12 @@ export interface DropCountdownProps {
   kind: "start" | "end";
   /** "Nu live" at the start; without it the countdown renders nothing at 0. */
   liveLabel?: string;
+  /** The server clock: a start in another calendar year gets its year in the labels (QA round 3). */
+  now?: number;
   className?: string;
 }
 
-export function DropCountdown({ target, kind, liveLabel, className }: DropCountdownProps) {
+export function DropCountdown({ target, kind, liveLabel, now, className }: DropCountdownProps) {
   const start = kind === "start";
   return (
     <span
@@ -37,8 +39,8 @@ export function DropCountdown({ target, kind, liveLabel, className }: DropCountd
       <Countdown
         target={target}
         liveLabel={liveLabel}
-        srLabel={formatCountdownSr(target, kind)}
-        fallbackLabel={start ? formatStartLabel(target) : formatEndLabel(target)}
+        srLabel={formatCountdownSr(target, kind, now)}
+        fallbackLabel={start ? formatStartLabel(target, now) : formatEndLabel(target)}
         prefix={start ? collectionCopy.drop.startsIn : collectionCopy.drop.endsIn}
         tone="op-roest"
       />

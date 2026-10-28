@@ -164,6 +164,19 @@ test.describe("no layout shift", () => {
     });
   }
 
+  // QA round 3: a stored cart with the gift wrap arrives after hydration; the tick's text swap moved "In je tas" 20 px.
+  test("a product page with the gift wrap already in the stored cart: CLS 0", async ({ page }) => {
+    await gotoHydrated(page, "/products/evi-dikke-schakelketting");
+    await page.getByRole("main").getByRole("checkbox", { name: /^Cadeauverpakking/ }).check();
+    await mainAddToCart(page).click();
+    await expect(page.getByRole("dialog", { name: /^Je tas/ })).toBeVisible();
+    await observeLayoutShift(page);
+    await gotoHydrated(page, "/products/nina-chunky-ring");
+    await expect(page.getByRole("main").getByText("Staat al aan voor je bestelling.", { exact: false })).toBeVisible();
+    const { total, shifts } = await layoutShift(page);
+    expect(total, JSON.stringify(shifts)).toBeLessThan(0.001);
+  });
+
   test("404: CLS 0", async ({ page }) => {
     await observeLayoutShift(page);
     await gotoHydrated(page, "/bestaat-niet", { status: 404 });
@@ -378,5 +391,54 @@ test("a hover-opened megamenu panel closes on Escape", async ({ page, isMobile }
     await page.keyboard.press("Escape");
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
     await page.mouse.move(10, 600);
+  }
+});
+
+/* -------------------------------------------------------------------------- */
+/* QA round 3                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The gallery sticks only where it fits, and then caps its photo so it does (QA round 3, WCAG 2.4.7 and 2.4.11): on a
+ * 1366 × 657 laptop the sticky gallery's previous/next buttons sat below the fold while focused.
+ */
+test("the product gallery's previous and next buttons are in view when they get focus on a laptop", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Previous and next are the desktop gallery (from lg).");
+  for (const size of [
+    { width: 1366, height: 657 },
+    { width: 1280, height: 609 },
+    { width: 1536, height: 730 },
+    { width: 1440, height: 789 },
+  ]) {
+    await page.setViewportSize(size);
+    await gotoHydrated(page, "/products/lola-chunky-hoops");
+    const gallery = page.getByRole("region", { name: "Foto's van Lola chunky hoops" });
+    for (const name of ["Vorige", "Volgende"]) {
+      const button = gallery.getByRole("button", { name, exact: true });
+      for (let i = 0; i < 60 && !(await button.evaluate((node) => node === document.activeElement)); i += 1) {
+        await page.keyboard.press("Tab");
+      }
+      await expect(button, `${name} at ${size.width} × ${size.height}`).toBeFocused();
+      // The whole button and its 2 px ring with 2 px offset.
+      const box = await button.boundingBox();
+      expect(box, name).not.toBeNull();
+      expect(box!.y + box!.height + 4, `${name} at ${size.width} × ${size.height}`).toBeLessThanOrEqual(size.height);
+    }
+  }
+});
+
+/** "Bekijk alle N resultaten" sits in the search sheet's fixed footer, never under its edge (QA round 3). */
+test("the search dialog keeps its link to all results in view on a phone", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The top sheet is capped at 85dvh on a phone; on desktop it fits.");
+  for (const size of [
+    { width: 390, height: 844 },
+    { width: 375, height: 667 },
+  ]) {
+    await page.setViewportSize(size);
+    await gotoHydrated(page, "/");
+    await page.getByRole("banner").getByRole("button", { name: "Zoeken" }).click();
+    const dialog = page.getByRole("dialog", { name: "Zoeken" });
+    await dialog.getByRole("searchbox").fill("goud");
+    await expect(dialog.getByRole("link", { name: /^Bekijk alle \d+ resultaten$/ })).toBeInViewport({ ratio: 1 });
   }
 });

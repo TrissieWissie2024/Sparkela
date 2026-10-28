@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { site } from "@/content/site";
-import { expect, gotoHydrated, pickOption, test } from "./fixtures";
+import { expect, footerClub, gotoHydrated, pickOption, test } from "./fixtures";
 
 /**
  * Brief §7 "Spark Finder geeft een aanbeveling" (docs/PLAN.md §19.2, §5.7, §14.5): Chunky en bold → Date night →
@@ -36,10 +36,23 @@ async function expectRecommendation(page: Page) {
   await expect(email.getByRole("button", { name: "Liever zonder e-mail verder" })).toBeVisible();
 }
 
+/** Answers Chunky en bold → Date night → Oorbellen with the mouse. */
+async function answerQuiz(page: Page) {
+  const main = page.getByRole("main");
+  await pickOption(main.getByRole("group", { name: "Wat is je vibe?" }), "Chunky en bold");
+  await main.getByRole("button", { name: "Volgende" }).click();
+  await pickOption(main.getByRole("group", { name: "Voor welk moment?" }), "Date night");
+  await main.getByRole("button", { name: "Volgende" }).click();
+  await pickOption(main.getByRole("group", { name: "Wat zoek je?" }), "Oorbellen");
+  await main.getByRole("button", { name: "Toon mijn sparks" }).click();
+}
+
 test("three answers give a recommendation with the email step", async ({ page }) => {
   await gotoHydrated(page, "/spark-finder");
   const main = page.getByRole("main");
   await expect(main.getByRole("heading", { level: 1 })).toHaveText("Spark Finder");
+  // Before the result the footer has its Club form; the result's own sign-up replaces it (QA round 3).
+  await expect(footerClub(page)).toBeVisible();
 
   await expect(main.getByText("Vraag 1 van 3", { exact: true })).toBeVisible();
   await pickOption(main.getByRole("group", { name: "Wat is je vibe?" }), "Chunky en bold");
@@ -54,6 +67,28 @@ test("three answers give a recommendation with the email step", async ({ page })
   await main.getByRole("button", { name: "Toon mijn sparks" }).click();
 
   await expectRecommendation(page);
+  await expect(footerClub(page)).toBeHidden();
+
+  // "Liever zonder e-mail verder" closes the step; the footer's Club form comes back.
+  await main.getByRole("button", { name: "Liever zonder e-mail verder" }).click();
+  await expect(main.getByRole("region", { name: "Krijg 10% op je eerste bestelling" })).toHaveCount(0);
+  await expect(footerClub(page)).toBeVisible();
+});
+
+test("after a sign-up the email step keeps the code and drops the skip link (QA round 3)", async ({ page }) => {
+  // The test build has no Shopify keys; answer as /api/subscribe does after a successful double opt-in request.
+  await page.route("**/api/subscribe", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { status: "pending" } }) }),
+  );
+  await gotoHydrated(page, "/spark-finder");
+  await answerQuiz(page);
+  const email = page.getByRole("main").getByRole("region", { name: "Krijg 10% op je eerste bestelling" });
+  await email.getByRole("textbox", { name: "Je e-mailadres" }).fill("lid@voorbeeld.nl");
+  await email.getByRole("checkbox", { name: site.consentText }).check();
+  await email.getByRole("button", { name: "Ik doe mee" }).click();
+  await expect(email.getByText("WELKOM10")).toBeVisible();
+  await expect(email.getByRole("button", { name: "Liever zonder e-mail verder" })).toHaveCount(0);
+  await expect(email.getByText("Laat je e-mailadres achter voor de code.", { exact: false })).toHaveCount(0);
 });
 
 test("the same flow with the keyboard alone", async ({ page }) => {

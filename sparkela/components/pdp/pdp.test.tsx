@@ -168,7 +168,13 @@ describe("ProductAccordions", () => {
     expect(safety).toContain("[Fabrikant, adres]");
     expect(safety).toContain("[Verantwoordelijke in de EU]");
     expect(safety).toContain("[Waarschuwingen van de leverancier invullen]");
-    expect(safety).toContain("SPK-001-GOUD, SPK-001-ZILVER (lola-chunky-hoops)");
+    expect(safety.replace(/\s+,/g, ",").replace(/\s+/g, " ")).toContain("SPK-001-GOUD, SPK-001-ZILVER (lola-chunky-hoops)");
+    // QA round 3: every code (and the handle) is one unbreakable piece; lines break only between them.
+    const raw = renderToStaticMarkup(
+      <>{productAccordionItems(product("lola-chunky-hoops")).find((entry) => entry.title === "Productveiligheid")?.content}</>,
+    );
+    expect(raw).toContain('<span class="whitespace-nowrap">SPK-001-GOUD</span>');
+    expect(raw).toContain('<span class="whitespace-nowrap">(lola-chunky-hoops)</span>');
     const bare = product("lola-chunky-hoops");
     const empty: Product = { ...bare, metafields: { ...bare.metafields, gpsrFabrikant: null } };
     expect(panels(empty)["Productveiligheid"]).toContain(pdpCopy.gpsr.missing);

@@ -216,7 +216,8 @@ export interface PdpCopy {
       responsible: string;
       identification: string;
       /** "SPK-001-GOUD, SPK-001-ZILVER (lola-chunky-hoops)". */
-      identificationValue: (codes: string, handle: string) => string;
+      /** The handle after the article numbers: "(lola-chunky-hoops)". */
+      identificationHandle: (handle: string) => string;
       warnings: string;
       /** Gift card: the seller's details under pdp.gpsr.digital (decision 116). */
       seller: string;
@@ -337,7 +338,8 @@ export const pdpCopy: PdpCopy = {
       "Leg een touwtje of een strookje papier om je vinger, op de plek waar de ring komt.",
       "Zet een streepje waar de uiteinden elkaar raken. Niet te strak: de ring moet over je knokkel.",
       "Leg het touwtje langs een liniaal en meet tot het streepje. Dat is je omtrek.",
-      "Zoek in de tabel de omtrek die het dichtst in de buurt komt. Daar staat je maat.",
+      // QA round 3: "het dichtst in de buurt" contradicted the tip below (51 mm is closest to 16, the tip says 17).
+      "Zoek je omtrek op in de tabel. Daar staat je maat.",
     ],
     ringTitle: "Heb je al een ring die past?",
     ringText: "Meet de binnenkant van rand tot rand, recht door het midden. Dat is je binnendiameter.",
@@ -448,7 +450,7 @@ export const pdpCopy: PdpCopy = {
       manufacturer: "Fabrikant",
       responsible: "Verantwoordelijke in de EU",
       identification: "Productidentificatie",
-      identificationValue: (codes, handle) => `${codes} (${handle})`,
+      identificationHandle: (handle) => `(${handle})`,
       warnings: "Waarschuwingen",
       seller: "Verkoper",
     },

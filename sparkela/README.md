@@ -105,7 +105,7 @@ Productie bouwt altijd met `shopify`. Een lege catalogus breekt de build niet: d
 
 ### 7. Foto van Linde
 
-Exporteer de foto voor de wachtlijst als `public/images/linde/wachtlijst.webp` (4:5, 1200 × 1500 px, zie `docs/ASSETS.md`) en voeg de sleutel `linde.wachtlijst` toe aan `SUPPLIED` in `content/assets.ts`. Zonder dat bestand toont de wachtlijst geen fotoblok (en dus ook geen grijs vlak).
+Exporteer de foto voor de wachtlijst als `public/images/linde/wachtlijst.webp` (4:5, 1200 × 1500 px, zie `docs/ASSETS.md`) en voeg de sleutel `linde.wachtlijst` toe aan `SUPPLIED` in `content/assets.ts`. Zonder dat bestand toont de wachtlijst geen fotoblok (en dus ook geen grijs vlak). Kleinere versies van elke foto maakt `scripts/build-images.mjs` vanzelf bij elke build en bij `npm run dev` (los: `npm run images`); ze komen in `public/_img/` en gaan niet mee in git.
 
 ### 8. Controleren
 

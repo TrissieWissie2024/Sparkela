@@ -35,7 +35,7 @@ Spreken we samen iets anders af, dan geldt die afspraak. Zijn er naast deze voor
 - We fotograferen onze sieraden zelf en doen ons best om ze zo echt mogelijk te laten zien. Kleuren kunnen op elk scherm een beetje anders zijn.
 - Een kennelijke vergissing of fout in het aanbod (bijvoorbeeld een prijs die duidelijk veel te laag is) bindt ons niet. Dan laten we het je zo snel mogelijk weten.
 - Ons aanbod geldt zolang de voorraad strekt. Is iets uitverkocht, dan zie je dat bij het product en kun je het niet bestellen.
-- Prijzen staan in euro's. Op de site en in de checkout zie je of er btw in de prijs zit. Verzendkosten zie je vooraf, in je winkelwagen en in de checkout.
+- Prijzen staan in euro's. Op de site en in de checkout zie je of er btw in de prijs zit. Verzendkosten staan bij elk product en op de pagina Verzenden en retourneren. In de checkout zie je ze terug voordat je betaalt.
 - Kortingscodes en acties gelden alleen zoals ze bij de actie staan beschreven, bijvoorbeeld voor je eerste bestelling of tot een einddatum.
 
 ## 5. Je bestelling

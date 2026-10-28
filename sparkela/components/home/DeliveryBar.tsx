@@ -34,7 +34,8 @@ export function DeliveryBar({ schedule, className }: DeliveryBarProps) {
   const freeFrom = formatMoneyShort(shipping.countries[shipping.defaultCountry].freeFrom);
 
   return (
-    <section aria-labelledby={headingId} className={cn("border-b border-rand bg-pagina text-tekst", className)}>
+    // data-pill-vrij: the Spark pill waits until this bar is out of the bottom left corner (QA round 3).
+    <section aria-labelledby={headingId} data-pill-vrij="" className={cn("border-b border-rand bg-pagina text-tekst", className)}>
       <h2 id={headingId} className="sr-only">
         {copy.title}
       </h2>

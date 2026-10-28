@@ -23,6 +23,7 @@ import {
   isDialogOpen,
   isEditingField,
   markShown,
+  pillSpotTaken,
   useConsentOpen,
 } from "./state";
 
@@ -35,7 +36,8 @@ import {
  * - Appears 8 s after the page started loading (performance.now()) or on desktop exit intent (a fine pointer leaving
  *   the top of the window), whichever comes first. Only when canShowPill(now): popup on, storage works, no sign-up,
  *   last-shown missing or older than 7 days. At that moment also: no dialog or drawer open, no consent banner, no
- *   sticky add-to-cart bar in view, the visitor is not typing, and not on /checkout or /wachtlijst. If one of those
+ *   sticky add-to-cart bar in view, the visitor is not typing, nothing marked data-pill-vrij in the bottom left
+ *   corner (the home's delivery bar at the fold, QA round 3), and not on /checkout or /wachtlijst. If one of those
  *   holds, it tries again every second until it can.
  * - markShown(Date.now()) as it appears (an effect, never render), so it shows at most once per 7 days. If that write
  *   fails, it does not appear.
@@ -99,7 +101,8 @@ export function EmailCapture() {
       isBlockedPath(window.location.pathname) ||
       bodyBlocksPill() ||
       isDialogOpen() ||
-      isEditingField(),
+      isEditingField() ||
+      pillSpotTaken(),
   );
 
   // Rule 1: one timer (8 s from the start of the page load) and one exit-intent listener per page load.

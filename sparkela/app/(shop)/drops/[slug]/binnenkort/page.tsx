@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { dropPath, NOT_FOUND_TITLE, pageMetadata } from "@/lib/seo";
+import { getServerNow } from "@/lib/server-clock";
 import { collectionCopy } from "@/content/copy/collection";
 import { drops, isDropSlug } from "@/content/drops";
 import { DropTeaser } from "@/components/drops/DropTeaser";
@@ -47,7 +48,8 @@ export default async function DropTeaserPage({ params }: PageProps<"/drops/[slug
       </Suspense>
     );
   }
-  return <DropTeaser drop={drop} />;
+  // The server clock only decides whether the start label needs its year (QA round 3).
+  return <DropTeaser drop={drop} now={await getServerNow()} />;
 }
 
 /** Calls notFound() inside the Suspense boundary of the 404 pattern (decision 133). */

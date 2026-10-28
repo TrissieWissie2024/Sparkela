@@ -107,8 +107,12 @@ export interface PagesCopy {
     /** Visually hidden prefix of a turned card; the visible face (code and reward) completes its name. */
     cardChosen: (n: number, total: number) => string;
     cardRevealed: (n: number, total: number) => string;
-    /** The face of every card: the same, real reward. */
-    cardFace: { value: string; line: string };
+    /**
+     * The face of every card: the same, real reward. `value` (large) and `code` (small caps) are visible; `spoken`
+     * sits between them for screen readers only, so the card reads "10% op je eerste bestelling, code WELKOM10"
+     * (QA round 3: the intro above the cards already says the rest).
+     */
+    cardFace: { value: string; spoken: string; code: string };
     yourCard: string;
     sameReward: string;
     chooseHint: string;
@@ -128,6 +132,8 @@ export interface PagesCopy {
       appliedMessage: (code: string) => string;
       appliedEmpty: (code: string) => string;
       notCombined: (code: string) => string;
+      /** The code is on the tas, but nothing in it counts (only gift cards, QA round 3). */
+      notEligible: (code: string) => string;
       continueShopping: string;
     };
   };
@@ -342,7 +348,7 @@ export const pagesCopy: PagesCopy = {
     card: (n, total) => `Kaart ${n} van ${total} omdraaien`,
     cardChosen: (n, total) => `Kaart ${n} van ${total}, jouw kaart:`,
     cardRevealed: (n, total) => `Kaart ${n} van ${total}:`,
-    cardFace: { value: welcomeCode.code, line: reward },
+    cardFace: { value: `${welcomeCode.percent}%`, spoken: "op je eerste bestelling, code", code: welcomeCode.code },
     yourCard: "Jouw kaart",
     sameReward: "Zelfde beloning",
     chooseHint: "Kies een kaart en draai hem om. Daarna vraag je de code aan met je e-mailadres.",
@@ -361,12 +367,14 @@ export const pagesCopy: PagesCopy = {
       appliedMessage: (code) => `${code} staat klaar. Je ziet de korting in je tas.`,
       appliedEmpty: (code) => `${code} staat klaar. De korting zie je zodra er iets in je tas zit.`,
       notCombined: (code) => `${code} staat klaar, maar je stack-korting is nu hoger. Die houd je.`,
+      notEligible: (code) => `${code} staat klaar. Hij telt op sieraden, niet op cadeaukaarten.`,
       continueShopping: "Verder shoppen",
     },
   },
   account: {
     title: "Account",
-    text: "Inloggen kan straks hier. Vragen over je bestelling? Mail ons.",
+    // QA round 3: the card right below asks "Vragen over je bestelling?", so the intro does not.
+    text: "Inloggen kan straks hier. Tot die tijd regel je alles hieronder.",
     metaDescription: "Je account bij Sparkela.",
     help: {
       title: "Vragen over je bestelling?",
@@ -415,7 +423,8 @@ export const pagesCopy: PagesCopy = {
       empty: "Vul eerst een code in.",
       invalid: (code) => `De code ${code} kennen we niet.`,
       added: (code) => `Code ${code} toegevoegd.`,
-      addedNotCounted: (code) => `Code ${code} staat erin, maar telt nu niet mee.`,
+      // The totals row right below says why it does not count (QA round 3: the checkout said it twice).
+      addedNotCounted: (code) => `Code ${code} staat klaar.`,
       error: "Dat lukte niet. Probeer het opnieuw.",
     },
     formLabel: "Je gegevens",

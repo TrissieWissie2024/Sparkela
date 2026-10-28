@@ -50,6 +50,8 @@ export interface FinderQuizProps {
   tone?: FinderTone;
   /** Level of the question and result headings. Default 3 (inside the home section's h2). */
   headingLevel?: 2 | 3;
+  /** The result's email step is the page's own Club sign-up (FinderResult ownsClub, QA round 3). */
+  ownsClub?: boolean;
   className?: string;
 }
 
@@ -58,7 +60,7 @@ const PANEL_RESIZE: KeyframeAnimationOptions = { duration: 320, easing: "cubic-b
 
 const STEP_ENTER = "motion-safe:animate-[sparkela-fade-in_320ms_ease-out_both]";
 
-export function FinderQuiz({ config, tone = "donker", headingLevel = 3, className }: FinderQuizProps) {
+export function FinderQuiz({ config, tone = "donker", headingLevel = 3, ownsClub = false, className }: FinderQuizProps) {
   const t = finderTones[tone];
   const copy = pagesCopy.finder;
   const questions = config.questions;
@@ -175,6 +177,7 @@ export function FinderQuiz({ config, tone = "donker", headingLevel = 3, classNam
             headingRef={headingRef}
             onRestart={() => send({ type: "restart" })}
             config={config}
+            ownsClub={ownsClub}
           />
         ) : null}
       </div>

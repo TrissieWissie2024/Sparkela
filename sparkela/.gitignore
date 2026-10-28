@@ -26,6 +26,9 @@ reference/
 # production
 /build
 
+# width variants of the site photos (scripts/build-images.mjs, generated before every build)
+/public/_img/
+
 # misc
 .DS_Store
 *.pem

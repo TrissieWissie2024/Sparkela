@@ -23,10 +23,15 @@ export interface ProductPhotoProps {
   kind?: ImageKind;
   sizes: string;
   preload?: boolean;
+  /**
+   * "eager" loads the photo at once without a <head> preload: for cards that are above the fold on a wide screen only
+   * (QA round 3). Ignored with `preload`, which is eager already.
+   */
+  loading?: "eager" | "lazy";
   className?: string;
 }
 
-export function ProductPhoto({ image, productTitle, kind, sizes, preload = false, className }: ProductPhotoProps) {
+export function ProductPhoto({ image, productTitle, kind, sizes, preload = false, loading, className }: ProductPhotoProps) {
   const photoKind = kind ?? image?.kind ?? "packshot";
   const description = sharedCopy.ui.imageAlt(productTitle, sharedCopy.ui.imageKinds[photoKind]);
 
@@ -42,6 +47,7 @@ export function ProductPhoto({ image, productTitle, kind, sizes, preload = false
         fill
         sizes={sizes}
         preload={preload}
+        loading={preload ? undefined : loading}
         className="object-cover"
       />
     </div>

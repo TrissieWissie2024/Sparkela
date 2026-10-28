@@ -84,7 +84,7 @@ function FinderPage({ id, className }: { id: string; className?: string }) {
   const stepsId = useId();
   return (
     <Container id={id} className={cn("grid grid-cols-1 gap-10 pb-12 md:gap-12 md:pb-16 lg:grid-cols-12 lg:gap-x-8", className)}>
-      <FinderQuiz config={quiz} tone="licht" headingLevel={2} className="lg:col-span-8 lg:col-start-5 lg:row-start-1" />
+      <FinderQuiz config={quiz} tone="licht" headingLevel={2} ownsClub className="lg:col-span-8 lg:col-start-5 lg:row-start-1" />
 
       {/* Sticky next to a long result, as in the home section (decision 209o), so the left column is never an empty band. */}
       <aside

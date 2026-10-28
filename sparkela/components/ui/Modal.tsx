@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { useEffect, useId, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { useEffect, useId, useState, type ComponentPropsWithoutRef, type FocusEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { sharedCopy } from "@/content/copy/shared";
@@ -77,14 +77,47 @@ const anchors: Record<ModalAnchor, string> = {
     "[@media(max-height:820px)]:mt-4 [@media(max-height:820px)]:max-h-[calc(100dvh-2rem)]",
 };
 
-/** Whether the element scrolls vertically; follows size changes of the element and of its children. */
+/** Height of the fade over the bottom of an overflowing body (h-10) plus room for a 2 px focus ring with its offset. */
+const FADE_CLEARANCE_PX = 48;
+
+/**
+ * Whether a scrolling body is at its end: its last content is in view. The bottom padding counts as the end, because
+ * focus scrolling only brings a control to the padding edge and the fade must not stay over it (QA round 3).
+ */
+export function isScrolledToEnd(node: HTMLElement): boolean {
+  const padding = Number.parseFloat(getComputedStyle(node).paddingBottom) || 0;
+  return node.scrollTop + node.clientHeight >= node.scrollHeight - padding - 2;
+}
+
+/**
+ * Keeps a newly focused control inside a scrolling body clear of the fade over its bottom: a Tab into the last controls
+ * of the popup left "Ik doe mee" under the opaque fade with its ring cut off (WCAG 2.4.7, 2.4.11, 1.4.3; QA round 3).
+ * Scrolls the body just far enough; at the end of the body the fade is gone anyway.
+ */
+export function keepFocusClearOfFade(event: FocusEvent<HTMLElement>) {
+  const body = event.currentTarget;
+  const target = event.target;
+  if (target === body || !(target instanceof HTMLElement) || body.scrollHeight <= body.clientHeight + 1) return;
+  const limit = body.getBoundingClientRect().bottom - FADE_CLEARANCE_PX;
+  const bottom = target.getBoundingClientRect().bottom;
+  if (bottom > limit) body.scrollBy({ top: bottom - limit });
+}
+
+/**
+ * Whether the element scrolls vertically and whether it is scrolled to its end; follows size changes of the element
+ * and of its children (an error line that appears).
+ */
 function useOverflowing() {
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const [overflowing, setOverflowing] = useState(false);
+  const [atEnd, setAtEnd] = useState(false);
 
   useEffect(() => {
     if (!node) return;
-    const check = () => setOverflowing(node.scrollHeight > node.clientHeight + 1);
+    const check = () => {
+      setOverflowing(node.scrollHeight > node.clientHeight + 1);
+      setAtEnd(isScrolledToEnd(node));
+    };
     const resize = new ResizeObserver(check);
     const observeAll = () => {
       resize.disconnect();
@@ -101,7 +134,7 @@ function useOverflowing() {
     };
   }, [node]);
 
-  return [setNode, overflowing] as const;
+  return [setNode, overflowing, atEnd, setAtEnd] as const;
 }
 
 export function Modal({
@@ -134,9 +167,8 @@ export function Modal({
     onCloseAutoFocus,
   );
   const titleId = useId();
-  const [bodyRef, overflowing] = useOverflowing();
+  const [bodyRef, overflowing, atEnd, setAtEnd] = useOverflowing();
   const [scrolled, setScrolled] = useState(false);
-  const [atEnd, setAtEnd] = useState(false);
 
   return (
     <Dialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -198,20 +230,22 @@ export function Modal({
           ) : null}
 
           {/* The body and, while it overflows and is not scrolled to its end, a fade over its last 2.5rem: content cut
-              off at the dialog's bottom edge reads as "there is more" (QA round 2, the popup's error state on a laptop). */}
+              off at the dialog's bottom edge reads as "there is more" (QA round 2, the popup's error state on a laptop).
+              A focused control never sits under the fade: scroll-pb-12 for scrollIntoView and keepFocusClearOfFade for
+              Tab, and the bottom padding counts as the end (QA round 3). */}
           <div className="relative flex min-h-0 flex-1 flex-col">
           <div
             ref={bodyRef}
             {...(overflowing ? { tabIndex: 0, role: "region", "aria-label": sharedCopy.ui.dialogBody } : {})}
             onScroll={(event) => {
-              const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-              const next = scrollTop > 2;
+              const next = event.currentTarget.scrollTop > 2;
               setScrolled((current) => (current === next ? current : next));
-              const end = scrollTop + clientHeight >= scrollHeight - 2;
+              const end = isScrolledToEnd(event.currentTarget);
               setAtEnd((current) => (current === end ? current : end));
             }}
+            onFocus={keepFocusClearOfFade}
             className={cn(
-              "min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:-outline-offset-2",
+              "peer min-h-0 flex-1 scroll-pb-12 overflow-y-auto overscroll-contain focus-visible:-outline-offset-2",
               padded && "px-5 pb-6 md:px-7 md:pb-7",
               padded && (description && !descriptionInBody ? "pt-5" : "pt-3"),
               bodyClassName,
@@ -234,7 +268,8 @@ export function Modal({
             className={cn(
               "pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-t to-transparent transition-opacity duration-150",
               dark ? "from-donker" : "from-pagina",
-              overflowing && !atEnd ? "opacity-100" : "opacity-0",
+              // Not over the body's own inset focus ring while a keyboard user scrolls it.
+              overflowing && !atEnd ? "opacity-100 peer-focus-visible:opacity-0" : "opacity-0",
             )}
           />
           </div>

@@ -10,7 +10,7 @@ import { sharedCopy } from "@/content/copy/shared";
 import { faq } from "@/content/faq";
 import { home } from "@/content/home";
 import { PageHeader } from "@/components/pages/PageHeader";
-import { FaqList } from "@/components/sections/FaqList";
+import { ProductFaq } from "@/components/pdp/ProductFaq";
 import { HowToStack } from "@/components/sections/HowToStack";
 import { StackGrid } from "@/components/stacks/StackGrid";
 import { Button } from "@/components/ui/Button";
@@ -83,14 +83,8 @@ function StacksContent({ items }: { items: Awaited<ReturnType<typeof getVisibleS
           </Button>
         </section>
 
-        {faqItems.length > 0 ? (
-          <section aria-labelledby={faqId} className="mt-16 grid gap-8 md:mt-24 lg:grid-cols-12 lg:gap-12">
-            <h2 id={faqId} className="kop-2 text-tekst lg:col-span-4">
-              {copy.faqTitle}
-            </h2>
-            <FaqList items={faqItems} headingLevel={3} className="lg:col-span-8" />
-          </section>
-        ) : null}
+        {/* The same "Goed om te weten" block as on a product page (QA round 3). */}
+        <ProductFaq items={faqItems} headingId={faqId} inPage className="mt-16 md:mt-24" />
       </Container>
     </>
   );

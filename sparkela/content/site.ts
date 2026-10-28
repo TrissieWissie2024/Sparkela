@@ -25,6 +25,8 @@ export interface SiteConfig {
   name: string;
   description: string;
   taglines: [string, string, string];
+  /** Language of each tagline, for lang= where it is rendered (WCAG 3.1.2; QA round 3): two are English. */
+  taglineLangs: ["en" | "nl", "en" | "nl", "en" | "nl"];
   /** Shop opens; before this the proxy shows the waitlist (plan §11). Literal with offset. */
   launchAt: IsoDateTime;
   /** Placeholder until the mailbox exists (TODO-LAUNCH); also the fallback address of every form. */
@@ -101,6 +103,7 @@ export const site: SiteConfig = {
   name: "Sparkela",
   description: "Chunky sieraden met een spark. Statement oorbellen en armbanden, gestyled door Linde.",
   taglines: ["Spark your outfit", "Made to spark", "Sieraden met een spark"],
+  taglineLangs: ["en", "en", "nl"],
   launchAt: "2026-11-27T00:00:00+01:00",
   email: "hallo@sparkela.nl",
   company: {
@@ -161,6 +164,13 @@ export const site: SiteConfig = {
     hideMissingOptionalMedia: process.env.VERCEL_ENV === "production",
   },
 };
+
+/**
+ * The socials that are really Sparkela's (confirmed: true). Only these are linked, in the footer, on the waitlist and
+ * in JSON-LD: an unconfirmed handle may be empty or someone else's (QA round 3). TODO-LAUNCH: create the accounts and
+ * set confirmed: true.
+ */
+export const confirmedSocials: readonly SocialLink[] = site.socials.filter((social) => social.confirmed);
 
 // Fail fast at load, so a broken config never reaches a build (as in CORVANE).
 if (!welcomeCode.code.trim()) {

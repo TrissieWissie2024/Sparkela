@@ -15,11 +15,11 @@ export interface ChromeCopy {
     dropUpcoming: (name: string) => string;
     /** Link to /sparkela-club next to an upcoming drop. */
     earlyAccessLink: string;
-    /** Before the running countdown to a campaign's end ("Nog 3d 11u"); not before the fixed "t/m" label. */
+    /** Before the running countdown to a campaign's or live drop's end ("Nog 3d 11u"); not before the fixed "t/m" label. */
     campaignEndsIn: string;
     /** Before the running countdown to a drop's start ("Over 2d 5u"). */
     dropStartsIn: string;
-    /** Drop live for less than 7 days (rule 3). */
+    /** A live drop, until its end, followed by the countdown to that end (rule 3, QA round 5). */
     dropLive: (name: string) => string;
     /** Link to /drops/<slug> next to a live drop. */
     dropLink: string;
@@ -160,7 +160,8 @@ export const chromeCopy: ChromeCopy = {
     current: "huidige pagina",
   },
   footer: {
-    clubIntro: `Stylingtips van Linde en ${EARLY_ACCESS_HOURS} uur eerder shoppen bij elke drop.`,
+    // Only what the Club title and the form line under the field do not say yet (QA round 5).
+    clubIntro: `Met je eigen link shop je elke drop ${EARLY_ACCESS_HOURS}\u00a0uur eerder.`,
     navLabel: "Meer van Sparkela",
     compactNavLabel: "Juridisch en service",
     socialsLabel: "Volg Sparkela",

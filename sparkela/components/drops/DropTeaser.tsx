@@ -98,17 +98,20 @@ export function DropTeaser({ drop, now }: DropTeaserProps) {
             data-eigen-club
             className="rounded-kaart border border-rand bg-kaart p-6 md:p-8 lg:col-span-7"
           >
-            <h2 id={formId} className="kop-2 text-tekst">
-              {copy.formTitle}
-            </h2>
-            <p className="mt-2 text-tekst-2">{copy.formText}</p>
-            <SubscribeForm source="club" submitLabel={site.club.cta} layout="inline" className="mt-6" />
+            <SubscribeForm
+              source="club"
+              heading={{ id: formId, title: copy.formTitle, text: copy.formText }}
+              submitLabel={site.club.cta}
+              layout="inline"
+              className="mt-6"
+            />
           </section>
 
           <ClubBenefits headingId={benefitsId} className="lg:col-span-5" />
         </div>
 
-        <nav aria-labelledby={meanwhileId} className="mt-12 border-t border-rand pt-8 md:mt-16">
+        {/* Below lg the benefits' last hairline is right above: no second line 48 px under it (QA round 5). */}
+        <nav aria-labelledby={meanwhileId} className="mt-12 md:mt-16 lg:border-t lg:border-rand lg:pt-8">
           <h2 id={meanwhileId} className="kop-3 text-tekst">
             {copy.meanwhile.title}
           </h2>

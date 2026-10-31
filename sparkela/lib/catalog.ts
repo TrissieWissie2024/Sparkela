@@ -186,6 +186,15 @@ export function defaultVariant(product: Pick<Product, "variants">): Variant {
   return variant;
 }
 
+/**
+ * The cart already holds every unit of the variant that is for sale (QA rounds 4 and 5): adding more cannot work, so
+ * the buy box and QuickAdd show their button as unavailable with "Van {titel} zit alles … al in je tas.". Untracked
+ * stock (null) never counts as reached.
+ */
+export function isAtStockLimit(variant: Pick<Variant, "availableForSale" | "quantityAvailable">, inCart: number): boolean {
+  return variant.availableForSale && variant.quantityAvailable !== null && inCart > 0 && inCart >= variant.quantityAvailable;
+}
+
 /** Earrings and bracelets count for the stack discount (content/offers.ts stackDiscount.eligibleTypes). */
 export function isStackEligible(type: ProductType | null): type is StackEligibleType {
   return type !== null && (stackDiscount.eligibleTypes as readonly ProductType[]).includes(type);
@@ -252,6 +261,15 @@ export function keepUnitsTogether(text: string): string {
   return text
     .replace(/(\d)\s+(mm|cm|m|g|gr|ml|ct|karaat)(?![\p{L}\d])/giu, "$1\u00a0$2")
     .replace(/\s+·\s+/gu, "\u00a0· ");
+}
+
+/**
+ * A number stays on the line of its unit in running text (QA round 5, like keepUnitsTogether for spec lines and the
+ * hard spaces in tile copy, decision 223j): "1 tot 2 werkdagen", "16.00 uur", "6 maanden", "14 dagen", "3 stuks". For
+ * texts that come from Markdown or plain strings (legal pages, FAQ answers); a no-break space between them.
+ */
+export function keepNumbersWithUnits(text: string): string {
+  return text.replace(/(\d[\d.,]*) (uur|minuten|dagen|werkdagen|weken|maanden|jaar|stuks)(?![\p{L}\d])/gu, "$1\u00a0$2");
 }
 
 function dropsOf(product: Pick<Product, "tags">, drops: readonly Drop[]): Drop[] {
@@ -401,7 +419,8 @@ export function applyCollectionRule(products: Product[], rule: CollectionRule, n
 /* Sorting, filters and facets                                                 */
 /* -------------------------------------------------------------------------- */
 
-type Sortable = Pick<Product, "featuredRank" | "priceRange" | "publishedAt" | "availableForSale">;
+type Sortable = Pick<Product, "featuredRank" | "priceRange" | "publishedAt" | "availableForSale"> &
+  Partial<Pick<Product, "tags">>;
 
 function byRank(a: Sortable, b: Sortable): number {
   return a.featuredRank - b.featuredRank;
@@ -413,8 +432,23 @@ function publishedMs(value: string): number {
 }
 
 /**
+ * When a piece became new to the visitor (QA round 5): its publishedAt, or the start of its drop when that is later.
+ * Drop pieces exist (and are published) before their drop starts, gated by the proxy, so publishedAt alone put the
+ * live drop at the very bottom of "Nieuwste".
+ */
+export function newSince(item: Pick<Sortable, "publishedAt" | "tags">): number {
+  let ms = publishedMs(item.publishedAt);
+  for (const slug of item.tags?.drops ?? []) {
+    const drop = allDrops.find((candidate) => candidate.slug === slug);
+    if (drop) ms = Math.max(ms, publishedMs(drop.startsAt));
+  }
+  return ms;
+}
+
+/**
  * A sorted copy (plan §7.2): "uitgelicht" by featuredRank with sold-out products last (decision 42); "prijs-*" by
- * the lowest variant price, equal prices by featuredRank; "nieuwste" by publishedAt descending, then featuredRank.
+ * the lowest variant price, equal prices by featuredRank; "nieuwste" by newSince descending (publishedAt, or the drop's
+ * start when later; QA round 5), then featuredRank.
  * The input is never mutated.
  */
 export function sortProducts<T extends Sortable>(items: T[], key: SortKey): T[] {
@@ -425,7 +459,7 @@ export function sortProducts<T extends Sortable>(items: T[], key: SortKey): T[] 
     case "prijs-aflopend":
       return sorted.sort((a, b) => b.priceRange.min.cents - a.priceRange.min.cents || byRank(a, b));
     case "nieuwste":
-      return sorted.sort((a, b) => publishedMs(b.publishedAt) - publishedMs(a.publishedAt) || byRank(a, b));
+      return sorted.sort((a, b) => newSince(b) - newSince(a) || byRank(a, b));
     case "uitgelicht":
     default:
       return sorted.sort((a, b) => Number(!a.availableForSale) - Number(!b.availableForSale) || byRank(a, b));
@@ -501,7 +535,43 @@ export function normalizeSearchText(value: string): string {
 }
 
 type Searchable = Pick<CatalogProduct, "title" | "type" | "tags" | "featuredRank"> &
-  Partial<Pick<CatalogProduct, "variants" | "specRegel" | "badges">>;
+  Partial<Pick<CatalogProduct, "variants" | "specRegel" | "badges" | "availableForSale">>;
+
+/** Dutch endings stripped from a query word that does not occur as typed (longest first; QA round 5). */
+const SEARCH_ENDINGS = ["etjes", "tjes", "jes", "tje", "je", "en", "es", "s", "e"] as const;
+/** Shortest stem that is still matched as the start of a word ("ster" from "sterren", "hart" from "hartje"). */
+const SEARCH_STEM_MIN = 4;
+
+/**
+ * The stems of a query word, for a word that does not occur as typed (QA round 5: "zilveren", "bangles",
+ * "armbandjes", "sterren", "hartje", "kraal" found nothing). Without a Dutch ending (plural, diminutive, the inflected
+ * "-en"/"-e"), then with a doubled final consonant undone ("sterr" → "ster") and a long vowel in the last syllable
+ * made short ("kraal" → "kral", the start of "kralen"). Each stem has at least SEARCH_STEM_MIN letters.
+ */
+export function searchStems(word: string): string[] {
+  const stems = new Set<string>();
+  const add = (stem: string) => {
+    if (stem.length < SEARCH_STEM_MIN) return;
+    stems.add(stem);
+    const undoubled = stem.replace(/([^aeiou])\1$/, "$1");
+    if (undoubled.length >= SEARCH_STEM_MIN) stems.add(undoubled);
+    const shortVowel = stem.replace(/(aa|ee|oo|uu)([^aeiou]+)$/, (_, vowel: string, tail: string) => `${vowel[0]}${tail}`);
+    if (shortVowel.length >= SEARCH_STEM_MIN) stems.add(shortVowel);
+  };
+  add(word);
+  for (const ending of SEARCH_ENDINGS) {
+    if (word.endsWith(ending)) add(word.slice(0, -ending.length));
+  }
+  stems.delete(word);
+  return [...stems];
+}
+
+/** A query word occurs in the haystack as typed, or one of its stems starts a word there. */
+function occursIn(haystack: string, haystackWords: readonly string[], word: string): boolean {
+  if (haystack.includes(word)) return true;
+  const stems = searchStems(word);
+  return stems.some((stem) => haystackWords.some((candidate) => candidate.startsWith(stem)));
+}
 
 function haystackOf(item: Searchable): string {
   const { type: typeLabels, vibe: vibeLabels, moment: momentLabels } = sharedCopy.vocab;
@@ -534,19 +604,30 @@ function haystackOf(item: Searchable): string {
  * §7.3). Every word of the query must occur. A query word that names a type (sharedCopy.searchTypeWords: "ring",
  * "oorbellen") keeps only that type (QA round 3). Best match first: the title equals the query, starts with it,
  * contains it as whole words, contains it inside a word ("ring" in "ringetjes"), contains every word; then the rest.
- * Ties by featuredRank. An empty query finds nothing. The caller passes the visible products (useCatalog().products);
- * this function does not filter visibility.
+ * Ties by featuredRank. A word that does not occur as typed also matches through its Dutch stem (searchStems,
+ * QA round 5: "zilveren oorbellen", "armbandjes", "sterren"). Sold-out pieces always come after the pieces for sale,
+ * the same rule as "Uitgelicht" (decision 42) and Shopify's unavailableProducts: LAST (QA round 5). An empty query finds
+ * nothing. The caller passes the visible products (useCatalog().products); this function does not filter visibility.
  */
 export function searchProducts<T extends Searchable>(items: T[], query: string): T[] {
   const q = normalizeSearchText(query.slice(0, MAX_QUERY_LENGTH));
   if (!q) return [];
   const words = q.split(" ");
   const types = new Set(words.flatMap((word) => sharedCopy.searchTypeWords[word] ?? []));
+  const candidates = items
+    .filter((item) => types.size === 0 || (types as Set<string | null>).has(item.type))
+    .map((item) => {
+      const haystack = haystackOf(item);
+      return { item, haystack, haystackWords: haystack.split(" ") };
+    });
+  // A word that some piece has as typed is matched as typed; only a word that nothing has falls back to its stems
+  // (so "ringetjes" stays the earrings, while "zilveren" finds the silver pieces).
+  const stemmed = new Set(words.filter((word) => !candidates.some((candidate) => candidate.haystack.includes(word))));
   const scored: Array<{ item: T; score: number }> = [];
-  for (const item of items) {
-    if (types.size > 0 && !(types as Set<string | null>).has(item.type)) continue;
-    const haystack = haystackOf(item);
-    if (!words.every((word) => haystack.includes(word))) continue;
+  for (const { item, haystack, haystackWords } of candidates) {
+    const matches = (word: string) =>
+      stemmed.has(word) ? occursIn(haystack, haystackWords, word) : haystack.includes(word);
+    if (!words.every(matches)) continue;
     const title = normalizeSearchText(item.title);
     const score =
       title === q
@@ -562,7 +643,10 @@ export function searchProducts<T extends Searchable>(items: T[], query: string):
                 : 5;
     scored.push({ item, score });
   }
-  return scored.sort((a, b) => a.score - b.score || a.item.featuredRank - b.item.featuredRank).map((entry) => entry.item);
+  const soldOut = (item: T) => (item.availableForSale === false ? 1 : 0);
+  return scored
+    .sort((a, b) => soldOut(a.item) - soldOut(b.item) || a.score - b.score || a.item.featuredRank - b.item.featuredRank)
+    .map((entry) => entry.item);
 }
 
 /** Shortest query word that matches a keyword it is the start of ("verz" finds "verzenden"). */

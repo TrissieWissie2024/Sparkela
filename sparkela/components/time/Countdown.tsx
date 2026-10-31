@@ -12,7 +12,7 @@ import { sharedCopy } from "@/content/copy/shared";
 import { InlineScript } from "@/components/ui/InlineScript";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 
-import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
+import { COUNTDOWN_HIDE_ATTRIBUTE, countdownReserveEm, countdownScript } from "./countdownScript";
 
 /**
  * A real countdown to a fixed date from content/drops.ts or content/offers.ts (brief §2.4, plan §10.6). Never reset
@@ -22,7 +22,9 @@ import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
  *   (countdownScript) writes the running digits into the same box before the first paint, and hydration keeps them
  *   (suppressHydrationWarning), so the hand-over is invisible.
  * - After mount it ticks every second through useNow(1000): "2d 5u" above a day, "05:12:09" in the last 24 hours, in
- *   tabular figures in a box of at least 8 digit widths (in em), so the layout does not move as digits change. `prefix`
+ *   tabular figures in a box as wide as the widest text of the current format (countdownReserveEm, in em, measured for
+ *   Inter and its fallback; QA round 5: a fixed 8 digits plus the prefix left a 41 px hole before the pause button), so
+ *   the layout does not move as digits change or when Inter arrives; the inline script sets the same width. `prefix`
  *   ("Nog ") stands before the running digits only, so sighted users see what counts down; the fixed label has none. The digits are
  *   aria-hidden; screen readers get `srLabel` ("Eindigt op …") and no live region.
  * - A pause button with a fixed label ("Aftellen pauzeren") and aria-pressed (WCAG 2.2.2). Paused, the fixed label
@@ -33,12 +35,6 @@ import { COUNTDOWN_HIDE_ATTRIBUTE, countdownScript } from "./countdownScript";
  *   countdown whose target can pass while the page is cached still sits inside a TimeSwitch on that target (§12.4).
  */
 
-/**
- * The advance of the digit 0 in Inter 600, in em (measured: 0.6597). The text box reserves (8 + prefix) of these in
- * em rather than in `ch`: `ch` follows the font that is painting, and the fallback face's 0 is 14% narrower, so the box
- * (and the centred promo bar around it) changed width when Inter swapped in (integrator 10, decision 212).
- */
-const INTER_SEMIBOLD_ZERO_EM = 0.66;
 
 export interface CountdownProps {
   /** Fixed date from content/drops.ts or content/offers.ts, never computed. */
@@ -111,13 +107,14 @@ export function Countdown({
     return liveLabel ? <span className={cn("font-semibold", tones[tone], className)}>{liveLabel}</span> : null;
   }
 
-  const text =
-    ticking && now !== null ? `${prefix}${formatCountdown(getCountdown(now, targetMs), sharedCopy.countdown)}` : fallbackLabel;
+  const running = ticking && now !== null;
+  const text = running ? `${prefix}${formatCountdown(getCountdown(now, targetMs), sharedCopy.countdown)}` : fallbackLabel;
+  const minWidth = running ? `${countdownReserveEm(prefix, targetMs - now, sharedCopy.countdown)}em` : undefined;
 
   return (
     <span id={id} suppressHydrationWarning className={cn("inline-flex items-center gap-1", tones[tone], className)}>
       <span data-countdown-text="" aria-hidden="true" suppressHydrationWarning className="tabular inline-block text-left font-semibold"
-        style={{ minWidth: `${((8 + prefix.length) * INTER_SEMIBOLD_ZERO_EM).toFixed(3)}em` }}>
+        style={minWidth ? { minWidth } : undefined}>
         {text}
       </span>
       <VisuallyHidden {...hideAttribute} id={`${id}-label`} suppressHydrationWarning>

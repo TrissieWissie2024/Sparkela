@@ -17,14 +17,28 @@ export interface RingSizeGuideProps {
   onOpenChange(open: boolean): void;
   /** The size values of the ring ("16" to "19"). */
   sizes: readonly string[];
+  /** Where focus goes on close when the guide was not opened by its button (the #ringmaatgids link, QA round 5). */
+  returnFocus?: () => HTMLElement | null;
 }
 
-export function RingSizeGuide({ open, onOpenChange, sizes }: RingSizeGuideProps) {
+export function RingSizeGuide({ open, onOpenChange, sizes, returnFocus }: RingSizeGuideProps) {
   const copy = pdpCopy.sizeGuide;
   const rows = ringSizeRows(sizes);
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} size="md" title={copy.title} description={copy.intro}>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="md"
+      title={copy.title}
+      description={copy.intro}
+      onCloseAutoFocus={(event) => {
+        const target = returnFocus?.();
+        if (!target) return;
+        event.preventDefault();
+        target.focus();
+      }}
+    >
       <div className="flex flex-col gap-7">
         {rows.length > 0 ? (
           <table className="w-full border-collapse text-left text-[0.9375rem]">

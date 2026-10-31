@@ -155,7 +155,8 @@ export interface SharedCopy {
 
 const cutoff = shipping.cutoff.label;
 const transit = shipping.countries[shipping.defaultCountry].transitDays;
-const transitText = `${transit.min} tot ${transit.max} werkdagen`;
+// "2" never ends a line away from "werkdagen" (QA round 5: the delivery card under "In je tas").
+const transitText = `${transit.min} tot ${transit.max}\u00a0werkdagen`;
 const stackPercent = `${stackDiscount.percent}%`;
 
 /** Lower bounds of the price buckets in cents (lib/catalog.ts buckets on priceRange.min, plan §7.2). */
@@ -251,9 +252,12 @@ export const sharedCopy: SharedCopy = {
     error: "Dat lukte niet. Probeer het opnieuw.",
   },
   searchSynonyms: {
-    verguld: "goud goudkleurig",
-    goudkleurig: "goud",
-    zilverkleurig: "zilver",
+    verguld: "goud goudkleurig gouden",
+    goudkleurig: "goud gouden",
+    zilverkleurig: "zilver zilveren",
+    // QA round 5: the inflected colour words people type ("zilveren oorbellen", "gouden ketting").
+    zilver: "zilveren zilverkleurig",
+    goud: "gouden goudkleurig",
     feestdagen: "kerst kerstmis",
     // QA round 4: the words of the menu and the collections ("Subtiel en klassiek" is the clean-en-classy vibe).
     classy: "subtiel subtiele klassiek klassieke",

@@ -524,13 +524,11 @@ export function formatDayMonth(value: IsoDateTime | number): string {
 export type PromoState =
   | { kind: "campaign"; campaign: Campaign; target: IsoDateTime | null }
   | { kind: "drop-upcoming"; drop: Drop; target: IsoDateTime }
-  | { kind: "drop-live"; drop: Drop; target: null }
+  | { kind: "drop-live"; drop: Drop; target: IsoDateTime }
   | { kind: "usp" };
 
 /** A drop whose startsAt is at most this many days away is announced ("Nieuwe drop: …"). */
 export const PROMO_UPCOMING_DAYS = 7;
-/** A drop is "Nu live" in the bar for this many days after startsAt. */
-export const PROMO_LIVE_DAYS = 7;
 
 interface PromoInput {
   campaigns: readonly Campaign[];
@@ -541,8 +539,10 @@ const defaultPromoInput: PromoInput = { campaigns: allCampaigns, drops: allDrops
 
 /**
  * What the announcement bar shows at `now` (plan §12.3), in this order: a running campaign (timer to endsAt when
- * showTimer); a drop starting within PROMO_UPCOMING_DAYS (timer to startsAt; the earliest start first); a drop that
- * has been live for less than PROMO_LIVE_DAYS (the first started, for overlapping drops); else the USP bar.
+ * showTimer); a drop starting within PROMO_UPCOMING_DAYS (timer to startsAt; the earliest start first); a live drop
+ * for its whole window, with a timer to its fixed endsAt (QA round 5, brief §6 block 1: the active drop with a real
+ * timer, the USPs only when there is none; for overlapping drops the one that started last, the newest); else the
+ * USP bar.
  */
 export function getPromoState(now: number, input: PromoInput = defaultPromoInput): PromoState {
   const campaign = getActiveCampaign(now, input.campaigns);
@@ -555,11 +555,8 @@ export function getPromoState(now: number, input: PromoInput = defaultPromoInput
   });
   if (upcoming) return { kind: "drop-upcoming", drop: upcoming, target: upcoming.startsAt };
 
-  const live = ordered.find((drop) => {
-    const start = toMs(drop.startsAt);
-    return start <= now && now < Math.min(start + PROMO_LIVE_DAYS * DAY_MS, toMs(drop.endsAt));
-  });
-  if (live) return { kind: "drop-live", drop: live, target: null };
+  const live = [...ordered].reverse().find((drop) => toMs(drop.startsAt) <= now && now < toMs(drop.endsAt));
+  if (live) return { kind: "drop-live", drop: live, target: live.endsAt };
 
   return { kind: "usp" };
 }
@@ -576,7 +573,7 @@ function promoKey(state: PromoState): string {
     case "drop-upcoming":
       return `drop-upcoming:${state.drop.slug}:${state.target}`;
     case "drop-live":
-      return `drop-live:${state.drop.slug}`;
+      return `drop-live:${state.drop.slug}:${state.target}`;
     case "usp":
       return "usp";
   }
@@ -588,7 +585,7 @@ function promoBoundaries(input: PromoInput): number[] {
   for (const campaign of input.campaigns) out.push(toMs(campaign.startsAt), toMs(campaign.endsAt));
   for (const drop of input.drops) {
     const start = toMs(drop.startsAt);
-    out.push(start - PROMO_UPCOMING_DAYS * DAY_MS, start, start + PROMO_LIVE_DAYS * DAY_MS, toMs(drop.endsAt));
+    out.push(start - PROMO_UPCOMING_DAYS * DAY_MS, start, toMs(drop.endsAt));
   }
   return out;
 }
@@ -631,7 +628,6 @@ export function timeBoundaries(): number[] {
       start,
       toMs(drop.endsAt),
       start - PROMO_UPCOMING_DAYS * DAY_MS,
-      start + PROMO_LIVE_DAYS * DAY_MS,
     );
   }
   for (const w of defaultGiftWrap.freeWindows) out.push(toMs(w.startsAt), toMs(w.endsAt));

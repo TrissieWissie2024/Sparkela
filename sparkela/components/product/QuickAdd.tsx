@@ -4,13 +4,13 @@ import { Check, Plus, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 
 import type { CatalogProduct, Variant } from "@/lib/types";
-import { defaultVariant } from "@/lib/catalog";
+import { defaultVariant, isAtStockLimit } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/money";
 import { productPath } from "@/lib/paths";
 import { cartCopy } from "@/content/copy/cart";
 import { pdpCopy } from "@/content/copy/pdp";
-import { useCartActions, type AddToCartSource } from "@/components/cart/useCart";
+import { useCartActions, useCartQuantity, type AddToCartSource } from "@/components/cart/useCart";
 import { variantKind } from "@/components/pdp/variants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 
@@ -31,8 +31,13 @@ import { Button, buttonClasses } from "@/components/ui/Button";
  *   otherwise cover: WCAG 2.4.11) and on a pointer press outside it, without moving focus (QA round 2). A press on
  *   "Kies" while the list is open closes it (and does not reopen it). With `panelInCard` (the product card) the
  *   wrapper is not positioned, so the list is placed against the card itself and can cover the card's whole text area.
- * - Rings (size tiles on the product page): no size is preselected; "In tas" stays aria-disabled with "Kies eerst je
- *   maat." until one is chosen, and "Welke maat heb ik?" links to the product page with the size guide.
+ * - Rings (size tiles on the product page): no size is preselected. "In tas" looks and works like the buy box's button
+ *   (QA round 5, decision 216a): a full roest button that, pressed without a size, says "Kies eerst je maat." and
+ *   moves focus to the first size; "Welke maat heb ik?" links to the product page with the size guide.
+ * - At the stock limit (the cart already holds every unit of the variant, isAtStockLimit, QA round 5): the button is
+ *   aria-disabled and described by "Van {titel} zit alles wat we nu hebben al in je tas." like the buy box (visible
+ *   in the choice list, for screen readers on the single button). A press on the single button still asks the cart,
+ *   which opens the drawer with its notice and announces the same fact, never "Probeer het opnieuw".
  * - The gift card: the link "Kies bedrag" to its product page.
  * - Sold out: "Uitverkocht", aria-disabled (it keeps focus).
  * Above the card's stretched link (relative z-10), so it stays clickable. Uses useCartActions(): no re-render when
@@ -101,6 +106,10 @@ export function QuickAdd({
   const panelId = `${id}-panel`;
   const legendId = `${id}-legend`;
   const hintId = `${id}-hint`;
+  const limitId = `${id}-limit`;
+  // Units of the variant the button would add (the only one, or the chosen one) already in the cart.
+  const watchedId = mode === "single" ? (product.variants[0]?.id ?? null) : selected || null;
+  const inCart = useCartQuantity(watchedId);
 
   // Clear a pending "Toegevoegd" reset when the card unmounts (a filter removes it).
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -180,22 +189,32 @@ export function QuickAdd({
 
   if (mode === "single") {
     const variant = product.variants[0];
+    const atLimit = !added && isAtStockLimit(variant, inCart);
     return (
-      <Button
-        variant="primair"
-        size={size}
-        fullWidth={fullWidth}
-        loading={adding}
-        loadingLabel={cartCopy.quickAdd.adding}
-        aria-label={added ? cartCopy.quickAdd.addedLabel(title) : cartCopy.quickAdd.addLabel(title)}
-        iconStart={icon}
-        onClick={() => {
-          void add(variant.id);
-        }}
-        className={classes}
-      >
-        {added ? cartCopy.quickAdd.added : cartCopy.quickAdd.add}
-      </Button>
+      <>
+        <Button
+          variant="primair"
+          size={size}
+          fullWidth={fullWidth}
+          loading={adding}
+          loadingLabel={cartCopy.quickAdd.adding}
+          aria-label={added ? cartCopy.quickAdd.addedLabel(title) : cartCopy.quickAdd.addLabel(title)}
+          aria-disabled={atLimit || undefined}
+          aria-describedby={atLimit ? limitId : undefined}
+          iconStart={icon}
+          onClick={() => {
+            void add(variant.id);
+          }}
+          className={classes}
+        >
+          {added ? cartCopy.quickAdd.added : cartCopy.quickAdd.add}
+        </Button>
+        {atLimit ? (
+          <span id={limitId} className="sr-only">
+            {pdpCopy.addToCart.allInCart(title)}
+          </span>
+        ) : null}
+      </>
     );
   }
 
@@ -203,6 +222,7 @@ export function QuickAdd({
   const showPrice = prices.size > 1;
   const optionName = product.options[0]?.name ?? cartCopy.quickAdd.optionFallback;
   const selectedVariant = product.variants.find((variant) => variant.id === selected && variant.availableForSale) ?? null;
+  const atLimit = selectedVariant !== null && isAtStockLimit(selectedVariant, inCart);
 
   const onPanelKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Escape") return;
@@ -321,6 +341,11 @@ export function QuickAdd({
               </a>
             </p>
           ) : null}
+          {atLimit ? (
+            <p id={limitId} className="tekst-klein mt-1 text-tekst-2">
+              {pdpCopy.addToCart.allInCart(title)}
+            </p>
+          ) : null}
           {/* At least 0.75rem, and more in a list that is taller than its content (the product card's overlay), so
               "In tas" sits at the bottom. */}
           <span aria-hidden="true" className="min-h-3 flex-1" />
@@ -330,13 +355,17 @@ export function QuickAdd({
             fullWidth
             loading={adding}
             loadingLabel={cartCopy.quickAdd.adding}
-            aria-disabled={selectedVariant === null || undefined}
-            aria-describedby={hint ? hintId : undefined}
+            // Without a choice it still looks and works like the buy box: the press asks for the size (QA round 5).
+            aria-disabled={atLimit || undefined}
+            aria-describedby={atLimit ? limitId : hint ? hintId : undefined}
             aria-label={cartCopy.quickAdd.addLabel(title)}
             iconStart={<Plus aria-hidden="true" className="size-4" strokeWidth={2} />}
             onClick={() => {
+              if (atLimit) return;
               if (!selectedVariant) {
                 setHint(true);
+                // Like the buy box: focus (and so scroll to) the first size that is for sale.
+                document.getElementById(panelId)?.querySelector<HTMLInputElement>("input[type=radio]:not(:disabled)")?.focus();
                 return;
               }
               // Close the list and focus "Kies" first, so the drawer that the add opens returns focus there.

@@ -1,5 +1,4 @@
 import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
 
 import { chromeCopy } from "@/content/copy/chrome";
 import { sharedCopy } from "@/content/copy/shared";
@@ -8,6 +7,7 @@ import { confirmedSocials as socials, site } from "@/content/site";
 import { Logo } from "@/components/brand/Logo";
 import { CookieSettingsButton } from "@/components/consent/ConsentSlots";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
+import { SiteLink } from "@/components/ui/SiteLink";
 import { VatNotice } from "@/components/time/VatNotice";
 import { Container } from "@/components/ui/Container";
 import { SentenceLines } from "@/components/ui/SentenceLines";
@@ -33,7 +33,7 @@ import { PaymentBadges } from "./PaymentBadges";
  * 4. The company details (placeholders until TODO-LAUNCH), the VAT line by date, the withdrawal link
  *    <a href="/herroepen">Hier de overeenkomst herroepen</a> (exactly this label and target, on every page) and the
  *    copyright with the year as a literal from content.
- * 5. The wordmark, the container width on phones and at most 36rem from md (decorative: the name is in the copyright
+ * 5. The wordmark, the container width on phones (at most 36rem) and at most 24rem from md (decorative: the name is in the copyright
  *    line). QA round 2: its free space is trimmed left and right (Logo trimInline), so its letters run from the
  *    column's edge like every other footer line and the tagline under it; the container gutter is the free space on
  *    the sides, as in the header and on /nieuwsbrief/bevestigen (decisions 161, 216n), and it keeps its free space
@@ -43,9 +43,13 @@ import { PaymentBadges } from "./PaymentBadges";
  * Hidden in print. Port of CORVANE components/layout/Footer.tsx.
  */
 
-/** 44 px tall and at least 44 px wide targets; the lists have no gap, so 44 px is the rhythm. */
+/**
+ * 44 px tall and at least 44 px wide targets; the lists have no gap, so 44 px is the rhythm. From lg with a mouse
+ * (pointer-fine) 32 px rows, still above WCAG 2.5.8's 24 px (QA round 5: the Shop column alone was 9 × 44 px and the
+ * footer filled 59% of a short page at 1440). Touch screens keep 44 px at every width.
+ */
 const linkClasses =
-  "inline-flex min-h-11 min-w-11 items-center text-[0.9375rem] text-tekst-op-donker decoration-1 underline-offset-4 hover:underline";
+  "inline-flex min-h-11 min-w-11 items-center text-[0.9375rem] text-tekst-op-donker decoration-1 underline-offset-4 hover:underline lg:pointer-fine:min-h-8";
 
 export function Footer() {
   const copy = chromeCopy.footer;
@@ -56,7 +60,7 @@ export function Footer() {
       <Container>
         <div
           data-footer-club
-          className="grid grid-cols-1 gap-6 pt-12 pb-12 md:gap-8 md:pt-20 md:pb-16 lg:grid-cols-12 lg:items-start lg:gap-x-8"
+          className="grid grid-cols-1 gap-6 pt-10 pb-10 md:gap-8 md:pt-16 md:pb-12 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:pt-14"
         >
           <div className="lg:col-span-5">
             {/* One sentence per line (QA round 2): never "Als eerste bij elke / drop. Plus 10% op / …". */}
@@ -71,7 +75,7 @@ export function Footer() {
         <nav
           data-footer-nav
           aria-label={copy.navLabel}
-          className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-rand-op-donker py-10 md:grid-cols-4 md:gap-x-8 md:py-14"
+          className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-rand-op-donker py-8 md:grid-cols-4 md:gap-x-8 md:py-12 lg:py-10"
         >
           {footerNav.map((column, index) => (
             <div key={column.title}>
@@ -79,9 +83,9 @@ export function Footer() {
               <ul className="mt-3 flex flex-col">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className={linkClasses}>
+                    <SiteLink href={link.href} className={linkClasses}>
                       {link.label}
-                    </Link>
+                    </SiteLink>
                   </li>
                 ))}
                 {index === footerNav.length - 1 && site.analytics.enabled ? (
@@ -99,9 +103,9 @@ export function Footer() {
           <ul className="flex flex-wrap gap-x-6">
             {legalNav.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className={linkClasses}>
+                <SiteLink href={link.href} className={linkClasses}>
                   {link.label}
-                </Link>
+                </SiteLink>
               </li>
             ))}
           </ul>
@@ -109,7 +113,7 @@ export function Footer() {
 
         <div
           data-footer-social
-          className="flex flex-col gap-8 border-t border-rand-op-donker pt-10 md:flex-row md:items-center md:justify-between"
+          className="flex flex-col gap-6 border-t border-rand-op-donker pt-8 md:flex-row md:items-center md:justify-between"
         >
           <PaymentBadges tone="donker" />
           {socials.length > 0 ? (
@@ -152,7 +156,8 @@ export function Footer() {
           data-footer-wordmark
           className="flex flex-col gap-1 pt-6 pb-6 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-8 md:pb-4"
         >
-          <div aria-hidden="true" className="w-full max-w-[36rem]">
+          {/* At most 24rem from md (QA round 5: a band of 271 px at 1440 tipped short pages to dark). */}
+          <div aria-hidden="true" className="w-full max-w-[36rem] md:max-w-[24rem]">
             <Logo variant="op-donker" width={600} trimInline className="h-auto w-full" />
           </div>
           {/* English inside lang="nl": marked, so a Dutch voice does not read it as Dutch (WCAG 3.1.2, QA round 3). */}

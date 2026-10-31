@@ -3,13 +3,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import type { FaqItem } from "@/lib/types";
+import { keepNumbersWithUnits } from "@/lib/catalog";
 import { pageMetadata } from "@/lib/seo";
 import { formsCopy } from "@/content/copy/forms";
 import { pagesCopy } from "@/content/copy/pages";
 import { faq } from "@/content/faq";
 import { site } from "@/content/site";
 import { sharedCopy } from "@/content/copy/shared";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { Accordion } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -43,7 +44,7 @@ const linkClass =
 function Answer({ item }: { item: FaqItem }) {
   return (
     <>
-      <p className="max-w-[34rem]">{item.answer}</p>
+      <p className="max-w-[34rem]">{keepNumbersWithUnits(item.answer)}</p>
       {item.link ? (
         <Link href={item.link.href} className={linkClass}>
           {item.link.label}
@@ -57,11 +58,12 @@ function Answer({ item }: { item: FaqItem }) {
 export default function VeelgesteldeVragenPage() {
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={copy.eyebrow}
         title={copy.title}
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+        path="/veelgestelde-vragen"
       />
       <Container className="pb-16 md:pb-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-x-8">

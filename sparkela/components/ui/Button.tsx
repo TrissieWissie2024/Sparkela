@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ComponentPropsWithRef, MouseEvent, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { needsFullPageLoad } from "@/lib/paths";
 
 /**
  * Buttons and button-styled links (plan §4.2, §13.2; brief §5: roest is the only button colour, decision 77).
@@ -164,7 +165,8 @@ export function Button(props: ButtonProps) {
       ? { "aria-busy": true as const, "aria-disabled": true as const, onClick: blockClick }
       : {};
 
-    if (isInPageAnchor(href)) {
+    // An in-page fragment, or a path that leaves the app (/account, QA round 5): a plain anchor, no prefetch.
+    if (isInPageAnchor(href) || needsFullPageLoad(href)) {
       // Drop the props only <Link> understands; the rest are plain anchor attributes.
       const {
         as,

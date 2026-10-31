@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/Button";
 /**
  * The account icon link in the header (docs/PLAN.md §13.5): 44 px, "Account", to /account (the proxy forwards it to
  * Shopify's customer accounts once SHOPIFY_CUSTOMER_ACCOUNT_URL is set). Below 380 px (xs) the header hides it; the
- * mobile menu has Account too (decision 83).
+ * mobile menu has Account too (decision 83). A plain anchor (Button renders one for needsFullPageLoad paths, QA
+ * round 5): no prefetch, because the router would follow the redirect to Shopify into a CORS error on every page.
  */
 export function AccountLink({ className }: { className?: string }) {
   return (

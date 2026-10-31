@@ -100,8 +100,9 @@ function handlesOf(items: Array<{ handle: string }>): string[] {
 }
 
 /** Handles of the products that are listable at `now`, by featuredRank. */
+/** The sitemap's product handles at `now`: the listable pieces plus the gift card (QA round 5). */
 function listableHandlesAt(now: number): string[] {
-  return handlesOf(localCatalogProducts(now).filter((item) => item.listable));
+  return handlesOf(localCatalogProducts(now).filter((item) => item.listable || (item.isGiftCard && !item.tags.verborgen)));
 }
 
 /** Every list for cards is CatalogProduct[] with badges and listable, without server-only fields (decision 106). */
@@ -458,8 +459,10 @@ describe("lib/shop-data.ts at TEST_NOW (27 November, Holiday Sparkle live)", () 
 
   it("getSitemapProducts and getShopProductsForParams", async () => {
     const sitemap = handlesOf(await getSitemapProducts());
+    // The listable pieces plus the gift card's page (QA round 5), never the gift wrap.
     expect(sitemap).toEqual(listableHandlesAt(TEST_NOW));
-    expect(sitemap).not.toContain("cadeaukaart");
+    expect(sitemap).toContain("cadeaukaart");
+    expect(sitemap).not.toContain("cadeauverpakking");
 
     const params = handlesOf(await getShopProductsForParams());
     expect(params).toHaveLength(25);
@@ -953,7 +956,8 @@ describe("tests/fixtures/local-catalog.ts (decision 140)", () => {
     expect(routes).not.toContain("/drops/love-club");
     expect(routes).toContain("/products/holiday-ster-oorbellen");
     expect(routes).not.toContain("/products/cadeauverpakking");
-    expect(routes).not.toContain("/products/cadeaukaart");
+    // The gift card's page is indexable and in the sitemap (QA round 5).
+    expect(routes).toContain("/products/cadeaukaart");
     expect(new Set(routes).size).toBe(routes.length);
     const productRoutes = routes.filter((route) => route.startsWith("/products/"));
     expect(productRoutes).toEqual(handlesOf(await getSitemapProducts()).map((handle) => `/products/${handle}`));

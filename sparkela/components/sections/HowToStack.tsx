@@ -59,12 +59,14 @@ export function HowToStack({ content, headingLevel = 2, showLink = true, classNa
           ) : undefined
         }
       />
-      <ol className="mt-8 flex flex-col gap-6 md:mt-12 md:grid md:grid-cols-3 md:gap-6">
+      {/* From md the cards share their rows (subgrid: icon, number, title, text), so every text starts at the same
+          height whatever its title wraps to (QA round 5: one to three lines apart at 1024). */}
+      <ol className="mt-8 flex flex-col gap-6 md:mt-12 md:grid md:grid-cols-3 md:gap-x-6 md:gap-y-0">
         {content.steps.map((step, index) => (
           <li
             key={step.title}
             className={cn(
-              "flex items-start gap-4 md:flex-col md:gap-0",
+              "flex items-start gap-4 md:row-span-4 md:grid md:grid-rows-subgrid md:content-start md:gap-0",
               "md:rounded-kaart md:border md:border-rand md:bg-kaart md:p-7 lg:p-8",
             )}
           >
@@ -74,11 +76,12 @@ export function HowToStack({ content, headingLevel = 2, showLink = true, classNa
             >
               {STEP_ICONS[index]}
             </span>
-            <div className="min-w-0 pt-0.5 md:mt-6 md:pt-0">
-              <span aria-hidden="true" className="tabular label-caps block text-tekst-2">
+            <div className="min-w-0 pt-0.5 md:contents">
+              <span aria-hidden="true" className="tabular label-caps block text-tekst-2 md:mt-6">
                 {stepNumber(index)}
               </span>
-              <StepHeading className="kop-3 mt-1.5 text-tekst">{step.title}</StepHeading>
+              {/* The phone size up to xl: the brief's fixed titles do not wrap to four lines in a 238 px column. */}
+              <StepHeading className="kop-3 mt-1.5 text-tekst md:max-xl:text-[1.125rem]!">{step.title}</StepHeading>
               <p className="mt-2 max-w-[24rem] text-tekst-2">{step.text}</p>
             </div>
           </li>

@@ -8,7 +8,7 @@ import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { site } from "@/content/site";
 import { ContactForm } from "@/components/forms/ContactForm";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { Container } from "@/components/ui/Container";
 
 /**
@@ -27,11 +27,12 @@ export default function ContactPage() {
     <>
       {/* A task page: the compact footer (app/globals.css, QA round 1). */}
       <div data-compacte-footer="" hidden />
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={pagesCopy.pageEyebrows.service}
         title={copy.title}
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+        path="/contact"
       />
       <Container className="grid gap-10 pb-16 md:pb-24 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
         <div className="min-w-0">

@@ -305,11 +305,16 @@ export async function getShipSchedule(): Promise<ShipLabelEntry[]> {
   return buildShipSchedule(now);
 }
 
-/** The product pages in the sitemap: the listable products at the server clock, by featuredRank. */
+/**
+ * The product pages in the sitemap: the listable products at the server clock, by featuredRank, plus the gift card's
+ * page (QA round 5: an indexable landing page with Product JSON-LD that /cadeaukaarten links to; never the gift wrap).
+ */
 export async function getSitemapProducts(): Promise<Array<{ handle: string }>> {
   "use cache";
   const now = clockScope();
-  return (await catalogAt(now)).filter((product) => product.listable).map((product) => ({ handle: product.handle }));
+  return (await catalogAt(now))
+    .filter((product) => product.listable || (product.isGiftCard && !product.tags.verborgen))
+    .map((product) => ({ handle: product.handle }));
 }
 
 /**

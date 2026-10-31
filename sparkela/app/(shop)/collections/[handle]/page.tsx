@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
+import { homeFavorites } from "@/lib/catalog";
 import { breadcrumbJsonLd, collectionPath, NOT_FOUND_TITLE, pageMetadata } from "@/lib/seo";
-import { getShopCollection } from "@/lib/shop-data";
+import { getShopCollection, getShopProducts } from "@/lib/shop-data";
 import { collections } from "@/content/collections";
+import { collectionCopy } from "@/content/copy/collection";
 import { sharedCopy } from "@/content/copy/shared";
 import { CollectionBanner } from "@/components/collection/CollectionBanner";
 import { CollectionEmpty } from "@/components/collection/CollectionEmpty";
@@ -14,10 +16,12 @@ import { visibleFacets } from "@/components/collection/filterParams";
 import { StylingTile } from "@/components/collection/StylingTile";
 import { NotFoundView } from "@/components/pages/NotFoundView";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductGrid } from "@/components/product/ProductGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Container } from "@/components/ui/Container";
 import { InlineScript } from "@/components/ui/InlineScript";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
  * /collections/[handle] (docs/PLAN.md §14.3; brief §6 "Collectie", also `alle`): breadcrumbs, the banner (eyebrow,
@@ -48,6 +52,11 @@ export const instant = false;
 const PRELOADED_CARDS = 2;
 const EAGER_CARDS = 4;
 
+/** A collection with fewer pieces than this gets Linde's favourites from the rest of the shop under its grid. */
+const SHORT_COLLECTION = 8;
+/** How many favourites a short collection shows (one row of four from md, two rows of two on a phone). */
+const MORE_FAVORITES = 4;
+
 export function generateStaticParams(): Array<{ handle: string }> {
   return collections.map((collection) => ({ handle: collection.handle }));
 }
@@ -77,6 +86,15 @@ export default async function CollectionPage({ params }: PageProps<"/collections
   const { definition, products, facets } = collection;
   const path = collectionPath(definition.handle);
   const home = sharedCopy.ui.home;
+  // A short collection is no dead end (QA round 5, brief §5 70/20/10: two rings and then the dark footer): Linde's
+  // favourites from the rest of the shop, on the light page, between the grid and the footer.
+  const inCollection = new Set(products.map((product) => product.handle));
+  const more =
+    products.length > 0 && products.length < SHORT_COLLECTION
+      ? homeFavorites(await getShopProducts(), false)
+          .products.filter((product) => !inCollection.has(product.handle))
+          .slice(0, MORE_FAVORITES)
+      : [];
 
   const cards: Record<string, ReactNode> = Object.fromEntries(
     products.map((product, index) => [
@@ -126,6 +144,21 @@ export default async function CollectionPage({ params }: PageProps<"/collections
           <CollectionEmpty variant={definition.rule.kind === "drop" ? "limited" : "default"} className="mt-8 md:mt-10" />
         )}
       </Container>
+      {more.length > 0 ? (
+        <Container as="section" aria-labelledby="meer-favorieten" className="-mt-4 pb-16 md:-mt-8 md:pb-24">
+          {/* Two sections on the same surface: a hairline over the container width (plan §4.4). */}
+          <div className="border-t border-rand pt-12 md:pt-16">
+            <SectionHeading id="meer-favorieten" level={2} title={collectionCopy.more.title} intro={collectionCopy.more.intro} />
+            <ProductGrid
+              products={more}
+              label={collectionCopy.more.title}
+              headingLevel={3}
+              columns={more.length === MORE_FAVORITES ? "2-4" : "2-3-4"}
+              className="mt-8 md:mt-10"
+            />
+          </div>
+        </Container>
+      ) : null}
     </>
   );
 }

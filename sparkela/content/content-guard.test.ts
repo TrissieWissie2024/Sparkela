@@ -721,7 +721,8 @@ describe("content guard: verbatim copy (rule 11, plan §5.2)", () => {
       waitlistSignup: formsCopy.waitlist.signupTitle,
       withdrawalSubmit: formsCopy.withdrawal.submit,
       lindeIntro: pagesCopy.about.lindeIntro,
-      estimateToday: sharedCopy.deliveryEstimate.today,
+      // Number and unit share a no-break space on the site (QA round 5); the brief writes a plain one.
+      estimateToday: sharedCopy.deliveryEstimate.today.replace(/\u00a0/g, " "),
       barToday: sharedCopy.deliveryBar.today,
       barLater: sharedCopy.deliveryBar.later("maandag"),
       remaining: sharedCopy.progress.remaining("€0,10"),

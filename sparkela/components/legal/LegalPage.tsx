@@ -2,13 +2,14 @@ import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import type { ReactNode } from "react";
 
+import { keepNumbersWithUnits } from "@/lib/catalog";
 import { MONTHS_NL } from "@/lib/dates";
 import type { IsoDate } from "@/lib/types";
 import { legalPages, legalReviewNotice, legalUi, legalVariables, type LegalPageMeta, type LegalSlug } from "@/content/legal";
 import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { Container } from "@/components/ui/Container";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 
 import { LegalNotice } from "./LegalNotice";
 import { Markdown } from "./Markdown";
@@ -54,7 +55,8 @@ export function legalSource(slug: LegalSlug): string {
   // project into the server output). The pages revalidate, so the files must be there at runtime too.
   const raw = readFileSync(join(process.cwd(), "content", "legal", basename(legalPage(slug).file)), "utf8").replace(/^﻿/, "");
   const body = raw.startsWith(legalReviewNotice) ? raw.slice(legalReviewNotice.length) : raw;
-  return fillLegalTemplate(body.trim());
+  // A number never ends a line away from its unit ("binnen 6" / "maanden", "16.00" / "uur"; QA round 5).
+  return keepNumbersWithUnits(fillLegalTemplate(body.trim()));
 }
 
 /** "2026-10-27" → "27 oktober 2026". */
@@ -87,10 +89,11 @@ export function LegalPage({ slug, children }: LegalPageProps) {
   const [before, after] = legalSource(slug).split(LEGAL_SLOT);
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={slug === "verzenden-en-retourneren" ? pagesCopy.pageEyebrows.service : pagesCopy.pageEyebrows.legal}
         title={page.title}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: page.title }]}
+        path={`/${slug}`}
       />
       <Container className="pb-16 md:pb-24">
         <LegalNotice className="max-w-[42rem]" />

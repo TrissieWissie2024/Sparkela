@@ -237,7 +237,7 @@ export const pagesCopy: PagesCopy = {
         },
         {
           title: site.guarantee.short,
-          text: `Verkleurt je sieraad binnen ${site.guarantee.months} maanden? Mail ons een foto, dan sturen we je een nieuwe.`,
+          text: `Verkleurt je sieraad binnen ${site.guarantee.months} maanden? Mail ons een foto en je bestelnummer, dan sturen we je een nieuwe.`,
         },
         {
           title: "Cadeautjes in plaats van grote kortingen",
@@ -283,7 +283,8 @@ export const pagesCopy: PagesCopy = {
     },
     drops: {
       title: "Komende drops",
-      intro: "Zet ze alvast in je agenda. Als Club-lid hoor je als eerste wanneer ze live gaan.",
+      // Month and year only until Linde and Tristan confirm the dates (decision 22), so no "zet ze in je agenda".
+      intro: "Dit staat op de planning. Als Club-lid hoor je als eerste de precieze datum.",
       empty: "De volgende drops maken we snel bekend.",
       month: (month, year) => `${month} ${year}`,
       listLabel: "Komende drops met hun maand",
@@ -368,7 +369,7 @@ export const pagesCopy: PagesCopy = {
       appliedMessage: (code) => `${code} staat klaar. Je ziet de korting in je tas.`,
       appliedEmpty: (code) => `${code} staat klaar. De korting zie je zodra er iets in je tas zit.`,
       notCombined: (code) => `${code} staat klaar, maar je stack-korting is nu hoger. Die houd je.`,
-      notEligible: (code) => `${code} staat klaar. Hij telt op sieraden, niet op cadeaukaarten.`,
+      notEligible: (code) => `${code} staat klaar. Hij geldt voor sieraden, niet voor cadeaukaarten.`,
       continueShopping: "Verder shoppen",
     },
   },

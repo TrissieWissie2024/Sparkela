@@ -1,7 +1,7 @@
 "use client";
 
 import * as RadixTabs from "@radix-ui/react-tabs";
-import type { ReactNode } from "react";
+import { useDeferredValue, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -15,6 +15,11 @@ import { cn } from "@/lib/cn";
  * Radix focuses a tab on pointer down, and Chrome then matches :focus-visible on it, so a tap left the heavy focus
  * ring around the tab (QA round 1). The list marks pointer use (data-pointer, set on pointer down and cleared on any
  * key), and while it is set the ring is hidden; keyboard focus keeps the 2 px --focus ring (AGENTS.md).
+ *
+ * INP (QA round 5): the root is controlled and the panels follow a deferred copy of the value, so a tap paints the new
+ * tab's underline at once and the new grid (eight cards rendered on the client) renders in a non-blocking pass; the
+ * previous panel stays until it is ready. Every panel is mounted (forceMount) but only the shown one has children,
+ * so a product is still never in the DOM twice.
  */
 
 export interface TabItem {
@@ -35,11 +40,22 @@ export interface TabsProps {
 }
 
 export function Tabs({ tabs, label, defaultTab, onChange, className, panelClassName }: TabsProps) {
+  const initial =
+    defaultTab !== undefined && tabs.some((tab) => tab.id === defaultTab) ? defaultTab : (tabs[0]?.id ?? "");
+  const [value, setValue] = useState(initial);
+  const shown = useDeferredValue(value);
   if (tabs.length === 0) return null;
-  const initial = defaultTab !== undefined && tabs.some((tab) => tab.id === defaultTab) ? defaultTab : tabs[0].id;
 
   return (
-    <RadixTabs.Root defaultValue={initial} onValueChange={onChange} activationMode="automatic" className={className}>
+    <RadixTabs.Root
+      value={value}
+      onValueChange={(next) => {
+        setValue(next);
+        onChange?.(next);
+      }}
+      activationMode="automatic"
+      className={className}
+    >
       <RadixTabs.List
         aria-label={label}
         loop
@@ -71,8 +87,14 @@ export function Tabs({ tabs, label, defaultTab, onChange, className, panelClassN
         ))}
       </RadixTabs.List>
       {tabs.map((tab) => (
-        <RadixTabs.Content key={tab.id} value={tab.id} className={cn("pt-6 md:pt-8", panelClassName)}>
-          {tab.panel}
+        <RadixTabs.Content
+          key={tab.id}
+          value={tab.id}
+          forceMount
+          hidden={tab.id !== shown}
+          className={cn("pt-6 md:pt-8", panelClassName)}
+        >
+          {tab.id === shown ? tab.panel : null}
         </RadixTabs.Content>
       ))}
     </RadixTabs.Root>

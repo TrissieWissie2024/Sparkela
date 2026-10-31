@@ -219,6 +219,8 @@ test.describe("no layout shift when the fonts arrive late", () => {
     ["/sparkela-club", 200],
     // The confirm page's own H1, which took one line in Unbounded and two in the fallback (QA round 2).
     ["/nieuwsbrief/bevestigen?t=voorbeeld", 200],
+    // Without a token: the new sign-up, whose scope line wrapped to 3 lines only in Inter at 350 px (QA round 5).
+    ["/nieuwsbrief/bevestigen", 200],
     ["/bestaat-niet", 404],
   ];
 
@@ -540,4 +542,138 @@ test.describe("waitlist on a phone", () => {
     const box = await field.boundingBox();
     expect(box && box.y + box.height <= 844, `field at ${box?.y}`).toBe(true);
   });
+});
+
+/* -------------------------------------------------------------------------- */
+/* QA round 5                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const ONE_CELL_TILE_COLLECTIONS = [
+  "/collections/oorbellen",
+  "/collections/kettingen",
+  "/collections/nieuw",
+  "/collections/feestdagen",
+  "/collections/kantoor-maar-niet-saai",
+  "/collections/date-night",
+];
+
+/** Text, arrow and padding of the first styling tile: nothing cut off, the arrow inside with room under it. */
+async function tileFits(page: Page) {
+  return page.evaluate(() => {
+    const tile = document.querySelector<HTMLElement>("main [class*='group/tegel']");
+    if (!tile) return null;
+    const box = tile.getBoundingClientRect();
+    const arrow = tile.querySelector("svg")!.getBoundingClientRect();
+    return { overflow: tile.scrollHeight - tile.clientHeight, arrowRoom: Math.round(box.bottom - arrow.bottom) };
+  });
+}
+
+/**
+ * A one-cell styling tile never cuts its text off (QA round 5, WCAG 1.4.10 and 1.4.12, plan §18.3 rules 12 and 13): at
+ * 320 px the cell is too narrow for a photo above the text, so only the text shows; with WCAG text spacing the row
+ * grows instead of clipping.
+ */
+test("a one-cell styling tile keeps all its text and its arrow at 320 px and with text spacing", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Phone widths.");
+  for (const [width, spacing] of [
+    [320, false],
+    [390, true],
+  ] as const) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const path of ONE_CELL_TILE_COLLECTIONS) {
+      await gotoHydrated(page, path);
+      await fontsReady(page);
+      if (spacing) {
+        await page.addStyleTag({
+          content: "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }",
+        });
+      }
+      const fit = await tileFits(page);
+      expect(fit, path).not.toBeNull();
+      expect(fit!.overflow, `${path} at ${width} px${spacing ? " with text spacing" : ""}`).toBeLessThanOrEqual(0);
+      expect(fit!.arrowRoom, `${path} at ${width} px`).toBeGreaterThanOrEqual(11.5);
+    }
+  }
+});
+
+/** Two parallel hairlines with nothing between them read as a mistake (QA rounds 1 and 5). */
+test("no double hairline between sections on the finder and the drop teaser", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The stacked phone layout.");
+  for (const path of ["/spark-finder", "/drops/love-club"]) {
+    await gotoHydrated(page, path);
+    await fontsReady(page);
+    const pairs = await page.evaluate(() => {
+      const main = document.querySelector("main")!;
+      const width = main.getBoundingClientRect().width;
+      const lines: Array<{ y: number; el: Element }> = [];
+      for (const el of main.querySelectorAll("*")) {
+        const style = getComputedStyle(el);
+        const box = el.getBoundingClientRect();
+        if (box.width < width * 0.5 || style.display === "none" || style.visibility === "hidden") continue;
+        // Hairlines only: a bordered box (an option tile, a card) has side borders too and is not a section line.
+        if (style.borderLeftWidth !== "0px" || style.borderRightWidth !== "0px") continue;
+        if (style.borderTopWidth === "1px" && style.borderTopStyle !== "none") lines.push({ y: box.top + scrollY, el });
+        if (style.borderBottomWidth === "1px" && style.borderBottomStyle !== "none") lines.push({ y: box.bottom + scrollY, el });
+      }
+      lines.sort((a, b) => a.y - b.y);
+      const texts = Array.from(main.querySelectorAll("h1, h2, h3, h4, p, li, a, button, label, input, img, svg")).map((el) => {
+        const box = el.getBoundingClientRect();
+        return { top: box.top + scrollY, bottom: box.bottom + scrollY, height: box.height };
+      });
+      const found: string[] = [];
+      for (let i = 1; i < lines.length; i += 1) {
+        const gap = lines[i]!.y - lines[i - 1]!.y;
+        if (gap < 2 || gap > 64) continue;
+        const between = texts.some((text) => text.height > 0 && text.top >= lines[i - 1]!.y - 1 && text.bottom <= lines[i]!.y + 1);
+        if (!between) found.push(`${Math.round(gap)} px at y=${Math.round(lines[i - 1]!.y)}`);
+      }
+      return found;
+    });
+    expect(pairs, path).toEqual([]);
+  }
+});
+
+/** /account leaves the app (Shopify's customer accounts): never prefetched, so no cross-origin RSC fetch (QA round 5). */
+test("no page prefetches /account", async ({ page }) => {
+  const prefetched: string[] = [];
+  page.on("request", (request) => {
+    if (/\/account\?_rsc=/.test(request.url()) || (request.url().endsWith("/account") && request.headers()["rsc"])) {
+      prefetched.push(request.url());
+    }
+  });
+  for (const path of ["/", "/products/lola-chunky-hoops", "/collections/oorbellen"]) {
+    await gotoHydrated(page, path);
+    await page.mouse.wheel(0, 4000);
+    await page.waitForTimeout(1500);
+  }
+  expect(prefetched).toEqual([]);
+});
+
+/** The sticky filter row hides its top hairline under the header's, so the line under the header stays 1 px. */
+test("the stuck filter row sits 1 px under the header", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The sticky row exists below lg.");
+  await gotoHydrated(page, "/collections/oorbellen");
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const header = document.querySelector("header")!.getBoundingClientRect().bottom;
+        const bar = document.querySelector("[data-sticky-filterbar]")!.getBoundingClientRect().top;
+        return Math.round(header - bar);
+      }),
+    )
+    .toBe(1);
+});
+
+/** Resetting the stack picks puts focus on what replaces the button (QA round 5, WCAG 2.4.3 and 4.1.3). */
+test("focus stays on the stack after resetting it to Linde's stack", async ({ page }) => {
+  await gotoHydrated(page, "/products/lola-chunky-hoops");
+  await page.getByRole("main").locator("label").filter({ has: page.getByRole("radio", { name: /^Stack van 3/ }) }).click();
+  const second = page.getByRole("main").getByRole("combobox", { name: "Stuk 2" });
+  const values = await second.evaluate((node) => Array.from((node as HTMLSelectElement).options, (option) => option.value));
+  await second.selectOption(values[values.length - 1]!);
+  const reset = page.getByRole("main").getByRole("button", { name: /^Terug naar/ });
+  await reset.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("main").getByText(/^Lindes stack: /)).toBeFocused();
 });

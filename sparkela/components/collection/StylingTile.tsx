@@ -16,9 +16,12 @@ import { PhotoSlot } from "@/components/media/PhotoSlot";
  * A size container, because CollectionView lets it span the cells the last row would leave empty (one cell up to a
  * whole row). Several cells: the tile is a row of its own and its content gives the height; from 20rem the photo moves
  * to the left, and from 48rem it becomes a wide 16:10 crop, so a whole-row tile never towers over the cards.
- * One cell (QA round 4): the cell is a `tegelcel` (app/globals.css), so the product cards next to it set the row
- * height and the tile fills it: always the card shape (photo on top), the photo takes what the text leaves, and the
- * text keeps at least 12 px above the arrow. Never taller than a card, so a card next to it never stretches.
+ * One cell (QA rounds 4 and 5): the cell is a `tegelcel` (app/globals.css). The photo never adds height, so the
+ * product cards next to it set the row height and the tile fills it: always the card shape (photo on top), the photo
+ * takes what the text leaves (at least 6rem), and the text keeps at least 12 px above the arrow. In a cell too narrow
+ * for a photo above the text (`in-smalle-tegelcel`, under 9.5rem: a 320 px phone) only the text shows, the arrow at the
+ * bottom. The text always counts: if it needs more room (WCAG text spacing, a larger font) the row grows, so nothing
+ * is ever cut off.
  * The photo is decorative (alt=""). No data-vlak on the link: its focus ring is drawn outside the tile, on the light
  * page, so it keeps the leisteen ring. Synchronous and without hooks, like ProductCard (server or client).
  */
@@ -57,7 +60,10 @@ export function StylingTile({ eyebrow, title, text, image, href, className }: St
           className={cn(
             "relative aspect-[4/5] w-full shrink-0",
             "@min-[20rem]:w-2/5 @min-[48rem]:aspect-[16/10] @min-[48rem]:w-[45%]",
-            "in-tegelcel:aspect-auto! in-tegelcel:min-h-24 in-tegelcel:w-full! in-tegelcel:flex-1!",
+            // One cell: the photo never adds height ([contain:size]) and fills what the text leaves, at least 6rem; in a
+            // cell too narrow for both (under 9.5rem, a 320 px phone) only the text shows (QA round 5).
+            "in-tegelcel:aspect-auto! in-tegelcel:min-h-24 in-tegelcel:w-full! in-tegelcel:flex-1! in-tegelcel:basis-0!",
+            "in-tegelcel:[contain:size] in-smalle-tegelcel:hidden!",
           )}
         >
           <PhotoSlot assetKey={image} label={label} aspect="fill" tone="donker" alt="" sizes={STYLING_TILE_SIZES} />
@@ -65,7 +71,8 @@ export function StylingTile({ eyebrow, title, text, image, href, className }: St
         <div
           className={cn(
             "flex flex-1 flex-col p-4 @min-[15rem]:p-5 @min-[20rem]:justify-center @min-[48rem]:px-10",
-            "in-tegelcel:flex-none! in-tegelcel:justify-start!",
+            // In a narrow cell the side padding of the product cards next to it (12 px), so the text gets 110 px.
+            "in-tegelcel:flex-none! in-tegelcel:justify-start! in-smalle-tegelcel:flex-1! in-smalle-tegelcel:p-3!",
           )}
         >
           <p className="label-caps text-tekst-2-op-donker">{eyebrow ?? collectionCopy.stylingTile.eyebrow}</p>

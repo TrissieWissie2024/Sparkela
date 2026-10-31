@@ -1,7 +1,10 @@
 import type { CartResult } from "@/lib/commerce/types";
 import type { Cart, CheckoutState, Money } from "@/lib/types";
 import { isValidEmail } from "@/lib/forms/validation";
+import { formatMoney } from "@/lib/money";
+import { cartCopy } from "@/content/copy/cart";
 import { pagesCopy } from "@/content/copy/pages";
+import { discountLabel } from "@/components/cart/discountLabel";
 
 /**
  * Pure logic of the local demo checkout (docs/PLAN.md §13.13, §14.18; brief §7): the fields and their check, the demo
@@ -79,9 +82,28 @@ export interface PlacedOrder {
   itemCount: number;
   total: Money;
   lines: Array<{ id: string; title: string; variant: string | null; quantity: number }>;
+  /**
+   * What else was in the order (QA round 5: the confirmation dropped them): the gift wrap ("Cadeauverpakking €1,95")
+   * and one row per discount, as in the review ("Code WELKOM10 −€4,69", "Gratis cadeauverpakking in december −€1,95").
+   */
+  extras: Array<{ id: string; label: string; value: string }>;
+  /** The gift message, or "". */
+  note: string;
 }
 
 export function placedOrderFrom(cart: Cart, orderRef: string, email: string): PlacedOrder {
+  const extras: PlacedOrder["extras"] = [];
+  if (cart.giftWrap.selected) {
+    extras.push({ id: "cadeauverpakking", label: cartCopy.giftWrap.label, value: formatMoney(cart.giftWrap.price) });
+  }
+  for (const discount of cart.discounts) {
+    if (discount.amount.cents <= 0) continue;
+    extras.push({
+      id: `korting-${discount.source}-${discount.code ?? discount.title}`,
+      label: discountLabel(discount),
+      value: formatMoney(-discount.amount.cents),
+    });
+  }
   return {
     orderRef,
     email: email.trim(),
@@ -93,6 +115,8 @@ export function placedOrderFrom(cart: Cart, orderRef: string, email: string): Pl
       variant: line.merchandise.variantTitle,
       quantity: line.quantity,
     })),
+    extras,
+    note: cart.note.trim(),
   };
 }
 

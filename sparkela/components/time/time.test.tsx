@@ -134,7 +134,8 @@ describe("Countdown", () => {
 
   it("shows the fixed label in a tabular box, the screen reader text and the inline script before mount", () => {
     const html = renderToStaticMarkup(<Countdown {...props} tone="op-roest" />);
-    expect(html).toMatch(/<span data-countdown-text="" aria-hidden="true" class="tabular inline-block text-left font-semibold" style="min-width:5.280em">t\/m 31 december<\/span>/);
+    // Before mount the fixed label hugs its own width; the inline script and the first tick set the reserved width.
+    expect(html).toMatch(/<span data-countdown-text="" aria-hidden="true" class="tabular inline-block text-left font-semibold">t\/m 31 december<\/span>/);
     expect(html).toMatch(new RegExp(`<span class="sr-only" data-countdown-hide="" id="([^"]+)-label">${props.srLabel}</span>`));
     // The pause button says which countdown it pauses (QA round 4: two "Aftellen pauzeren" on one page).
     const labelId = /id="([^"]+-label)"/.exec(html)?.[1];

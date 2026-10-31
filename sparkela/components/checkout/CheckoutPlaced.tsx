@@ -13,8 +13,9 @@ import type { PlacedOrder } from "./demoOrder";
 /**
  * The confirmation of a demo order (docs/PLAN.md §13.13: "CheckoutState placed met DEMO-XXXXXX, cart leeg"). A white
  * card: a check in an olijf circle, the heading (focus lands here), the line that nothing was paid or sent, the demo
- * order reference, what was ordered (title, variant, quantity) with the total, where the confirmation would have gone,
- * and "Verder shoppen". The cart is already empty by now; this snapshot keeps the order in view.
+ * order reference, what was ordered (title, variant, quantity) with the total, the gift wrap and the discounts with
+ * their amounts and the gift message (QA round 5: they were dropped), where the confirmation would have gone, and
+ * "Verder shoppen". The cart is already empty by now; this snapshot keeps the order in view.
  */
 export function CheckoutPlaced({ order, headingRef }: { order: PlacedOrder; headingRef?: RefObject<HTMLHeadingElement | null> }) {
   const copy = pagesCopy.checkout.placed;
@@ -62,7 +63,20 @@ export function CheckoutPlaced({ order, headingRef }: { order: PlacedOrder; head
               <span className="tabular shrink-0 text-tekst-2">{cartCopy.line.quantityReadOnly(line.quantity)}</span>
             </li>
           ))}
+          {order.extras.map((extra) => (
+            <li key={extra.id} className="flex items-baseline justify-between gap-4">
+              <span className="min-w-0">{extra.label}</span>
+              <span className="tabular shrink-0 text-tekst-2">{extra.value}</span>
+            </li>
+          ))}
         </ul>
+      ) : null}
+
+      {order.note ? (
+        <div className="mt-5">
+          <p className="label-caps text-tekst-2">{cartCopy.giftMessage.label}</p>
+          <p className="mt-1.5 text-[0.9375rem] break-words whitespace-pre-line text-tekst">{order.note}</p>
+        </div>
       ) : null}
 
       {order.email ? <p className="mt-6 text-[0.9375rem] leading-relaxed text-tekst-2">{copy.emailNote(order.email)}</p> : null}

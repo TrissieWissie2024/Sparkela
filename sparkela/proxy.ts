@@ -228,7 +228,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
   if (pathname === "/account") {
     const target = accountUrl();
-    return target ? redirect(target, "open") : next("open");
+    if (!target) return next("open");
+    // A router fetch (an RSC prefetch or a client navigation, header "rsc") never gets the cross-origin redirect: it
+    // would follow it into a CORS error on every page (QA round 5). Links to /account are plain anchors (SiteLink,
+    // Button); this is the safety net. 204: the router then loads the page normally, which does redirect.
+    if (request.headers.has("rsc")) return tag(new NextResponse(null, { status: 204 }), "open");
+    return redirect(target, "open");
   }
 
   const prelaunch = isPrelaunch(now);

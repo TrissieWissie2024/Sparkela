@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import type { FaqItem } from "@/lib/types";
+import { keepNumbersWithUnits } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { Accordion } from "@/components/ui/Accordion";
 
@@ -37,7 +38,7 @@ export function FaqList({ items, headingLevel = 3, tone = "licht", className }: 
         title: item.question,
         content: (
           <>
-            <p>{item.answer}</p>
+            <p>{keepNumbersWithUnits(item.answer)}</p>
             {item.link ? (
               <Link
                 href={item.link.href}

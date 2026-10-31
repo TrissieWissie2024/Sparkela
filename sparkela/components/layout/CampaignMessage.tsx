@@ -32,7 +32,7 @@ export const promoLinkClasses =
  * started 6 px above the screen, so only 38 px of it could be tapped (QA round 3). There the target hangs from the
  * bar's top edge instead (0 to 44 px; the countdown line under it is not interactive).
  */
-const campaignLinkClasses = `${promoLinkClasses} max-lg:before:-top-2 max-lg:before:translate-y-0`;
+export const campaignLinkClasses = `${promoLinkClasses} max-lg:before:-top-2 max-lg:before:translate-y-0`;
 
 export function PromoDivider({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("h-3 w-px shrink-0 bg-rand-op-donker", className)} />;

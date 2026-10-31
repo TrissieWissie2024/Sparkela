@@ -5,7 +5,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import type { CartErrorCode } from "@/lib/commerce/types";
 import type { CatalogProduct, Product } from "@/lib/types";
 import { track, viewItemEvent } from "@/lib/analytics";
-import { defaultVariant, isStackEligible } from "@/lib/catalog";
+import { defaultVariant, isAtStockLimit, isStackEligible } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { pdpCopy } from "@/content/copy/pdp";
@@ -86,8 +86,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   const inCart = (cart?.lines ?? [])
     .filter((line) => line.merchandise.variantId === variant.id)
     .reduce((sum, line) => sum + line.quantity, 0);
-  const atStockLimit =
-    !sizeMissing && !soldOut && variant.quantityAvailable !== null && inCart > 0 && inCart >= variant.quantityAvailable;
+  const atStockLimit = !sizeMissing && !soldOut && isAtStockLimit(variant, inCart);
   const unavailable = soldOut || atStockLimit;
   const stackable = !product.isGiftCard && product.availableForSale && isStackEligible(product.type) && defaultStack !== null;
   const options = useMemo(() => stackOptionsFor(stackCandidates), [stackCandidates]);

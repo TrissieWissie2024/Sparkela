@@ -29,7 +29,6 @@ import {
   nextBoundary,
   nextWorkingDay,
   phaseIndex,
-  PROMO_LIVE_DAYS,
   PROMO_UPCOMING_DAYS,
   promoSchedule,
   shipScheduleBoundaries,
@@ -217,14 +216,14 @@ describe("dispatch (plan §9.4, brief §7)", () => {
     expect(deliveryBarText(at(now))).toBe(today ? bar.today : bar.later(label));
   });
 
-  it("uses the exact texts of the brief", () => {
+  it("uses the exact texts of the brief, with a no-break space between number and unit (QA round 5)", () => {
     expect(deliveryBarText(at("2026-11-27T15:59:00+01:00"))).toBe("Vóór 16.00 besteld? Vandaag verstuurd.");
     expect(deliveryBarText(at("2026-11-27T16:00:00+01:00"))).toBe("Nu besteld, maandag verstuurd.");
     expect(deliveryEstimateText(at("2026-11-27T15:59:00+01:00"))).toBe(
-      "Vóór 16.00 besteld, vandaag verstuurd. Meestal binnen 1 tot 2 werkdagen in je brievenbus.",
+      "Vóór 16.00 besteld, vandaag verstuurd. Meestal binnen 1 tot 2\u00a0werkdagen in je brievenbus.",
     );
     expect(deliveryEstimateText(at("2026-11-29T22:00:00+01:00"))).toBe(
-      "Nu besteld, morgen verstuurd. Meestal binnen 1 tot 2 werkdagen daarna in je brievenbus.",
+      "Nu besteld, morgen verstuurd. Meestal binnen 1 tot 2\u00a0werkdagen daarna in je brievenbus.",
     );
   });
 
@@ -387,23 +386,27 @@ describe("campaigns and the announcement bar (cases 23 and 24)", () => {
     const live = getPromoState(at("2026-12-02T12:00:00+01:00"));
     expect(live.kind).toBe("drop-live");
     expect(live.kind === "drop-live" && live.drop.slug).toBe("holiday-sparkle");
-    expect(getPromoState(at("2026-12-05T12:00:00+01:00"))).toEqual({ kind: "usp" });
+    // QA round 5 (brief §6 block 1): the live drop stays for its whole window, with a timer to its fixed end.
+    expect(getPromoState(at("2026-12-15T12:00:00+01:00"))).toMatchObject({ kind: "drop-live", target: "2027-01-01T00:00:00+01:00" });
+    expect(getPromoState(at("2026-12-31T23:59:59+01:00")).kind).toBe("drop-live");
+    expect(getPromoState(at("2027-01-01T00:00:00+01:00"))).toEqual({ kind: "usp" });
     const upcoming = getPromoState(at("2027-01-31T12:00:00+01:00"));
     expect(upcoming).toMatchObject({ kind: "drop-upcoming", target: "2027-02-05T19:00:00+01:00" });
     expect(upcoming.kind === "drop-upcoming" && upcoming.drop.slug).toBe("love-club");
   });
 
-  it("uses exact 7-day windows for upcoming and live drops", () => {
+  it("announces a drop 7 days ahead and shows it live until its end", () => {
     const start = at(loveClub.startsAt);
+    const end = at(loveClub.endsAt);
     const week = 7 * 86_400_000;
     expect(PROMO_UPCOMING_DAYS).toBe(7);
-    expect(PROMO_LIVE_DAYS).toBe(7);
     expect(getPromoState(start - week - 1000).kind).toBe("usp");
     expect(getPromoState(start - week).kind).toBe("drop-upcoming");
     expect(getPromoState(start - 1000).kind).toBe("drop-upcoming");
-    expect(getPromoState(start).kind).toBe("drop-live");
-    expect(getPromoState(start + week - 1000).kind).toBe("drop-live");
-    expect(getPromoState(start + week).kind).toBe("usp");
+    expect(getPromoState(start)).toMatchObject({ kind: "drop-live", target: loveClub.endsAt });
+    expect(getPromoState(start + week).kind).toBe("drop-live");
+    expect(getPromoState(end - 1000).kind).toBe("drop-live");
+    expect(getPromoState(end).kind).not.toBe("drop-live");
   });
 
   it("has no timer for a campaign without showTimer", () => {
@@ -414,18 +417,18 @@ describe("campaigns and the announcement bar (cases 23 and 24)", () => {
     });
   });
 
-  it("chooses the first started drop when two overlap", () => {
+  it("chooses the newest drop when two are live", () => {
     const oranje = drops.find((drop) => drop.slug === "oranje-spark") as Drop;
     const mother = drops.find((drop) => drop.slug === "like-mother-like-daughter") as Drop;
     // 2 May 2027 12.00: Like Mother, Like Daughter started on 1 May; Oranje Spark has ended.
     const state = getPromoState(at("2027-05-02T12:00:00+02:00"), { campaigns: [], drops: [mother, oranje] });
     expect(state.kind === "drop-live" && state.drop.slug).toBe("like-mother-like-daughter");
-    // 12 April: both drops are in their first 7 live days; the first started (Oranje Spark, 9 April) wins.
+    // 12 April: both drops are live; the one that started last (10 April) is the news (QA round 5).
     const both = getPromoState(at("2027-04-12T12:00:00+02:00"), {
       campaigns: [],
       drops: [{ ...mother, startsAt: "2027-04-10T19:00:00+02:00" }, oranje],
     });
-    expect(both.kind === "drop-live" && both.drop.slug).toBe("oranje-spark");
+    expect(both.kind === "drop-live" && both.drop.slug).toBe("like-mother-like-daughter");
   });
 });
 
@@ -439,14 +442,14 @@ describe("promoSchedule", () => {
       from,
       at("2026-11-27T00:00:00+01:00"),
       at("2026-12-01T00:00:00+01:00"),
-      at("2026-12-04T00:00:00+01:00"),
+      at("2027-01-01T00:00:00+01:00"),
     ]);
     for (const entry of schedule) expect(getPromoState(entry.from)).toEqual(entry.state);
   });
 
   it("is never empty and repeats nothing", () => {
-    const quiet = promoSchedule(at("2026-12-10T12:00:00+01:00"), 10);
-    expect(quiet).toEqual([{ from: at("2026-12-10T12:00:00+01:00"), state: { kind: "usp" } }]);
+    const quiet = promoSchedule(at("2027-01-10T12:00:00+01:00"), 10);
+    expect(quiet).toEqual([{ from: at("2027-01-10T12:00:00+01:00"), state: { kind: "usp" } }]);
     const year = promoSchedule(at("2026-11-20T12:00:00+01:00"), 400);
     for (let i = 1; i < year.length; i += 1) {
       expect(year[i].from).toBeGreaterThan(year[i - 1].from);
@@ -504,7 +507,6 @@ describe("server clock boundaries (case 28)", () => {
     for (const drop of drops) {
       expect(boundaries).toContain(earlyAccessAt(drop));
       expect(boundaries).toContain(at(drop.startsAt) - PROMO_UPCOMING_DAYS * 86_400_000);
-      expect(boundaries).toContain(at(drop.startsAt) + PROMO_LIVE_DAYS * 86_400_000);
     }
   });
 

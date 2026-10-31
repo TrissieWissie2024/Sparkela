@@ -1,9 +1,10 @@
 "use client";
 
-import { useId } from "react";
+import { useDeferredValue, useId, useLayoutEffect, useRef } from "react";
 
 import type { CatalogProduct, Product, Variant } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { useInstantChoice } from "@/lib/hooks/useInstantChoice";
 import { formatMoney } from "@/lib/money";
 import { pdpCopy } from "@/content/copy/pdp";
 import { sharedCopy } from "@/content/copy/shared";
@@ -26,7 +27,9 @@ import { isDefaultPicks, optionsExcept, quoteStack, resolvePicks, stackOptionsFo
  * prices; the closed field shows the name and the price stands at the end of its label row, QA round 4). They
  * start at Linde's stack (`defaultPicks`, else the fallback of §7.2) and are never empty; the two selects never hold
  * the same variant. Under them "Lindes stack: Chunky en gedurfd" while the picks are hers, else a button to put them
- * back. "Voeg de stack toe" (AddToCart) then adds exactly these three variant ids.
+ * back. That button goes away once pressed, so focus moves to what replaces it (QA round 5, WCAG 2.4.3 and 4.1.3, like
+ * FilterBar): the line "Lindes stack: …" (tabIndex -1, read out as the confirmation), or "Stuk 2" when the picks have
+ * no stack name. "Voeg de stack toe" (AddToCart) then adds exactly these three variant ids.
  * Without defaultPicks (fewer than two candidates) there is nothing to choose and it renders nothing: the buy box is
  * "Los" only.
  */
@@ -44,20 +47,39 @@ export interface StackPickerProps {
   className?: string;
 }
 
+/** One string per stack choice, so a rebuilt `{ mode: "los" }` is not a change. */
+function stackKey(choice: StackChoice): string {
+  return choice.mode === "stack" ? `stack:${choice.picks.join(",")}` : "los";
+}
+
 export function StackPicker({
   product,
   variant,
   candidates,
   defaultPicks,
-  value,
-  onChange,
+  value: chosenValue,
+  onChange: commit,
   stackName,
   className,
 }: StackPickerProps) {
+  // INP (QA round 5): the tile and the selects show the choice at once; the buy box and the rest follow in a
+  // transition, as in VariantPicker.
+  const [value, onChange] = useInstantChoice(chosenValue, commit, stackKey);
   const id = useId();
   const copy = pdpCopy.stack;
+  const panelRef = useRef<HTMLDivElement>(null);
+  /** Set by the reset button: focus what replaces it once the reset has rendered. */
+  const pendingFocus = useRef(false);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!pendingFocus.current || !panel || panel.querySelector("[data-stack-reset]")) return;
+    pendingFocus.current = false;
+    (panel.querySelector<HTMLElement>("[data-stack-name]") ?? panel.querySelector<HTMLElement>("select"))?.focus({ preventScroll: true });
+  });
   const options = stackOptionsFor(candidates);
   const picks = resolvePicks(value, defaultPicks, options);
+  // The panel with the two selects mounts in a deferred render, so the tapped tile paints first (INP, QA round 5).
+  const panelOpen = useDeferredValue(value.mode === "stack");
   if (!defaultPicks || !picks) return null;
 
   const first = { price: variant.price.cents, type: product.type };
@@ -133,8 +155,8 @@ export function StackPicker({
         </div>
       </div>
 
-      {stackMode ? (
-        <div role="group" aria-labelledby={`${id}-panel`} className="mt-3 rounded-kaart bg-vlak px-4 py-4 md:px-5 md:py-5">
+      {stackMode && panelOpen ? (
+        <div ref={panelRef} role="group" aria-labelledby={`${id}-panel`} className="mt-3 rounded-kaart bg-vlak px-4 py-4 md:px-5 md:py-5">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <p id={`${id}-panel`} className="label-caps text-tekst-2">
               {copy.yourStack}
@@ -187,12 +209,18 @@ export function StackPicker({
           {onDefault && !stackName ? null : (
             <div className="mt-4 flex min-h-11 flex-wrap items-center gap-x-3 border-t border-rand pt-3">
               {onDefault && stackName ? (
-                <p className="tekst-klein font-medium text-tekst">{copy.lindesStack(stackName)}</p>
+                <p data-stack-name="" tabIndex={-1} className="tekst-klein font-medium text-tekst">
+                  {copy.lindesStack(stackName)}
+                </p>
               ) : (
                 <Button
                   variant="link"
                   size="sm"
-                  onClick={() => onChange({ mode: "stack", picks: [defaultPicks[0], defaultPicks[1]] })}
+                  data-stack-reset=""
+                  onClick={() => {
+                    pendingFocus.current = true;
+                    onChange({ mode: "stack", picks: [defaultPicks[0], defaultPicks[1]] });
+                  }}
                 >
                   {stackName ? copy.resetToLinde : copy.resetToDefault}
                 </Button>

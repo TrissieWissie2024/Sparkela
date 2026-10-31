@@ -26,7 +26,9 @@ import { useCart } from "./useCart";
  * Linde's favourites; then the rest by featuredRank. The picks are a vertical list of compact rows (photo, name,
  * price, QuickAdd), so every pick is in view without a sideways scroll a mouse wheel cannot reach (QA round 1,
  * decision 216b; the drawer body scrolls). The name is a stretched link over the whole row (a 44 px target and more);
- * QuickAdd sits above it, and its choice list opens in the flow on a row of its own.
+ * QuickAdd sits above it. Its choice list opens in the flow under the row, as part of the row (a hairline, no card in
+ * the card, no floating shadow; QA round 5), while "Kies" stays where it was: the QuickAdd wrapper becomes
+ * display: contents, so the button keeps its place in the first line and the list wraps to a line of its own.
  * After an add the row disappears (the piece is in the cart now): focus moves to the next row's button, or to the
  * list's heading, instead of falling back to the drawer.
  *
@@ -79,11 +81,19 @@ export function pickUpsell(
   return picked.slice(0, max);
 }
 
-/** QuickAdd in a row: right of the name; with its choice list open it takes a line of its own. */
+/**
+ * QuickAdd in a row: right of the name. With its choice list open the wrapper is display: contents, so "Kies" stays
+ * in the first line (never jumps under the finger) and the list is the row's last flex item on a line of its own.
+ */
 const UPSELL_QUICK_ADD = cn(
   "ml-auto shrink-0",
-  "has-[[role=dialog]]:flex has-[[role=dialog]]:basis-full has-[[role=dialog]]:flex-col has-[[role=dialog]]:items-end",
-  "[&>[role=dialog]]:self-stretch",
+  "has-[[role=dialog]]:contents [&>button]:relative [&>button]:z-10 [&>button]:ml-auto [&>button]:shrink-0",
+);
+
+/** The choice list as part of the row: under a hairline, no card of its own and no floating shadow (brief §5). */
+const UPSELL_PANEL = cn(
+  "relative z-10 order-last basis-full",
+  "rounded-none! border-0! border-t! border-rand! bg-transparent! px-0! pt-3! pb-0! shadow-none!",
 );
 
 function UpsellCard({ product, onAdded }: { product: CatalogProduct; onAdded: () => void }) {
@@ -109,7 +119,14 @@ function UpsellCard({ product, onAdded }: { product: CatalogProduct; onAdded: ()
           </h4>
           <Price display={priceDisplay(defaultVariant(product), product.laagstePrijs30d)} size="sm" from={multiplePrices} className="mt-0.5" />
         </div>
-        <QuickAdd product={product} size="sm" source="upsell" onAdded={onAdded} className={UPSELL_QUICK_ADD} />
+        <QuickAdd
+          product={product}
+          size="sm"
+          source="upsell"
+          onAdded={onAdded}
+          className={UPSELL_QUICK_ADD}
+          panelClassName={UPSELL_PANEL}
+        />
       </article>
     </li>
   );

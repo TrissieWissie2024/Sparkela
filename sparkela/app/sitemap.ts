@@ -12,7 +12,7 @@ import { drops } from "@/content/drops";
 /**
  * /sitemap.xml (docs/PLAN.md §18.1, §2.4, brief §7), in this order: the indexable static pages (STATIC_ROUTES), every
  * collection in content/collections.ts, the drops whose public start has passed (phase "live" or "afgelopen"), and the
- * listable products at the server clock (getSitemapProducts). The same list as tests/fixtures/local-catalog.ts
+ * listable products at the server clock plus the gift card's page (getSitemapProducts, QA round 5). The same list as tests/fixtures/local-catalog.ts
  * localShopRoutes() (decision 140).
  *
  * Never in it: the noindex pages (/zoeken, /checkout, /account, /nieuwsbrief/bevestigen), /wachtlijst (canonical "/"),

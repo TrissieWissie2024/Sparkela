@@ -38,6 +38,9 @@ export interface DropHeroProps {
   productsHref?: string;
 }
 
+/** The element after the hero that the render-blocking `expect` link waits for. */
+const DROP_HERO_PARSED_ID = "drop-hero-geparsed";
+
 export function DropHero({ drop, headingId, productsHref }: DropHeroProps) {
   const generatedId = useId();
   const id = headingId ?? generatedId;
@@ -93,6 +96,11 @@ export function DropHero({ drop, headingId, productsHref }: DropHeroProps) {
           </div>
         </div>
       </Container>
+      {/* No first paint before the whole hero is parsed (QA round 5): a paint between its text column and the rest
+          re-centred the column as the button and the photo arrived (CLS 0.0017 at 1440, now and then). Same render-
+          blocking `expect` link as the root layout's (decision 212); React hoists it into <head>. */}
+      <link rel="expect" href={`#${DROP_HERO_PARSED_ID}`} blocking="render" />
+      <span id={DROP_HERO_PARSED_ID} hidden />
     </section>
   );
 }

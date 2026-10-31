@@ -18,6 +18,7 @@ import { mobileNav } from "@/content/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { PhotoSlot } from "@/components/media/PhotoSlot";
 import { Sheet } from "@/components/ui/Sheet";
+import { SiteLink } from "@/components/ui/SiteLink";
 
 import { isCurrentPage } from "./header/nav";
 
@@ -192,7 +193,7 @@ export function MobileNavSheet({ open, onOpenChange, onNavigate, feature }: Mobi
             const current = isCurrentPage(pathname, link.href);
             return (
               <li key={link.href}>
-                <Link
+                <SiteLink
                   href={link.href}
                   onClick={onNavigate}
                   aria-current={current ? "page" : undefined}
@@ -203,7 +204,7 @@ export function MobileNavSheet({ open, onOpenChange, onNavigate, feature }: Mobi
                 >
                   {link.label}
                   {current ? <CurrentDot /> : null}
-                </Link>
+                </SiteLink>
               </li>
             );
           })}

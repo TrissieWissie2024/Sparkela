@@ -6,12 +6,14 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { QuizAnswers, SubscribeResult, SubscribeSource } from "@/lib/types";
 import { signUpEvent, track } from "@/lib/analytics";
 import { cn } from "@/lib/cn";
+import { formatDayMonth, isPrelaunch } from "@/lib/dates";
 import { validateSubscribe, type FieldErrors, type SubscribeField } from "@/lib/forms/validation";
 import { markSubscribed } from "@/lib/subscription";
 import { formsCopy } from "@/content/copy/forms";
 import { welcomeCode } from "@/content/offers";
 import { site } from "@/content/site";
 import { Button } from "@/components/ui/Button";
+import { SentenceLines } from "@/components/ui/SentenceLines";
 
 import { ConsentCheckbox } from "./ConsentCheckbox";
 import { FormStatus } from "./FormStatus";
@@ -34,14 +36,31 @@ import { submitForm } from "./submitForm";
  * - The <form> has method="post" (like every form with personal data): pressed before hydration, the browser posts to
  *   the page itself instead of adding ?email=… to the URL, where it would reach logs (decision 212).
  *
+ * - Before the launch (the waitlist) the result says when the code works: "Je code WELKOM10 gebruik je vanaf 27
+ *   november." (QA round 5: the shop is closed until then, so "meteen" was not true).
+ * - `heading` (the Club page and the drop teaser, QA round 5): the form owns the heading and the line above it, so the
+ *   result can replace them. On success the heading (same id, so a section's aria-labelledby still works) says
+ *   "Bijna klaar" and the result is plain text in the same card: no stale "Vul je e-mailadres in" above it, no box in
+ *   the box.
+ *
  * `tone="donker"` on dark surfaces (waitlist, footer): bot-wit labels, a white field. The order is always field, its
  * error, what you sign up for, the consent checkbox and then the button, on screen and in tab order, so nobody presses
  * the button before seeing the required checkbox (fix 7-9). `layout="inline"` gives the button its own width from sm;
  * "stacked" (default) makes it full width.
  */
 
+export interface SubscribeFormHeading {
+  /** The heading's id (a section's aria-labelledby). */
+  id: string;
+  title: string;
+  /** The line under the title while the form shows. */
+  text: string;
+}
+
 export interface SubscribeFormProps {
   source: SubscribeSource;
+  /** An h2 with a line under it, owned by the form (see above). */
+  heading?: SubscribeFormHeading;
   quiz?: QuizAnswers;
   tone?: "licht" | "donker";
   layout?: "inline" | "stacked";
@@ -72,6 +91,7 @@ export function SubscribeForm({
   submitLabel,
   onSuccess,
   className,
+  heading,
 }: SubscribeFormProps) {
   const copy = formsCopy.subscribe;
   const id = useId();
@@ -93,6 +113,8 @@ export function SubscribeForm({
   const [status, setStatus] = useState<Status>("idle");
   const [failure, setFailure] = useState<{ message?: string; fallbackEmail?: string }>({});
   const [result, setResult] = useState<SubscribeResult | null>(null);
+  /** Whether the sign-up happened before the launch (read in the submit handler, never in render). */
+  const [beforeLaunch, setBeforeLaunch] = useState(false);
 
   const sending = status === "sending";
 
@@ -122,6 +144,7 @@ export function SubscribeForm({
     if (response.ok) {
       markSubscribed();
       track(signUpEvent(source));
+      setBeforeLaunch(isPrelaunch(Date.now()));
       setResult(response.data);
       setStatus("success");
       onSuccess?.(response.data);
@@ -153,7 +176,21 @@ export function SubscribeForm({
   const text = dark ? "text-tekst-op-donker" : "text-tekst";
   const soft = dark ? "text-tekst-2-op-donker" : "text-tekst-2";
 
-  if (status === "success" && result) {
+  const done = status === "success" && result !== null;
+  const pending = beforeLaunch ? copy.pendingBeforeLaunch(formatDayMonth(site.launchAt)) : copy.pending;
+
+  if (done && heading) {
+    return (
+      <div ref={resultRef} tabIndex={-1}>
+        <h2 id={heading.id} className={cn("kop-2", text)}>
+          {copy.successTitle}
+        </h2>
+        <p className={cn("mt-2", soft)}>{withCode(pending)}</p>
+      </div>
+    );
+  }
+
+  if (done) {
     return (
       <div
         ref={resultRef}
@@ -161,7 +198,7 @@ export function SubscribeForm({
         className={cn("rounded-kaart border p-5", dark ? "border-rand-op-donker" : "border-rand bg-kaart", text, className)}
       >
         <p className="font-semibold">{copy.successTitle}</p>
-        <p className={cn("mt-1.5", soft)}>{withCode(copy.pending)}</p>
+        <p className={cn("mt-1.5", soft)}>{withCode(pending)}</p>
       </div>
     );
   }
@@ -180,7 +217,7 @@ export function SubscribeForm({
     </Button>
   );
 
-  return (
+  const form = (
     <form
       ref={formRef}
       method="post"
@@ -221,8 +258,10 @@ export function SubscribeForm({
           {errors.email}
         </p>
       ) : null}
+      {/* One sentence per line: the fallback face and Inter then wrap the same at every form width in use (QA round 5:
+          at 350 px it was 2 lines in the fallback and 3 in Inter, a late-font shift of 20 px). */}
       <p id={whatId} className={cn("mt-2 tekst-klein", soft)}>
-        {copy.what}
+        <SentenceLines text={copy.what} />
       </p>
       <ConsentCheckbox
         inputRef={consentRef}
@@ -245,5 +284,16 @@ export function SubscribeForm({
         tone={tone}
       />
     </form>
+  );
+
+  if (!heading) return form;
+  return (
+    <>
+      <h2 id={heading.id} className={cn("kop-2", text)}>
+        {heading.title}
+      </h2>
+      <p className={cn("mt-2", soft)}>{heading.text}</p>
+      {form}
+    </>
   );
 }

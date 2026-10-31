@@ -136,7 +136,8 @@ export function WithdrawalForm() {
         <p className="mt-3 text-tekst-2">{r.text}</p>
         <dl className="mt-6 grid gap-x-6 gap-y-3 sm:grid-cols-[auto_1fr]">
           <dt className="tekst-klein font-semibold text-tekst-2">{r.reference}</dt>
-          <dd className="tabular font-semibold text-tekst">{receipt.reference}</dd>
+          {/* No tabular figures: tnum gives the hyphen of "HR-1A2B3C4D" a figure's width (QA round 5, decision 216n). */}
+          <dd className="font-semibold text-tekst">{receipt.reference}</dd>
           <dt className="tekst-klein font-semibold text-tekst-2">{r.receivedAt}</dt>
           <dd className="text-tekst">
             <time dateTime={receipt.receivedAt}>{receipt.receivedAtLabel}</time>

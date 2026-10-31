@@ -41,7 +41,8 @@ describe("SubscribeForm (brief §2.8)", () => {
         expect(html).toContain(escape(site.consentText));
         expect(html).toContain(`href="${site.privacyLink.href}"`);
         expect(html).toContain(escape(site.privacyLink.label));
-        expect(html).toContain(escape(formsCopy.subscribe.what));
+        // One sentence per line (QA round 5), the text itself unchanged.
+        for (const sentence of formsCopy.subscribe.what.split(/(?<=\.)\s+/)) expect(html).toContain(escape(sentence));
         const checkbox = /<input[^>]*type="checkbox"[^>]*>/.exec(html)?.[0] ?? "";
         expect(checkbox).not.toBe("");
         expect(checkbox).not.toMatch(CHECKED_ATTRIBUTE);

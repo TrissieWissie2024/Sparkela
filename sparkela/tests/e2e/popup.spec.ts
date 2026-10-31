@@ -196,6 +196,35 @@ test("a control that gets focus in the popup is never under its bottom fade (QA 
   }
 });
 
+/**
+ * QA round 5: on a 390 × 844 phone the error state (nothing filled in) overflowed and the fade washed out "Ik doe mee".
+ * Now it fits, the button is never under an active fade, and the pill hides while its own modal is open.
+ */
+test("the popup's error state fits a 390 × 844 phone with a solid button (QA round 5)", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The phone case; the laptop case is the test above.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openHome(page);
+  await scrollPastPillSpot(page);
+  await waitPastTheDelay(page);
+  await sparkPill(page).click();
+  const dialog = popup(page);
+  await expect(sparkPill(page)).toBeHidden();
+  await dialog.getByRole("button", { name: "Kaart 1 van 3 omdraaien" }).click();
+  await dialog.getByRole("button", { name: "Ik doe mee", exact: true }).click();
+  await expect(dialog.getByText("Vink eerst het vakje aan.")).toBeVisible();
+  const state = await dialog.evaluate((node) => {
+    const fade = node.querySelector("span[aria-hidden='true'][class*='bg-linear-to-t']");
+    const button = Array.from(node.querySelectorAll("button")).find((item) => item.textContent?.trim() === "Ik doe mee")!;
+    const covered =
+      fade !== null &&
+      Number(getComputedStyle(fade).opacity) > 0.05 &&
+      button.getBoundingClientRect().bottom > fade.getBoundingClientRect().top;
+    return { covered, dialogBottom: node.getBoundingClientRect().bottom };
+  });
+  expect(state.covered).toBe(false);
+  await expect(dialog.getByRole("button", { name: "Nee, bedankt" })).toBeInViewport({ ratio: 1 });
+});
+
 // QA round 4: the Club page and a drop teaser have their own sign-up (data-eigen-club); the pill would offer it again
 // and lie over that form.
 for (const path of ["/sparkela-club", "/drops/love-club"]) {

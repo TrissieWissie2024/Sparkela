@@ -375,3 +375,67 @@ Nieuwe of bijgewerkte e2e-checks: een stylingtegel in één cel even hoog als de
 ### 5.5 Servers
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+
+## 6. QA-ronde 5: fixer (31 oktober 2026)
+
+Zes lenzen (design mobiel en desktop, toegankelijkheid, performance, copy en compliance, functioneel, volledigheid) leverden 37 bevestigde bevindingen: 12 middel, 25 laag; de stylingtegel op 320 px kwam twee keer (design mobiel en toegankelijkheid). Alle zijn opgepakt; wat bewust anders of niet is gedaan staat in beslissing 226. Alles is gecontroleerd op `npm run build:test` en `npm run start:test` (testklok 27 november 2026; prelaunch met de header `x-sparkela-test-now` en `page.clock`) met eigen Playwright-scripts op 390 × 844 en 1440 × 900, en waar de bevinding daarom vroeg op 320, 360, 375, 390 × 800, 768, 1024 en 1280, met WCAG-tekstafstand en op 4× CPU. De beslissingen staan in `docs/DECISIONS.md` 225 en 226; plan §2.2 (`/account`), §7.2 (nieuwste), §10.6 (countdownbreedte), §12.3 (live drop), §13.2 en §13.5 tot §13.13 (componentrijen), §14.3 (favorieten onder een korte collectie), §15.2 (consentfout) en §18.1 (sitemap) zijn bijgewerkt.
+
+### 6.1 Wat er is opgelost (middel eerst)
+
+| Bevinding | Oplossing | Controle |
+| --- | --- | --- |
+| Stylingtegel in één cel knipte tekst en pijl af op 320 px, met tekstafstand en met een grotere letter (regressie van ronde 4; WCAG 1.4.10, 1.4.12) | `tegelcel` is een inline-size container; de foto telt niet mee (`contain: size`), de tekst wel; onder 9,5rem alleen tekst met 12 px zijpadding | 6 collecties op 320: `scrollHeight` = `clientHeight`, pijl 12 px van de rand, rijhoogte = kaarten (339 tot 382); 360: foto 103 tot 167 px; 390 met tekstafstand: rij groeit naar 452 tot 494, niets afgeknipt; 390 en 1440 ongewijzigd (383, 472) |
+| Popup-foutstaat op 390 × 844: vervaging over "Ik doe mee", "Nee, bedankt" onder de dialoog | Geen vervaging met een control in haar band; compact ritme tot 900 px; consentfout op één regel | 844: body 687 = 687 (paste niet: 740 in 690), knop 735 tot 783 egaal roest, "Nee, bedankt" 787 tot 809 in beeld; 800 past ook |
+| Pill piepte onder de modal uit | `invisible` zolang de modal open is | pill `visibility: hidden` bij open, gekeerd en foutstaat |
+| `/account` werd op elke pagina geprefetcht (cross-origin 307 in productie: CORS- en consolefout vóór toestemming) | Gewone `<a>` (`needsFullPageLoad`), proxy geeft een RSC-fetch 204 | 0 requests naar `/account` na laden en scrollen op `/`, een PDP en een collectie; unit-test op de 204 |
+| Oorbellentegel: "of nog een paar" voldeed niet aan de stack-voorwaarde | "Kies er nog 2 armbanden of oorbellen bij. Vanaf 3 stuks …" | unit-test (getallen uit `stackDiscount`) |
+| Zoeken: uitverkocht stuk bovenaan zonder markering | Uitverkocht altijd achteraan, "Uitverkocht" in de dialoog | "schakel": Tess, Evi, Lou, Isa (Isa als laatste, met label) |
+| Zoeken: "zilveren", "gouden", meervouden en verkleinwoorden gaven niets | Stam als begin van een woord, alleen voor een woord dat niets letterlijk heeft; synoniemen zilveren/gouden | "zilveren oorbellen" Lola, Noor, Mae; "gouden ketting" de vijf kettingen; "bangles" Roos; "armbandjes" de zes armbanden; "sterren" drie stukken; "kraal" Lieke; "ringetjes" blijft de oorbellen |
+| Kaart en QuickAdd bij de voorraadgrens: generieke "Probeer het opnieuw" | `isAtStockLimit` en `useCartQuantity`; capped melding met de zin van de drawer | Bo ×3 in de tas: kaartknop `aria-disabled` met "Van Bo grote druppels zit alles …"; geforceerde klik meldt "Van Bo grote druppels hebben we er nu 3. Die zitten al in je tas."; Nina 19 ×2: lijstknop idem |
+| Wachtlijst: "Je code WELKOM10 kun je meteen gebruiken." vóór de lancering | `pendingBeforeLaunch` | 20 november: "… Je code WELKOM10 gebruik je vanaf 27 november."; e2e |
+| Promobalk liet de live drop na 7 dagen los (brief §6 blok 1) | Live drop voor zijn hele looptijd met countdown naar `endsAt` | 1 december: "Nu live: Holiday Sparkle · Bekijk de drop · Nog 30d 23u"; 24 december "Nog 7d 7u"; 2 januari de USP's |
+| Korte collecties vooral donker | "Lindes favorieten" onder een collectie met minder dan 8 stukken; footer strakker vanaf `lg` | zie §6.2 |
+
+De lage bevindingen (upsell-lijst, ring-QuickAdd, haarlijnen, de vastgezette filterrij, `tabular` op de referentie, harde spaties bij getallen, de Club-kaart na succes, "Zo stack je", de countdownbreedte, focus na het terugzetten van de stack, de late-font-shift op 350 px, INP, de materiaalrij, de ringmaattegel, de copypunten, het heropenen van zoeken, "Nieuwste", de bevestiging van de demo-bestelling, BreadcrumbList op contentpagina's en de cadeaukaart in de sitemap) staan per punt in beslissing 225(j). De commit van fase 10 staat in 226(f).
+
+### 6.2 Metingen
+
+| Meting | Vóór | Na |
+| --- | --- | --- |
+| Footer op 1440 / 390 | 1479 / 1811 px | 1217 / 1771 px |
+| `/collections/ringen` licht (pixeltelling, 1440 / 390) | 33% / 33% | 54% / 53% |
+| `/collections/limited` en `/kettingen` licht (1440) | 40% / ongeveer 45% | 57% / 58% |
+| Ruimte tussen countdown en pauzeknop (promobalk 1440, 28 november) | 41 px | 14 px |
+| Drop-pill op de home (1440) | 35 px rechts, 16 links | 14 px |
+| "Zo stack je": begin van de tekst per kaart (1440 / 1024) | 170, 198, 198 / 198, 225, 253 px | 198 ×3 / 188 ×3 |
+| Upsell "Kies" (390) | 269,333 naar 269,394; lijst met schaduw | blijft op 269,333; lijst onder een haarlijn, geen schaduw |
+| Vastgezette filterrij (390) | lijn van 2 px binnen de container | 1 px over de volle breedte (rij 1 px onder de header) |
+| Drop-teaser (390) | twee haarlijnen 48 px uit elkaar | één |
+| INP op 4× CPU (390): tab Oorbellen | 300 tot 400 ms | 96 tot 120 ms (drie metingen) |
+| INP: "Stack van 3", kleur Zilver, ringmaat | 216 tot 368, 144 tot 208, 136 tot 208 ms | 112 tot 184, 136 (×3), 136 en 144 (één uitschieter van 296) ms; menu en tas ter vergelijking 56 tot 64 ms |
+| Leverbelofte op de PDP en `/verzenden-en-retourneren`, `/algemene-voorwaarden`, `/veelgestelde-vragen` | "2" / "werkdagen", "16.00" / "uur", "6" / "maanden" | 0 getal-eenheidparen met een gewone spatie |
+
+### 6.3 Toegankelijkheid
+
+- Tekst in een stylingtegel wordt nooit meer afgeknipt (320 px, tekstafstand, grotere letter); de rij groeit als het moet.
+- Na "Terug naar Lindes stack" staat de focus op "Lindes stack: Chunky en gedurfd" (390 en 1440), niet meer op `<body>`; na het sluiten van de ringmaatgids via `#ringmaatgids` op "Welke maat heb ik?".
+- Een geweigerde toevoeging bij de voorraadgrens meldt de echte reden in de live region (WCAG 4.1.3); de knop is vooraf `aria-disabled` met die reden als beschrijving.
+- De vervaging in een dialoog ligt nooit meer over een control.
+
+### 6.4 Mechanische controles (eindstand)
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 84 bestanden geslaagd, 1 overgeslagen; 1493 tests geslaagd, 4 overgeslagen |
+| `npm run build:test` | groen, geen waarschuwingen |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 407 geslaagd, 33 overgeslagen, 0 mislukt, 8,6 minuten |
+
+De eerste volledige e2e-run vond drie fouten in de nieuwe checks zelf (de haarlijncheck telde gestapelde optietegels mee, de promobalktest viel op 17.00 uur net onder 7u) en één keer CLS 0,0017 op `/drops/holiday-sparkle` (1440): Chrome schilderde soms halverwege de hero (de tekstkolom zonder knop) en hercentreerde daarna. `DropHero` wacht nu met een render-blocking `expect`-link op het einde van de hero (0 verschuivingen in 30 laadbeurten, de e2e-test 20 keer groen).
+
+Nieuwe of bijgewerkte e2e-checks: een stylingtegel in één cel op 320 px en op 390 px met WCAG-tekstafstand (niets afgeknipt, pijl met 12 px ruimte), geen dubbele haarlijn op `/spark-finder` en `/drops/love-club`, geen prefetch van `/account`, de vastgezette filterrij 1 px onder de header, focus na het terugzetten van de stack, de foutstaat van de popup op 390 × 844 (knop niet onder de vervaging, "Nee, bedankt" in beeld, de pill weg), de wachtlijstbevestiging met de lanceringsdag, de live drop in de promobalk tot zijn einde en daarna de USP's, een nieuwe zoekterm die de oude vervangt, "zilveren oorbellen" en "gouden ketting", en `/nieuwsbrief/bevestigen` zonder token met late fonts (CLS 0). Nieuwe unit-tests in `components/qa-round5.test.tsx` (zoeken op stam en uitverkocht achteraan, "Nieuwste" met de dropstart, de live drop, `isAtStockLimit`, `keepNumbersWithUnits`, de account-link als `<a>`, de ringmaattegel, de copypunten), plus de countdownbreedte gelijk in component en inline script, de 204 van de proxy, de sitemap met de cadeaukaart en de leverbelofte met harde spatie.
+
+### 6.5 Servers
+
+Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.

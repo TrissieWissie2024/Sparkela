@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatCountdown, getCountdown } from "@/lib/schedule";
 import { sharedCopy } from "@/content/copy/shared";
 
-import { COUNTDOWN_HIDE_ATTRIBUTE, COUNTDOWN_TEXT_ATTRIBUTE, countdownScript } from "./countdownScript";
+import { COUNTDOWN_HIDE_ATTRIBUTE, COUNTDOWN_TEXT_ATTRIBUTE, countdownReserveEm, countdownScript } from "./countdownScript";
 
 /*
  * The Countdown inline script writes the digits before the first paint. It must give exactly what the component
@@ -18,6 +18,7 @@ function fakePage(id: string, options: { reducedMotion?: boolean } = {}) {
   const attributes = new Set(["aria-hidden"]);
   const text = {
     textContent: "t/m 31 december",
+    style: { minWidth: "" },
     removeAttribute: (name: string) => attributes.delete(name),
     get ariaHidden() {
       return attributes.has("aria-hidden");
@@ -66,6 +67,22 @@ describe("countdownScript", () => {
     const page = fakePage("_R_1_");
     run(countdownScript("_R_1_", TARGET, units), page, TARGET - left);
     expect(page.text.textContent).toBe(formatCountdown(getCountdown(TARGET - left, TARGET), units));
+  });
+
+  it.each([40 * DAY + 5 * HOUR, 10 * DAY, 2 * DAY, DAY + 1, DAY, 5 * HOUR])(
+    "reserves the same width as Countdown, the widest text of the format (%i ms left; QA round 5)",
+    (left) => {
+      const page = fakePage("_R_7_");
+      run(countdownScript("_R_7_", TARGET, units, null, "Nog "), page, TARGET - left);
+      expect(page.text.style.minWidth).toBe(`${countdownReserveEm("Nog ", left, units)}em`);
+    },
+  );
+
+  it("reserves hours as two digits and never more than one digit width of slack", () => {
+    expect(countdownReserveEm("Nog ", 3 * DAY + 9 * HOUR, units)).toBe(countdownReserveEm("Nog ", 3 * DAY + 11 * HOUR, units));
+    // "Nog 3d 11u": 3 digits, N o g d u and two spaces.
+    expect(countdownReserveEm("Nog ", 3 * DAY + 11 * HOUR, units)).toBeLessThan(6);
+    expect(countdownReserveEm("Nog ", 5 * HOUR, units)).toBeLessThan(7.2);
   });
 
   it("writes the prefix before the digits, as Countdown does", () => {

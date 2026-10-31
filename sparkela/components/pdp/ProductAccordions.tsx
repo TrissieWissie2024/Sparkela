@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
 import type { Product } from "@/lib/types";
-import { materialForVariant, needsHygieneSeal } from "@/lib/catalog";
+import { defaultVariant, materialForVariant, needsHygieneSeal } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { chromeCopy } from "@/content/copy/chrome";
 import { pdpCopy } from "@/content/copy/pdp";
@@ -14,9 +14,9 @@ import { productCodes } from "./variants";
 /**
  * The accordions of the product page (docs/PLAN.md §13.9; brief §6 and §2.10; port of CORVANE ProductAccordions), Radix
  * Accordion type "multiple", all closed at first, h3 triggers under a visually hidden h2:
- * - Details en materiaal: what the Specificaties list does not show: the material per colour (materialForVariant,
- *   decision 81) for a piece in more than one colour, and the article numbers (fix 7-9: dimensions, weight, closure and
- *   the verified claims are in the list already). Left out when it would be empty.
+ * - Details en materiaal: the material (materialForVariant, decision 81; per colour for a piece in more than one,
+ *   QA round 5: always, so the panel holds what its title says) and the article numbers (fix 7-9: dimensions, weight,
+ *   closure and the verified claims are in the list already). Left out when it would be empty.
  * - Verzorging: the metafield verzorging, else pdpCopy.care.default.
  * - Garantie: the 6 months on discolouration, Sparkela's own promise (brief §2.6).
  * - Verzenden en retourneren: for earrings and piercings (needsHygieneSeal: type oorbellen or tag piercing, decision 80)
@@ -127,9 +127,10 @@ function present(value: string | null | undefined): string | null {
 /* -------------------------------------------------------------------------- */
 
 /**
- * What the Specificaties list right above does not show (fix 7-9: no second copy of Afmeting, Gewicht, Sluiting and
- * the claims): the material per colour when the piece comes in more than one (the list shows the chosen colour only)
- * and the article numbers.
+ * The material, then the article numbers (fix 7-9: no second copy of Afmeting, Gewicht, Sluiting and the claims).
+ * With more than one colour one material row per colour (the Specificaties list shows the chosen colour only); with
+ * one colour a single "Materiaal" row (QA round 5: the panel the brief names "Details en materiaal" showed only the
+ * article number on 20 of 24 pieces).
  */
 function detailRows(product: Product): Row[] {
   const copy = pdpCopy.accordions.details;
@@ -141,6 +142,9 @@ function detailRows(product: Product): Row[] {
       const text = materialForVariant(product.metafields.materiaal, variant);
       if (text) rows.push({ id: `materiaal-${variant.id}`, term: copy.materialFor(variant.title), value: text });
     }
+  } else {
+    const text = materialForVariant(product.metafields.materiaal, defaultVariant(product));
+    if (text) rows.push({ id: "materiaal", term: copy.material, value: text });
   }
   const codes = productCodes(product);
   if (codes.length > 0) rows.push({ id: "sku", term: copy.sku, value: <Codes codes={codes} /> });

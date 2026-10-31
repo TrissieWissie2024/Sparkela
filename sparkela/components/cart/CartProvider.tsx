@@ -7,6 +7,8 @@ import { createLocalCartAdapter, type LocalCartAdapter } from "@/lib/commerce/ca
 import { createShopifyCartAdapter } from "@/lib/commerce/cart/shopify-adapter";
 import { CartError, type CartAdapter, type CartErrorCode, type CartResult } from "@/lib/commerce/types";
 import type { Cart, CartLine, CartLineInput, CommerceProviderName } from "@/lib/types";
+import { cartCopy } from "@/content/copy/cart";
+import { pdpCopy } from "@/content/copy/pdp";
 import { sharedCopy } from "@/content/copy/shared";
 import { useCatalog, type CatalogValue } from "@/components/catalog/CatalogProvider";
 
@@ -14,6 +16,7 @@ import { CartAnnouncer } from "./CartAnnouncer";
 import {
   CartActionsContext,
   CartAnnouncementContext,
+  CartQuantitiesContext,
   CartStateContext,
   type AddToCartOptions,
   type CartActions,
@@ -24,6 +27,7 @@ import {
 export {
   useCart,
   useCartActions,
+  useCartQuantity,
   type AddToCartOptions,
   type AddToCartSource,
   type CartActions,
@@ -46,7 +50,9 @@ export {
  *   region (CartAnnouncer); changing a quantity and removing announce too, a failure announces sharedCopy.announce.error.
  * - checkout() fires begin_checkout and then loads the checkout URL with location.assign: cart.checkoutUrl
  *   (Shopify) or "/checkout" (local demo).
- * - Two contexts as in CORVANE: the state (useCart) and the stable actions (useCartActions), plus the announcement.
+ * - Two contexts as in CORVANE: the state (useCart) and the stable actions (useCartActions), plus the announcement
+ *   and the units per variant (useCartQuantity, QA round 5: a card's QuickAdd knows when the stock is all in the cart
+ *   without re-rendering on every cart change). A capped add announces the drawer's notice, not the generic error.
  */
 
 type CatalogLookup = CatalogValue["byVariantId"];
@@ -81,8 +87,44 @@ function quantityOf(cart: Cart | null, variantId: string): number {
     .reduce((sum, line) => sum + line.quantity, 0);
 }
 
+/**
+ * What a failed add announces. At the stock limit (quantity-capped) the same sentence as the drawer's notice, with the
+ * title and the number ("Van Bo grote druppels hebben we er nu 3. Die zitten al in je tas."), never "Probeer het
+ * opnieuw": trying again cannot work (QA round 5, WCAG 4.1.3, decision 218).
+ */
+function failureText(result: CartResult, lines: CartLineInput[], resolve: CatalogLookup): string {
+  if (result.ok || result.error !== "quantity-capped") return sharedCopy.announce.error;
+  const notice = result.cart?.notices.find((item) => item.kind === "quantity-capped");
+  if (notice?.kind === "quantity-capped") return cartCopy.notices.quantityCapped(notice.title, notice.max);
+  const title = lines.map((line) => resolve(line.variantId)?.product.title).find(Boolean);
+  return title ? pdpCopy.addToCart.allInCart(title) : sharedCopy.announce.error;
+}
+
 function findLine(cart: Cart | null, lineId: string): CartLine | null {
   return linesOf(cart).find((line) => line.id === lineId) ?? null;
+}
+
+/** Units per variant of the current cart, with listeners (useCartQuantity): a stable store, never React state. */
+class QuantityStore {
+  private counts = new Map<string, number>();
+  private listeners = new Set<() => void>();
+
+  update(cart: Cart | null): void {
+    const next = new Map<string, number>();
+    for (const line of linesOf(cart)) next.set(line.merchandise.variantId, (next.get(line.merchandise.variantId) ?? 0) + line.quantity);
+    const changed = next.size !== this.counts.size || [...next].some(([id, quantity]) => this.counts.get(id) !== quantity);
+    this.counts = next;
+    if (changed) for (const listener of this.listeners) listener();
+  }
+
+  readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  readonly get = (variantId: string): number => this.counts.get(variantId) ?? 0;
 }
 
 /**
@@ -118,6 +160,11 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
   const [isOpen, setOpen] = useState(false);
   const [lastError, setLastError] = useState<CartErrorCode | null>(null);
   const [announcement, setAnnouncement] = useState<CartAnnouncement | null>(null);
+
+  const [quantities] = useState(() => new QuantityStore());
+  useEffect(() => {
+    quantities.update(cart);
+  }, [cart, quantities]);
 
   /** The cart as the queue sees it: updated as soon as an answer arrives, before React re-renders. */
   const cartRef = useRef<Cart | null>(null);
@@ -204,7 +251,7 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
             if (title) titles.push(title);
           }
           if (titles.length > 0) announce(sharedCopy.announce.added(titles.join(", ")));
-          else if (!result.ok) announce(sharedCopy.announce.error);
+          else if (!result.ok) announce(failureText(result, lines, lookup.resolve));
           // The drawer mounts as a transition (QA round 2, INP): the button's "Toegevoegd" and "Tas (n)" paint
           // first, the dialog's subtree right after, instead of one long task before the next paint.
           if (options?.open ?? true) startTransition(() => setOpen(true));
@@ -347,14 +394,21 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     [addToCart, openCart, closeCart, registerNavigation],
   );
 
+  const quantityValue = useMemo(
+    () => ({ subscribeQuantities: quantities.subscribe, quantityInCart: quantities.get }),
+    [quantities],
+  );
+
   return (
     <CartActionsContext value={actions}>
-      <CartStateContext value={state}>
-        <CartAnnouncementContext value={announcement}>
-          {children}
-          <CartAnnouncer />
-        </CartAnnouncementContext>
-      </CartStateContext>
+      <CartQuantitiesContext value={quantityValue}>
+        <CartStateContext value={state}>
+          <CartAnnouncementContext value={announcement}>
+            {children}
+            <CartAnnouncer />
+          </CartAnnouncementContext>
+        </CartStateContext>
+      </CartQuantitiesContext>
     </CartActionsContext>
   );
 }

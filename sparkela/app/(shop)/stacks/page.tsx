@@ -9,7 +9,7 @@ import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { faq } from "@/content/faq";
 import { home } from "@/content/home";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { ProductFaq } from "@/components/pdp/ProductFaq";
 import { HowToStack } from "@/components/sections/HowToStack";
 import { StackGrid } from "@/components/stacks/StackGrid";
@@ -45,11 +45,12 @@ function StacksContent({ items }: { items: Awaited<ReturnType<typeof getVisibleS
 
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={pagesCopy.pageEyebrows.gifts}
         title={copy.title}
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+        path="/stacks"
       />
       <Container className="pb-16 md:pb-24">
         <HowToStack content={home.howToStack} headingLevel={2} showLink={false} />

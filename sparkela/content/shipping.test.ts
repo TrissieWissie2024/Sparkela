@@ -157,7 +157,7 @@ describe("shipping config (brief §4)", () => {
     expect(site.usps[0]).toContain(formatMoneyShort(nl.freeFrom));
     expect(site.usps[1]).toContain(shipping.cutoff.label);
     expect(sharedCopy.deliveryBar.today).toContain(shipping.cutoff.label);
-    expect(sharedCopy.deliveryEstimate.today).toContain(`${nl.transitDays.min} tot ${nl.transitDays.max} werkdagen`);
+    expect(sharedCopy.deliveryEstimate.today).toContain(`${nl.transitDays.min} tot ${nl.transitDays.max}\u00a0werkdagen`);
   });
 
   it("never reads the clock in content/shipping.ts", () => {

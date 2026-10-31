@@ -6,7 +6,7 @@ import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { quiz } from "@/content/quiz";
 import { SparkFinder } from "@/components/finder/SparkFinder";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 
@@ -27,11 +27,12 @@ export const metadata: Metadata = pageMetadata({
 export default function SparkFinderPage() {
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={copy.eyebrow}
         title={quiz.intro.title}
         intro={quiz.intro.text}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.breadcrumb }]}
+        path="/spark-finder"
       />
       <SparkFinder variant="pagina" />
       <Container className="pb-16 md:pb-24">

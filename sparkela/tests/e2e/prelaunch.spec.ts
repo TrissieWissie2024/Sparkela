@@ -151,7 +151,20 @@ test("the waitlist form reads field, consent, button from top to bottom", async 
   await field.fill("lid@voorbeeld.nl");
   await button.click();
   await expect(consent).toHaveAttribute("aria-invalid", "true");
-  await expect(form.getByText("Vink aan dat je de nieuwsbrief wilt ontvangen.", { exact: true })).toBeVisible();
+  await expect(form.getByText("Vink eerst het vakje aan.", { exact: true })).toBeVisible();
+});
+
+test("after a waitlist sign-up the code is for the launch day, not for now (QA round 5, brief §2.8)", async ({ page }) => {
+  await page.route("**/api/subscribe", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { status: "pending" } }) }),
+  );
+  await gotoHydrated(page, "/wachtlijst");
+  const form = page.getByRole("form", { name: "Aanmelden voor de wachtlijst" });
+  await form.getByRole("textbox", { name: "Je e-mailadres" }).fill("lid@voorbeeld.nl");
+  await form.getByRole("checkbox", { name: site.consentText }).check();
+  await form.getByRole("button", { name: "Ik doe mee" }).click();
+  await expect(page.getByText("Je code WELKOM10 gebruik je vanaf 27 november.", { exact: false })).toBeVisible();
+  await expect(page.getByText("kun je meteen gebruiken", { exact: false })).toHaveCount(0);
 });
 
 test.describe("at the launch", () => {

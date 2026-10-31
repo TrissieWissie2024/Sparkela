@@ -23,8 +23,11 @@ const DROP_ENDED = "2027-01-02T12:00:00+01:00";
 
 const previewHash = createHash("sha256").update(PREVIEW, "utf8").digest("hex");
 
-function request(path: string, options: { at?: string; cookies?: Record<string, string>; origin?: string } = {}): NextRequest {
-  const headers = new Headers();
+function request(
+  path: string,
+  options: { at?: string; cookies?: Record<string, string>; origin?: string; headers?: Record<string, string> } = {},
+): NextRequest {
+  const headers = new Headers(options.headers);
   if (options.at) headers.set("x-sparkela-test-now", options.at);
   if (options.cookies) {
     headers.set(
@@ -312,6 +315,13 @@ describe("/account (plan §2.2, decision 53)", () => {
   it("shows the fallback page without the variable", async () => {
     const response = await proxy(request("/account", { at: PRELAUNCH }));
     expect(isNext(response)).toBe(true);
+  });
+
+  it("never sends a router (RSC) fetch to Shopify: no cross-origin redirect for a prefetch (QA round 5)", async () => {
+    vi.stubEnv("SHOPIFY_CUSTOMER_ACCOUNT_URL", "https://account.sparkela.nl");
+    const response = await proxy(request("/account?_rsc=abc", { at: LAUNCHED, headers: { rsc: "1", "next-router-prefetch": "1" } }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get("location")).toBeNull();
   });
 });
 

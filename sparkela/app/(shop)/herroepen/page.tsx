@@ -9,7 +9,7 @@ import { WithdrawalForm } from "@/components/forms/WithdrawalForm";
 import { LegalNotice } from "@/components/legal/LegalNotice";
 import { legalPage, legalSource } from "@/components/legal/LegalPage";
 import { Markdown } from "@/components/legal/Markdown";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { Container } from "@/components/ui/Container";
 
 /**
@@ -26,11 +26,12 @@ export const metadata: Metadata = pageMetadata({ title: copy.title, description:
 export default function WithdrawalPage() {
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={pagesCopy.pageEyebrows.service}
         title={copy.title}
         intro={copy.intro(String(site.returnDays))}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+        path="/herroepen"
       />
       <Container className="pb-16 md:pb-24">
         <div className="max-w-[48rem]">

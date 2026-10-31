@@ -412,14 +412,17 @@ main:has([data-compacte-footer]:not([hidden] *, [data-inline-hidden] *)) ~ foote
 }
 
 /*
- * A grid cell that must never set its row's height (QA round 4: the styling tile in one cell of a product grid).
- * `tegelcel` makes the cell a size container named "cel": size containment, so its own content counts as empty and
- * the grid stretches it to the height the product cards next to it set. `tegelcel-uit` undoes it at a breakpoint
- * where the tile spans several cells (a row of its own, where its content has to give the height). Inside, the
- * `in-tegelcel:` variant styles only a tile that sits in such a cell (StylingTile: photo takes the rest of the height).
+ * A grid cell whose tile must never stretch its row (QA round 4: the styling tile in one cell of a product grid).
+ * `tegelcel` makes the cell an inline-size container named "cel". The tile inside takes its photo out of the height
+ * calculation (`contain: size` on the photo, which then fills what the text leaves), so normally the product cards
+ * next to it set the row height. Its text still counts (QA round 5: a size container cut the text off at 320 px, with
+ * WCAG text spacing and with a larger browser font): when the text needs more room than the cards, the row grows
+ * instead of clipping it. `tegelcel-uit` undoes it at a breakpoint where the tile spans several cells (a row of its
+ * own, where its content gives the height). Inside, `in-tegelcel:` styles only a tile in such a cell, and
+ * `in-smalle-tegelcel:` a tile in a cell too narrow for a photo above its text (a 320 px phone: cells of 134 px).
  */
 @utility tegelcel {
-  container: cel / size;
+  container: cel / inline-size;
 }
 
 @utility tegelcel-uit {
@@ -428,6 +431,12 @@ main:has([data-compacte-footer]:not([hidden] *, [data-inline-hidden] *)) ~ foote
 
 @custom-variant in-tegelcel {
   @container cel (min-width: 1px) {
+    @slot;
+  }
+}
+
+@custom-variant in-smalle-tegelcel {
+  @container cel (max-width: 9.5rem) {
     @slot;
   }
 }

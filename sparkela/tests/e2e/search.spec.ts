@@ -31,3 +31,28 @@ test("search finds the gift card and offers the stacks page", async ({ page }) =
   await expect(main.getByRole("heading", { name: "Geen sieraden voor “stack”" })).toBeVisible();
   await expect(main.getByRole("region", { name: "Pagina's" }).getByRole("link", { name: "Stacks van Linde" })).toBeVisible();
 });
+
+/** Reopening search selects the last term, so typing replaces it (QA round 5: "hoops" + "lola" gave "hoopslola"). */
+test("a new search replaces the last term", async ({ page }) => {
+  await gotoHydrated(page, "/");
+  const open = () => page.getByRole("banner").getByRole("button", { name: "Zoeken" }).click();
+  await open();
+  const dialog = page.getByRole("dialog", { name: "Zoeken" });
+  const field = dialog.getByRole("searchbox");
+  await field.fill("hoops");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await open();
+  await expect(field).toBeFocused();
+  await page.keyboard.type("lola");
+  await expect(field).toHaveValue("lola");
+});
+
+/** Inflected words and a sold-out piece (QA round 5). */
+test("search finds 'zilveren oorbellen' and 'gouden ketting'", async ({ page }) => {
+  await gotoHydrated(page, "/zoeken?q=zilveren%20oorbellen");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "Lola chunky hoops", exact: true })).toBeVisible();
+  await gotoHydrated(page, "/zoeken?q=gouden%20ketting");
+  await expect(main.getByRole("heading", { name: "Evi dikke schakelketting", exact: true })).toBeVisible();
+});

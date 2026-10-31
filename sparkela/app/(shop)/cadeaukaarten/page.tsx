@@ -12,7 +12,7 @@ import { sharedCopy } from "@/content/copy/shared";
 import { faq } from "@/content/faq";
 import { giftCards } from "@/content/offers";
 import { GiftCardTiles } from "@/components/giftcards/GiftCardTiles";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { ProductFaq } from "@/components/pdp/ProductFaq";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -56,11 +56,12 @@ function GiftCardsContent({ giftCard }: { giftCard: CatalogProduct | null }) {
 
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={pagesCopy.pageEyebrows.gifts}
         title={copy.title}
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
+        path="/cadeaukaarten"
       />
       <Container className="pb-16 md:pb-24">
         <section aria-labelledby={chooseId}>

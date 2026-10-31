@@ -231,7 +231,11 @@ export function EmailCapture() {
 
   return (
     <>
-      {showPill ? <SparkPill onOpen={openModal} onDismiss={hidePill} openRef={pillRef} /> : null}
+      {/* Invisible (still mounted) while its own modal is open: it no longer peeks out under the dialog's bottom edge
+          through the scrim, and focus can still return to it on close (QA round 5). */}
+      {showPill ? (
+        <SparkPill onOpen={openModal} onDismiss={hidePill} openRef={pillRef} className={open ? "invisible" : undefined} />
+      ) : null}
 
       <Modal
         open={open}
@@ -240,9 +244,10 @@ export function EmailCapture() {
         anchor="top"
         descriptionInBody
         onCloseAutoFocus={handleCloseAutoFocus}
-        // On a short screen (a laptop, below 820 px high) a tighter rhythm, so the turned card, the form with both
-        // error lines and "Nee, bedankt" fit without scrolling (QA round 2).
-        bodyClassName="[@media(max-height:820px)]:pb-4! [@media(max-height:820px)]:[&>p:first-child]:mb-3!"
+        // On a short screen (a laptop or a phone, up to 900 px high) a tighter rhythm, so the turned card, the form with
+        // both error lines and "Nee, bedankt" fit without scrolling (QA round 2; 900 since QA round 5: a 390 × 844
+        // phone overflowed in the error state).
+        bodyClassName="[@media(max-height:900px)]:pb-4! [@media(max-height:900px)]:[&>p:first-child]:mb-3!"
         title={onCode ? popup.reward.title : copy.title}
         description={
           onCode ? undefined : (
@@ -267,10 +272,10 @@ export function EmailCapture() {
             </p>
 
             {chosen !== null ? (
-              <SubscribeForm source="popup" onSuccess={handleSignedUp} className="mt-4 [@media(max-height:820px)]:mt-3" />
+              <SubscribeForm source="popup" onSuccess={handleSignedUp} className="mt-4 [@media(max-height:900px)]:mt-3" />
             ) : null}
 
-            <div className="mt-4 flex justify-center [@media(max-height:820px)]:mt-1">
+            <div className="mt-4 flex justify-center [@media(max-height:900px)]:mt-1">
               <Button variant="link" size="md" onClick={close}>
                 {popup.dismiss}
               </Button>

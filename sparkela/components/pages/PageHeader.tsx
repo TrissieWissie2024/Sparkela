@@ -7,7 +7,8 @@ import { SentenceLines } from "@/components/ui/SentenceLines";
 /**
  * Head of an ordinary page (plan §13.2, §14.7 to §14.17): optional breadcrumbs, then eyebrow, the page's H1 (kop-1)
  * and an intro, in the page container. The page renders its content below it; pages never render their own <main>
- * (ShopChrome does). Server component.
+ * (ShopChrome does). Client-safe (CheckoutView uses it); an indexable page uses IndexedPageHeader, which adds the
+ * trail as BreadcrumbList JSON-LD (QA round 5).
  */
 
 export interface PageHeaderProps {

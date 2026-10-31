@@ -72,7 +72,7 @@ export interface PdpCopy {
     resetToLinde: string;
     /** Same, while the stack has no name (the fallback picks). */
     resetToDefault: string;
-    /** The total of the three pieces before the discount: "Los samen €59,85". */
+    /** The total of the three pieces before the discount: "Los gekocht €59,85" (plain text, never struck through). */
     piecesTotal: (amount: string) => string;
   };
   breadcrumbs: {
@@ -307,7 +307,7 @@ export const pdpCopy: PdpCopy = {
     lindesStack: (name) => `Lindes stack: ${name}`,
     resetToLinde: "Terug naar Lindes stack",
     resetToDefault: "Terug naar de standaardkeuze",
-    piecesTotal: (amount) => `Los samen ${amount}`,
+    piecesTotal: (amount) => `Los gekocht ${amount}`,
   },
   breadcrumbs: {
     giftCards: { label: "Cadeaukaarten", href: "/cadeaukaarten" },

@@ -25,7 +25,8 @@ export function localCatalogProducts(now: number): CatalogProduct[] {
 /**
  * Every indexable shop route at `now`, in this order: STATIC_ROUTES (lib/seo.ts), /collections/<handle> for every
  * collection in content/collections.ts, /drops/<slug> for every drop that has started (phase "live" or "afgelopen",
- * the drops app/sitemap.ts lists, plan §18.1), and /products/<handle> for every listable product.
+ * the drops app/sitemap.ts lists, plan §18.1), and /products/<handle> for every listable product and the gift card
+ * (QA round 5).
  */
 export function localShopRoutes(now: number): string[] {
   const startedDrops = drops.filter((drop) => {
@@ -37,7 +38,7 @@ export function localShopRoutes(now: number): string[] {
     ...collections.map((collection) => collectionPath(collection.handle)),
     ...startedDrops.map((drop) => dropPath(drop.slug)),
     ...localCatalogProducts(now)
-      .filter((product) => product.listable)
+      .filter((product) => product.listable || (product.isGiftCard && !product.tags.verborgen))
       .map((product) => productPath(product.handle)),
   ];
 }

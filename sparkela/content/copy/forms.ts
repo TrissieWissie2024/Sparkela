@@ -28,6 +28,11 @@ export interface FormsCopy {
      * same answer for every address, so the form never tells whether an address is a member (decision 199).
      */
     pending: string;
+    /**
+     * The same before the launch (the waitlist, QA round 5): the shop is closed, so the code is for later. With the
+     * launch day ("27 november").
+     */
+    pendingBeforeLaunch: (launchDay: string) => string;
     sending: string;
     /** Heading of the success state (focus moves there). */
     successTitle: string;
@@ -199,8 +204,10 @@ export const formsCopy: FormsCopy = {
     emailPlaceholder: "jij@voorbeeld.nl",
     // One scope everywhere (QA round 4, brief §2.8): the same four things as "Welke mails krijg je?" on /sparkela-club.
     what: `${percent}% op je eerste bestelling, nieuwe drops, stylingtips en af en toe een actie. Afmelden kan altijd.`,
-    consentError: "Vink aan dat je de nieuwsbrief wilt ontvangen.",
+    // One line under the indented privacy link, also in the popup at 390 px (QA round 5: two lines pushed "Nee, bedankt" out).
+    consentError: "Vink eerst het vakje aan.",
     pending: `Check je mail om je aanmelding af te ronden. Je code ${code} kun je meteen gebruiken.`,
+    pendingBeforeLaunch: (launchDay) => `Check je mail om je aanmelding af te ronden. Je code ${code} gebruik je vanaf ${launchDay}.`,
     sending: "Je aanmelding wordt verstuurd.",
     successTitle: "Bijna klaar",
   },

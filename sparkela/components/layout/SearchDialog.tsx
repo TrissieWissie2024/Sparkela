@@ -17,6 +17,7 @@ import { ProductThumb } from "@/components/cart/ProductThumb";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Price } from "@/components/ui/Price";
 import { Sheet } from "@/components/ui/Sheet";
+import { StatusLabel } from "@/components/ui/StatusLabel";
 
 /**
  * The search dialog of the header (docs/PLAN.md §13.5, §7.3, decision 35): a Sheet from the top with a search field,
@@ -83,6 +84,8 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       onOpenAutoFocus={(event) => {
         event.preventDefault();
         inputRef.current?.focus();
+        // The last term stays one keystroke away, and typing replaces it (QA round 5: "hoops" + "lola" = "hoopslola").
+        inputRef.current?.select();
       }}
       bodyClassName={showAll ? undefined : "pb-8"}
       footer={
@@ -197,7 +200,12 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                             <span className="tekst-klein mt-0.5 block text-tekst-2">{product.specRegel}</span>
                           ) : null}
                         </span>
-                        <Price display={priceDisplay(variant, product.laagstePrijs30d)} size="sm" from={multiplePrices} />
+                        {/* A sold-out piece says so instead of a price that looks buyable (QA round 5); it is also last. */}
+                        {product.availableForSale ? (
+                          <Price display={priceDisplay(variant, product.laagstePrijs30d)} size="sm" from={multiplePrices} />
+                        ) : (
+                          <StatusLabel id="uitverkocht" className="shrink-0" />
+                        )}
                       </Link>
                     </li>
                   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 
 import type { CartErrorCode, CartResult } from "@/lib/commerce/types";
 import type { Cart, CartLineInput, CommerceProviderName } from "@/lib/types";
@@ -55,6 +55,13 @@ export interface CartContextValue {
   lastError: CartErrorCode | null;
 }
 
+/** Units of one variant in the cart, readable without re-rendering on every cart change (useCartQuantity). */
+export interface CartQuantities {
+  subscribeQuantities(listener: () => void): () => void;
+  /** Units of the variant in the cart; 0 before hydration. */
+  quantityInCart(variantId: string): number;
+}
+
 /** The actions that never change identity. */
 export type CartActions = Pick<CartContextValue, "addToCart" | "openCart" | "closeCart" | "setOpen" | "registerNavigation">;
 
@@ -67,6 +74,9 @@ export interface CartAnnouncement {
 export const CartStateContext = createContext<CartContextValue | null>(null);
 export const CartActionsContext = createContext<CartActions | null>(null);
 export const CartAnnouncementContext = createContext<CartAnnouncement | null>(null);
+/** Outside a provider (tests) every count is 0. */
+const NO_QUANTITIES: CartQuantities = { subscribeQuantities: () => () => undefined, quantityInCart: () => 0 };
+export const CartQuantitiesContext = createContext<CartQuantities>(NO_QUANTITIES);
 
 /** The cart with its actions. Throws outside <CartProvider>. */
 export function useCart(): CartContextValue {
@@ -83,6 +93,19 @@ export function useCartActions(): CartActions {
   const value = useContext(CartActionsContext);
   if (!value) throw new Error("useCartActions() must be used inside <CartProvider>.");
   return value;
+}
+
+/**
+ * How many units of one variant are in the cart (QA round 5: QuickAdd at the stock limit, like the buy box). Only the
+ * component whose own count changes re-renders; null gives 0 (and 0 outside <CartProvider>).
+ */
+export function useCartQuantity(variantId: string | null): number {
+  const { subscribeQuantities, quantityInCart } = useContext(CartQuantitiesContext);
+  return useSyncExternalStore(
+    subscribeQuantities,
+    () => (variantId ? quantityInCart(variantId) : 0),
+    () => 0,
+  );
 }
 
 /** The latest cart announcement, or null (CartAnnouncer). */

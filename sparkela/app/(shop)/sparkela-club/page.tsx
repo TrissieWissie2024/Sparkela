@@ -11,7 +11,7 @@ import { site } from "@/content/site";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { PhotoSlot } from "@/components/media/PhotoSlot";
 import { sharedCopy } from "@/content/copy/shared";
-import { PageHeader } from "@/components/pages/PageHeader";
+import { IndexedPageHeader } from "@/components/pages/IndexedPageHeader";
 import { ClubBenefits } from "@/components/sections/ClubBenefits";
 import { Container } from "@/components/ui/Container";
 
@@ -53,23 +53,26 @@ export default async function SparkelaClubPage() {
 
   return (
     <>
-      <PageHeader
+      <IndexedPageHeader
         eyebrow={copy.eyebrow}
         title={site.club.title}
         sentenceLines
         intro={copy.intro}
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.eyebrow }]}
+        path="/sparkela-club"
       />
 
       <Container className="pb-16 md:pb-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start lg:gap-x-8">
           <div className="flex min-w-0 flex-col gap-10 lg:col-span-7">
             <section aria-labelledby="club-aanmelden" data-eigen-club className="rounded-kaart border border-rand bg-kaart p-6 md:p-8">
-              <h2 id="club-aanmelden" className="kop-2 text-tekst">
-                {copy.form.title}
-              </h2>
-              <p className="mt-2 text-tekst-2">{copy.form.text}</p>
-              <SubscribeForm source="club" submitLabel={site.club.cta} layout="inline" className="mt-6" />
+              <SubscribeForm
+                source="club"
+                heading={{ id: "club-aanmelden", title: copy.form.title, text: copy.form.text }}
+                submitLabel={site.club.cta}
+                layout="inline"
+                className="mt-6"
+              />
             </section>
 
             <ClubBenefits headingId="club-voordelen" />

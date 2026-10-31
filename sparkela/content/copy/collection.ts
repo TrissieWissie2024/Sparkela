@@ -47,6 +47,8 @@ export interface CollectionCopy {
   /** The collection "limited" while no drop is publicly live. */
   emptyLimited: { title: string; text: string; cta: CopyLink };
   stylingTile: { eyebrow: string };
+  /** Under a short collection (fewer than 8 pieces): Linde's favourites from the rest of the shop (QA round 5). */
+  more: { title: string; intro: string };
   search: {
     title: string;
     intro: string;
@@ -186,6 +188,7 @@ export const collectionCopy: CollectionCopy = {
     cta: clubLink,
   },
   stylingTile: { eyebrow: "Stylingtip" },
+  more: { title: "Lindes favorieten", intro: "Nog niet gevonden wat je zoekt? Deze stukken kiest Linde zelf vaak." },
   search: {
     title: "Zoeken",
     intro: "Zoek op naam, soort, vibe of moment.",

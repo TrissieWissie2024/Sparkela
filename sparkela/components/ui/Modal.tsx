@@ -89,6 +89,24 @@ export function isScrolledToEnd(node: HTMLElement): boolean {
   return node.scrollTop + node.clientHeight >= node.scrollHeight - padding - 2;
 }
 
+/** Height of the fade itself (h-10). */
+const FADE_PX = 40;
+
+/**
+ * Whether a control (button, link, field) shows in the band the fade would cover (QA round 5: the fade washed out the
+ * bottom of "Ik doe mee" in the popup's error state, so the primary button looked disabled). Then the body shows no
+ * fade: a control cut off at the edge already says there is more, and a control never looks disabled.
+ */
+export function controlUnderFade(node: HTMLElement): boolean {
+  const box = node.getBoundingClientRect();
+  const top = box.bottom - FADE_PX;
+  for (const control of node.querySelectorAll<HTMLElement>("button, a[href], input, select, textarea")) {
+    const rect = control.getBoundingClientRect();
+    if (rect.height > 0 && rect.bottom > top && rect.top < box.bottom) return true;
+  }
+  return false;
+}
+
 /**
  * Keeps a newly focused control inside a scrolling body clear of the fade over its bottom: a Tab into the last controls
  * of the popup left "Ik doe mee" under the opaque fade with its ring cut off (WCAG 2.4.7, 2.4.11, 1.4.3; QA round 3).
@@ -116,7 +134,8 @@ function useOverflowing() {
     if (!node) return;
     const check = () => {
       setOverflowing(node.scrollHeight > node.clientHeight + 1);
-      setAtEnd(isScrolledToEnd(node));
+      // A control in the fade's band counts as the end: no fade over it (controlUnderFade).
+      setAtEnd(isScrolledToEnd(node) || controlUnderFade(node));
     };
     const resize = new ResizeObserver(check);
     const observeAll = () => {
@@ -232,7 +251,8 @@ export function Modal({
           {/* The body and, while it overflows and is not scrolled to its end, a fade over its last 2.5rem: content cut
               off at the dialog's bottom edge reads as "there is more" (QA round 2, the popup's error state on a laptop).
               A focused control never sits under the fade: scroll-pb-12 for scrollIntoView and keepFocusClearOfFade for
-              Tab, and the bottom padding counts as the end (QA round 3). */}
+              Tab, and the bottom padding counts as the end (QA round 3). No control is ever drawn under it: with one in
+              its band the fade stays off (controlUnderFade, QA round 5). */}
           <div className="relative flex min-h-0 flex-1 flex-col">
           <div
             ref={bodyRef}
@@ -240,7 +260,7 @@ export function Modal({
             onScroll={(event) => {
               const next = event.currentTarget.scrollTop > 2;
               setScrolled((current) => (current === next ? current : next));
-              const end = isScrolledToEnd(event.currentTarget);
+              const end = isScrolledToEnd(event.currentTarget) || controlUnderFade(event.currentTarget);
               setAtEnd((current) => (current === end ? current : end));
             }}
             onFocus={keepFocusClearOfFade}

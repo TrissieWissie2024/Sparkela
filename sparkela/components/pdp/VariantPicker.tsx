@@ -2,12 +2,14 @@
 
 import { Check } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import type { Product, Variant } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { useInstantChoice } from "@/lib/hooks/useInstantChoice";
 import { useLatch } from "@/lib/hooks/useLatch";
 import { formatMoneyShort } from "@/lib/money";
+import { RING_GUIDE_HASH } from "@/lib/paths";
 import { pdpCopy } from "@/content/copy/pdp";
 import { Button } from "@/components/ui/Button";
 
@@ -22,7 +24,8 @@ const RingSizeGuide = dynamic(() => import("@/components/layout/islands").then((
  * radios: a colour is not its own page here).
  * - Colour: a radio group of pills with a 28 px swatch (--swatch-goud, --swatch-zilver with a 1 px --rand-invoer edge,
  *   plan §14.2: gold and silver do not reach 3:1 on white) and the name, 44 px high.
- * - Ring size: radio tiles "16" to "19" and the link "Welke maat heb ik?" that opens the RingSizeGuide. No size is
+ * - Ring size: radio tiles "16" to "19" and the link "Welke maat heb ik?" that opens the RingSizeGuide (also opened by
+ *   the fragment #ringmaatgids, QA round 5). No size is
  *   checked until the visitor picks one (`value` null; QA round 1), so nobody orders size 16 by accident.
  * - Gift card: amount tiles (€15, €25, €50) with a note that it arrives by mail.
  * - A product with one variant shows its colour (if it has one) as a fixed line, without a choice.
@@ -60,12 +63,27 @@ function optionName(variant: Variant, kind: VariantKind): { visible: string; ext
   return { visible, extra: low !== null ? pdpCopy.variant.lowStock(low) : null };
 }
 
-export function VariantPicker({ product, value, onChange, errorId, error = null, className }: VariantPickerProps) {
+export function VariantPicker({ product, value: chosenValue, onChange, errorId, error = null, className }: VariantPickerProps) {
+  // INP (QA round 5): the tapped tile shows as chosen at once; the buy box, price, gallery, specs and sticky bar follow
+  // in a transition (one re-render of every consumer of the product page's state).
+  const [value, choose] = useInstantChoice<string | null>(chosenValue, (variantId) => {
+    if (variantId !== null) onChange(variantId);
+  });
   const id = useId();
   const labelId = `${id}-label`;
   const [guideOpen, setGuideOpen] = useState(false);
   const guideUsed = useLatch(guideOpen);
+  const guideButtonRef = useRef<HTMLButtonElement>(null);
   const kind = variantKind(product);
+  // "#ringmaatgids" opens the size guide (QA round 5: the "Welke ringmaat heb je?" tiles link here). The fragment goes
+  // from the URL, so a reload or the back button does not open it again; on close focus goes to "Welke maat heb ik?".
+  useEffect(() => {
+    if (kind !== "maat" || window.location.hash !== `#${RING_GUIDE_HASH}`) return;
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+    const frame = requestAnimationFrame(() => setGuideOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, [kind]);
+  const returnGuideFocus = () => guideButtonRef.current;
   const chosen = value !== null;
   const selected = resolveVariant(product, value ?? undefined);
   const low = chosen ? lowStockCount(selected) : null;
@@ -110,7 +128,14 @@ export function VariantPicker({ product, value, onChange, errorId, error = null,
           ) : null}
         </p>
         {kind === "maat" ? (
-          <Button variant="link" size="sm" onClick={() => setGuideOpen(true)} aria-haspopup="dialog" className="shrink-0">
+          <Button
+            ref={guideButtonRef}
+            variant="link"
+            size="sm"
+            onClick={() => setGuideOpen(true)}
+            aria-haspopup="dialog"
+            className="shrink-0"
+          >
             {pdpCopy.variant.sizeGuide}
           </Button>
         ) : null}
@@ -131,14 +156,14 @@ export function VariantPicker({ product, value, onChange, errorId, error = null,
             kind={kind}
             checked={chosen && variant.id === selected.id}
             invalid={Boolean(error)}
-            onSelect={() => onChange(variant.id)}
+            onSelect={() => choose(variant.id)}
           />
         ))}
       </div>
 
       {kind === "bedrag" ? <p className="tekst-klein mt-3 text-tekst-2">{pdpCopy.variant.giftCardNote}</p> : null}
 
-      {kind === "maat" && guideUsed ? <RingSizeGuide open={guideOpen} onOpenChange={setGuideOpen} sizes={sizes} /> : null}
+      {kind === "maat" && guideUsed ? <RingSizeGuide open={guideOpen} onOpenChange={setGuideOpen} sizes={sizes} returnFocus={returnGuideFocus} /> : null}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { sharedCopy } from "@/content/copy/shared";
 import { VatNotice } from "@/components/time/VatNotice";
 import { Button } from "@/components/ui/Button";
 
+import { discountLabel } from "./discountLabel";
 import { useCart } from "./useCart";
 
 /**
@@ -53,14 +54,6 @@ function shippingText(cart: Cart): string {
     case "none":
       return cartCopy.totals.shippingNone;
   }
-}
-
-function discountLabel(discount: DiscountApplication): string {
-  if (discount.kind === "code" && discount.code) return cartCopy.totals.code(discount.code);
-  // The automatic discount's title ("Cadeauverpakking december") must match Shopify's (decision 180); the row reads
-  // as a sentence instead (QA round 1).
-  if (discount.source === "cadeauverpakking") return cartCopy.totals.giftWrapFree;
-  return discount.title;
 }
 
 export interface CartTotalsProps {

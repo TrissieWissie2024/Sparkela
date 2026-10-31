@@ -1,4 +1,6 @@
 import type { AssetKey, JewelryType, Moment } from "@/lib/types";
+import { ringGuidePath } from "@/lib/paths";
+import { RING_GUIDE_PRODUCT } from "@/content/collections";
 import { sharedCopy } from "@/content/copy/shared";
 import { stackDiscount } from "@/content/offers";
 import { site, type SocialLink } from "@/content/site";
@@ -207,9 +209,9 @@ export const home: HomeContent = {
       ringen: {
         eyebrow: "Goed om te weten",
         title: "Welke ringmaat heb je?",
-        text: "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
+        text: "Meet de binnenkant van een ring die goed past. In de ringmaatgids zie je welke maat dat is.",
         image: "linde.portret",
-        href: "/veelgestelde-vragen",
+        href: ringGuidePath(RING_GUIDE_PRODUCT),
       },
       kettingen: {
         eyebrow: "Spark Finder",

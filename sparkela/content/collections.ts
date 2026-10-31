@@ -1,4 +1,5 @@
 import { formatMoneyShort } from "@/lib/money";
+import { ringGuidePath } from "@/lib/paths";
 import type { CollectionDefinition } from "@/lib/types";
 import { sharedCopy } from "@/content/copy/shared";
 import { EARLY_ACCESS_HOURS } from "@/content/drops";
@@ -41,6 +42,9 @@ function tile(eyebrow: string, title: string, text: string, image: StylingTileCo
  */
 
 /** Eyebrows of the tiles (QA round 2): what the tile is, so a Club or gift card pointer never reads as a styling tip. */
+/** The ring whose product page opens the size guide for the "Welke ringmaat heb je?" tiles (collection and home tab). */
+export const RING_GUIDE_PRODUCT = "nina-chunky-ring";
+
 const EYEBROW = {
   styling: "Stylingtip",
   finder: "Spark Finder",
@@ -114,7 +118,8 @@ export const collections: CollectionDefinition[] = [
     stylingTile: {
       afterIndex: STYLING_TILE_AFTER,
       title: "Maak er een stack van",
-      text: `Combineer je oorbellen met twee armbanden of nog een paar. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+      // The condition said plainly (QA round 5: "of nog een paar" read as one more pair, two pieces, no discount).
+      text: `Kies er nog ${stackDiscount.minUnits - 1}\u00a0armbanden of oorbellen bij. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
       image: "stacks.goud-en-gedurfd",
       href: "/stacks",
     },
@@ -162,9 +167,10 @@ export const collections: CollectionDefinition[] = [
     stylingTile: tile(
       EYEBROW.size,
       "Welke ringmaat heb je?",
-      "Meet de binnenkant van een ring die goed past. Zit je tussen twee maten in? Kies dan de grotere.",
+      // To the size guide itself (QA round 5: the FAQ only pointed back to the guide on a ring's page).
+      "Meet de binnenkant van een ring die goed past. In de ringmaatgids zie je welke maat dat is.",
       "linde.portret",
-      "/veelgestelde-vragen",
+      ringGuidePath(RING_GUIDE_PRODUCT),
     ),
   },
   {

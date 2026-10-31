@@ -63,6 +63,10 @@ describe("sitemap", () => {
     for (const handle of holiday.productHandles) expect(paths(urls)).toContain(`/products/${handle}`);
   });
 
+  it("lists the gift card's page (QA round 5)", async () => {
+    expect(paths(await urlsAt(TEST_NOW))).toContain("/products/cadeaukaart");
+  });
+
   it("starts with the static pages and has every collection", async () => {
     const list = paths(await urlsAt(TEST_NOW));
     expect(list.slice(0, STATIC_ROUTES.length)).toEqual(STATIC_ROUTES);

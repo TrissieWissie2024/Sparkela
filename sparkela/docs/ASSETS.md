@@ -20,7 +20,7 @@ Bronnen: brief §5 (beeld), plan §17.2, beslissingen 60, 119, 122, 127 en 131.
 
 - **Alleen eigen beeld.** Foto's en video's van Linde of van Sparkela, of klantfoto's met schriftelijke toestemming. Nooit foto's van de leverancier, van andere webshops of van internet, ook niet tijdelijk (brief §2.2). Dezelfde stukken worden elders verkocht; eigen beeld is wat Sparkela onderscheidt.
 - **Geen tekst in het beeld.** Koppen, prijzen en knoppen zet de site er zelf overheen of naast. Tekst in een foto is niet te lezen voor schermlezers en niet aan te passen.
-- **Exacte maat en verhouding.** Lever elk bestand precies op de maat uit de tabel: dat is de master. Vercel doet geen beeldbewerking; bij elke build maakt `scripts/build-images.mjs` van elke master kleinere versies (256, 384, 640, 828, 1200, 1920 en 2400 px breed, nooit groter dan de master) en de site laat elk apparaat de kleinste versie halen die scherp genoeg is (QA-ronde 3, plan §17.1). Een menuminiatuur haalt zo een bestand van 256 px in plaats van de hele master. De verhouding is vast: op de plek waarvoor een sleutel bedoeld is (de eerste plek in de kolom "Waar") staat de foto heel. Een paar sleutels komen ook op een tweede plek met een andere vorm (een collectiebanner, een stylingtegel, een stackkaart naast tekst); daar toont de site een uitsnede uit het midden. Welke plekken dat zijn en wat er dan zichtbaar blijft, staat in §4.7. Houd het onderwerp daarom in de veilige zone van §4.7.
+- **Exacte maat en verhouding.** Lever elk bestand precies op de maat uit de tabel: dat is de master. Vercel doet geen beeldbewerking. Bij elke build maakt `scripts/build-images.mjs` van elke master kleinere versies: 256, 384, 640, 828, 1200, 1920 en 2400 px breed, nooit groter dan de master. De site laat elk apparaat de kleinste versie halen die scherp genoeg is (QA-ronde 3, plan §17.1). Een menuminiatuur haalt zo een bestand van 256 px in plaats van de hele master. De verhouding is vast: op de plek waarvoor een sleutel bedoeld is (de eerste plek in de kolom "Waar") staat de foto heel. Een paar sleutels komen ook op een tweede plek met een andere vorm (een collectiebanner, een stylingtegel, een stackkaart naast tekst); daar toont de site een uitsnede uit het midden. Welke plekken dat zijn en wat er dan zichtbaar blijft, staat in §4.7. Houd het onderwerp daarom in de veilige zone van §4.7.
 - **Sitebeeld als WebP**, sRGB, kwaliteit ongeveer 80. Houd een master liefst onder 400 kB (de hero desktop onder 600 kB); de kleinere versies zijn vanzelf lichter, want de pagina moet ook op een telefoon met een matige verbinding snel laden (Lighthouse mobiel 90+).
 - **Productfoto's als JPEG of PNG**, nooit WebP of AVIF (§3).
 - **Bestandsnamen exact zoals in de tabel**: kleine letters, geen spaties, dezelfde map. Een andere naam vindt de site niet.
@@ -81,7 +81,7 @@ Op de home (tegels met de naam van het moment eroverheen) en in het megamenu "Sh
 
 ### 4.3 Stacks
 
-Op `/stacks` en waar een stack wordt uitgelicht (bijvoorbeeld de kaart in het mobiele menu en de stylingtegels "Maak er een stack van" in de collecties). Elke foto toont de drie stukken van de stack samen gedragen, oorbellen en pols in één beeld. Op een telefoon staat de foto heel; vanaf een tablet staat hij naast de tekst van de stack en vult hij de hoogte daarvan (uitsnede, §4.7).
+Op `/stacks` en waar een stack wordt uitgelicht: de kaart onderaan het mobiele menu (klein, 4:5), de tegel "Maak er een stack van" in de home-tabs (`stacks.goud-en-gedurfd`) en de stylingtegels in de collecties (oorbellen, armbanden, festival, kantoor maar niet saai en strand). Elke foto toont de drie stukken van de stack samen gedragen, oorbellen en pols in één beeld. Op een telefoon staat de foto heel; vanaf een tablet staat hij naast de tekst van de stack en vult hij de hoogte daarvan (uitsnede, §4.7).
 
 | Sleutel | Bestand | Verhouding | Maat (px) | De drie stukken |
 | --- | --- | --- | --- | --- |
@@ -90,11 +90,11 @@ Op `/stacks` en waar een stack wordt uitgelicht (bijvoorbeeld de kaart in het mo
 | `stacks.kantoor-maar-niet-saai` | `/images/stacks/kantoor-maar-niet-saai.webp` | 4:5 | 1200 × 1500 | Dikke ringetjes, dun armbandje, schakelarmband |
 | `stacks.holiday-stack` | `/images/stacks/holiday-stack.webp` | 4:5 | 1200 × 1500 | Steroorbellen, glitter hoops, sparkle armband (Holiday Sparkle) |
 
-De stukken per stack staan in `content/stacks.ts`. Verandert een stack, dan verandert de foto mee.
+De stukken per stack staan in `content/stacks.ts`. Verandert een stack, dan verandert de foto mee. Let op: de stack `goud-en-gedurfd` heet op de site "Chunky en gedurfd". De sleutel en de bestandsnaam blijven `goud-en-gedurfd`.
 
 ### 4.4 Drops
 
-Liggend sfeerbeeld voor de droppagina `/drops/<slug>`, met de stukken van de drop. Nodig vóór de early access van die drop (Club-leden kunnen 24 uur vóór de publieke start al kijken). De data zijn voorstellen (beslissing 22) en staan in `content/drops.ts`.
+Liggend sfeerbeeld voor de droppagina `/drops/<slug>`, met de stukken van de drop. Zolang de drop live is, staat dezelfde foto ook in de dropbanner op de home (vanaf 1024 px breed, 16:9) en als klein staand plaatje (4:5, uitsnede, §4.7) in de kaart onderaan het mobiele menu. Nodig vóór de early access van die drop (Club-leden kunnen 24 uur vóór de publieke start al kijken). De data zijn voorstellen (beslissing 22) en staan in `content/drops.ts`.
 
 | Sleutel | Bestand | Verhouding | Maat (px) | Drop | Publieke start |
 | --- | --- | --- | --- | --- | --- |
@@ -144,8 +144,9 @@ Op deze plekken toont de site een andere vorm dan de foto zelf heeft. De foto wo
 | Stylingtegel met de foto links (tablet, een tegel van 2 cellen) | idem | smaller dan 4:5 (tot 0,43 : 1) | de hele hoogte, het middelste 55% tot 80% van de breedte |
 | Stylingtegel over een hele rij (desktop) | idem | 16 : 10 | de hele breedte, het middelste 50% van de hoogte |
 | Stackkaart naast de tekst (`/stacks` vanaf tablet, de droppagina) | `stacks.*` | 0,57 : 1 tot 1 : 1, volgt de lengte van de tekst | bij 0,57 het middelste 70% van de breedte, bij 1 : 1 het middelste 80% van de hoogte |
+| Kaart onderaan het mobiele menu, tijdens een live drop | `drops.*` (16:9) | 4:5, 72 px breed | de hele hoogte, het middelste 45% van de breedte |
 
-**Veilige zone.** Zet wat er echt toe doet (gezicht, oorbellen, polsen, de stack) in het middelste vak van de foto: tussen 25% en 75% van de hoogte en tussen 20% en 80% van de breedte. Dan staat het op elke plek in beeld. Lucht aan de randen mag wegvallen. Bij `linde.portret` betekent dat: kader ruimer dan voor een gewoon portret, met het gezicht net boven het midden in plaats van in het bovenste derde.
+**Veilige zone.** Zet wat er echt toe doet (gezicht, oorbellen, polsen, de stack) in het middelste vak van de foto: tussen 25% en 75% van de hoogte en tussen 20% en 80% van de breedte. Bij een dropbeeld (16:9) zet je de stukken liefst in het middelste 45% van de breedte, dan staan ze ook in het menuplaatje. Dan staat het op elke plek in beeld. Lucht aan de randen mag wegvallen. Bij `linde.portret` betekent dat: kader ruimer dan voor een gewoon portret, met het gezicht net boven het midden in plaats van in het bovenste derde.
 
 ## 5. Video's
 

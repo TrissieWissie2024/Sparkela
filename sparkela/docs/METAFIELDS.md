@@ -2,7 +2,7 @@
 
 Voor Tristan. Dit document zegt hoe de producten in Shopify moeten staan, zodat de site ze goed toont: de metafields (productspecificaties, GPSR, laagste prijs), de tags (type, vibe, moment, drop), de collecties en de kortingen met hun combinaties. De site leest alles via de Storefront API van het Headless-kanaal; wat daar niet zichtbaar is, bestaat voor de site niet.
 
-Bronnen: plan §2.3, §6.4, §16.6 en §16.9 punt 2; beslissingen 30, 104, 109, 122, 164, 182 en 185. De rest van de livegang (Vercel, tokens, webhooks, betalen, domein) staat in `docs/TODO-LAUNCH.md` en de README.
+Bronnen: plan §2.3, §6.4, §16.6 en §16.9 punt 2; beslissingen 30, 104, 109, 122, 164, 182, 185, 216 en 223. De rest van de livegang (Vercel, tokens, webhooks, betalen, domein) staat in `docs/TODO-LAUNCH.md` en de README.
 
 ## 1. Volgorde
 
@@ -10,7 +10,7 @@ Houd deze volgorde aan (beslissing 122). Vooral stap 1 vóór stap 2: zonder def
 
 1. **Metafield-definities aanmaken** (§3), elk met het juiste type en met Storefront-toegang aan.
 2. **Pas dan `data/shopify-products.csv` importeren** (Producten › Importeren). Alle producten komen binnen als concept (`draft`) en zijn nog nergens gepubliceerd. De cadeaukaart zit niet in de CSV (§5.2).
-3. **Controle na de import:** open één product, bijvoorbeeld Lola chunky hoops, en kijk onderaan bij de metafields of `spec_regel` ("Staal, goud of zilver · 30 mm") en `gpsr_fabrikant` ("[Fabrikant, adres]") gevuld zijn. Zijn ze leeg, dan ontbreekt een definitie of heeft hij een ander type: herstel de definitie en importeer opnieuw, met "Bestaande producten overschrijven" aan.
+3. **Controle na de import:** open één product, bijvoorbeeld Lola chunky hoops, en kijk onderaan bij de metafields of `spec_regel` ("Staal, goud- of zilverkleurig · 30 mm") en `gpsr_fabrikant` ("[Fabrikant, adres]") gevuld zijn. Zijn ze leeg, dan ontbreekt een definitie of heeft hij een ander type: herstel de definitie en importeer opnieuw, met "Bestaande producten overschrijven" aan.
 4. **Productfoto's toevoegen**: JPEG of PNG, 4:5, in de volgorde packshot, draagfoto, detail, schaalfoto, stackfoto (`docs/ASSETS.md` §3).
 5. **GPSR-gegevens per product invullen** zodra de leverancier ze levert; daarna staat er nergens meer een `[`-placeholder (de build waarschuwt per product zolang dat wel zo is). **Claims alleen als ze kloppen** (§3.2). **Tag `piercing`** waar nodig (§4).
 6. **Producten actief zetten en alleen in het Headless-kanaal publiceren**, nooit in het kanaal Online Store (beslissing 109).
@@ -51,8 +51,8 @@ Houd deze volgorde aan (beslissing 122). Vooral stap 1 vóór stap 2: zonder def
 | GPSR verantwoordelijke in de EU | `custom.gpsr_verantwoordelijke_eu` | Tekst, meerdere regels (`multi_line_text_field`) | Accordion "Productveiligheid" | Idem | `[Verantwoordelijke in de EU]` |
 | GPSR waarschuwingen | `custom.gpsr_waarschuwingen` | Tekst, meerdere regels (`multi_line_text_field`) | Accordion "Productveiligheid" | Idem | `[Waarschuwingen van de leverancier invullen]` |
 | Laagste prijs 30 dagen | `custom.laagste_prijs_30d` | Geld (`money`), in EUR | Alleen hiermee mag een doorgestreepte van-prijs verschijnen (§3.3) | Nooit een doorgestreepte prijs | `{"amount":"14.95","currency_code":"EUR"}` |
-| Bestseller | `custom.bestseller` | Waar of onwaar (`boolean`) | Handmatige vlag voor het label "Bestseller" en de carrousel "Bestsellers"; telt pas als de site echte verkoopdata gebruikt (`site.flags.realSalesData`, bij de lancering uit) | `false` | `false` |
-| Lindes favoriet | `custom.lindes_favoriet` | Waar of onwaar (`boolean`) | Carrousel "Lindes favorieten" op de home, de 404-pagina en de aanvulling van de Spark Finder. Nooit als label op een product | `false` | `true` |
+| Bestseller | `custom.bestseller` | Waar of onwaar (`boolean`) | Handmatige vlag. Telt pas als de site echte verkoopdata gebruikt (`site.flags.realSalesData`, bij de lancering uit). Dan toont de home de carrousel "Bestsellers" in plaats van "Lindes favorieten". Het label "Bestseller" op de kaart vraagt daarnaast `bestseller` in `site.badges.enabled` (ook uit) | `false` | `false` |
+| Lindes favoriet | `custom.lindes_favoriet` | Waar of onwaar (`boolean`) | Carrousel "Lindes favorieten" op de home en de 404-pagina, het blok "Lindes favorieten" op `/spark-finder` (vóór het resultaat) en een pluspunt in de score van de Spark Finder, de aanvulling onder een korte collectie, en de aanvulling van "Maak de look af" op de productpagina. Nooit als label op een product. Geef minstens 6 stukken uit verschillende soorten deze vlag: de blokken tonen er 4, zonder de stukken die al op de pagina staan (te weinig vult de site aan onder een neutrale titel) | `false` | `true` |
 
 **In de CSV** heten de kolommen zoals het huidige importformaat van Shopify ze verwacht: `spec_regel (product.metafields.custom.spec_regel)` enzovoort (beslissing 164). Waarden: tekst gewoon, `true`/`false` voor de booleans, een geheel getal voor de meter, en geld als JSON (`{"amount":"14.95","currency_code":"EUR"}`). De metafields staan alleen op de eerste rij van een product; de volgende rijen zijn de varianten.
 
@@ -60,9 +60,12 @@ Houd deze volgorde aan (beslissing 122). Vooral stap 1 vóór stap 2: zonder def
 
 ### 3.1 Specregel en materiaal per kleur
 
-- De specregel staat op de kaart, voor alle kleuren tegelijk. Heeft een model een Zilver-variant, zet dan geen "Verguld", "verguld" of "goudlaag" in de specregel (bijvoorbeeld `Staal, goud of zilver · 30 mm`); de content-guard bewaakt dat voor de testproducten (beslissing 115).
+- De specregel staat op de kaart, voor alle kleuren tegelijk. Heeft een model een Zilver-variant, zet dan geen "Verguld", "verguld" of "goudlaag" in de specregel, maar bijvoorbeeld `Staal, goud- of zilverkleurig · 30 mm` (beslissingen 115 en 216).
+- Schrijf nooit "goud" als los woord voor het materiaal ("gouden oorbellen", "een vleugje goud"): het is staal met een goudlaag (Waarborgwet). Zeg goudkleurig, goudlaag of verguld. Alleen de kleuroptie zelf heet "Goud" (beslissing 223).
 - `materiaal` mag "met goudlaag" noemen: bij de Zilver-variant laat de productpagina dat weg.
 - Heeft een stuk een niet-metalen deel (kralen, een schelpje, emaille, een kleuraccent), noem dat deel dan in de specregel en zet het materiaal ervan pas in `materiaal` als de leverancier het heeft bevestigd. Tot dan staat er een herkenbare placeholder: `Roestvrij staal met goudlaag; kralen: [materiaal van de leverancier invullen]` (beslissing 185). Nooit zelf een materiaal verzinnen.
+- Sparkela koopt de stukken in en maakt of ontwerpt ze niet. Schrijf dus nooit "handgemaakt", "eigen ontwerp", "ontworpen door" of "Linde maakt …" in een titel, beschrijving of metafield (beslissing 223). Noem ook nooit een ander merk of een ontwerper, en nooit "dupe" of "zoals …" (brief §2).
+- De content-guard (`npm test`) controleert deze regels alleen voor de teksten in de code en de testproducten, niet voor wat je in Shopify typt. Voor Shopify ben jij de controle.
 
 ### 3.2 Claims (nikkelvrij en andere)
 

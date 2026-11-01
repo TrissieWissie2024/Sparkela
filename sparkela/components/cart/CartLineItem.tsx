@@ -19,7 +19,8 @@ import { useCart } from "./useCart";
 /**
  * One line in the cart (docs/PLAN.md §13.7, decision 117; brief §2.5): a 56 × 70 photo (ProductThumb, 4:5), the
  * name as a link to the product page, the variant, a quantity stepper, the line price (subtotal), and for every discount
- * on the line its own row ("Stack-korting −€2,24") with the line total under it. Never a struck-through price: <s>
+ * on the line its own row ("Stack-korting −€2,24") with the line total under it, below the stepper, so the stepper
+ * never moves when the discount comes or goes. Never a struck-through price: <s>
  * only exists in Price, always with the lowest price of 30 days. "Verwijderen" removes the line.
  *
  * The name link carries data-cart-line-focus: after a removal the drawer moves focus to the next line's name. With
@@ -68,21 +69,6 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
           <p className="tabular shrink-0 text-right text-[0.9375rem] font-semibold text-tekst">{formatMoney(line.subtotal)}</p>
         </div>
 
-        {discounts.length > 0 ? (
-          <div className="mt-1.5 text-right">
-            <ul className="tekst-klein text-succes">
-              {discounts.map((discount) => (
-                // Tabular figures only on the amount: in Inter they also widen the hyphen ("Stack - korting").
-                <li key={discount.source}>
-                  {cartCopy.line.discount(cartCopy.line.discountLabels[discount.source], "")}
-                  <span className="tabular">{formatMoney(-discount.amount.cents)}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="tabular tekst-klein font-semibold text-tekst">{cartCopy.line.total(formatMoney(line.total))}</p>
-          </div>
-        ) : null}
-
         <div className={cn("mt-3 flex items-center gap-4", readOnly ? "justify-start" : "justify-between")}>
           {readOnly ? (
             <p className="tekst-klein text-tekst-2">{cartCopy.line.quantityReadOnly(line.quantity)}</p>
@@ -107,6 +93,22 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
           <p id={maxHintId} className="tekst-klein mt-2 text-tekst-2">
             {cartCopy.line.maxStock(max)}
           </p>
+        ) : null}
+        {/* Under the stepper, not between the name and the stepper (QA afsluitende controle): the rows appear with the
+            third piece, and above the stepper they pushed "+" 47 px down under the finger. */}
+        {discounts.length > 0 ? (
+          <div className="mt-2 text-right">
+            <ul className="tekst-klein text-succes">
+              {discounts.map((discount) => (
+                // Tabular figures only on the amount: in Inter they also widen the hyphen ("Stack - korting").
+                <li key={discount.source}>
+                  {cartCopy.line.discount(cartCopy.line.discountLabels[discount.source], "")}
+                  <span className="tabular">{formatMoney(-discount.amount.cents)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="tabular tekst-klein font-semibold text-tekst">{cartCopy.line.total(formatMoney(line.total))}</p>
+          </div>
         ) : null}
       </div>
     </li>

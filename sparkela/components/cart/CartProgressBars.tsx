@@ -13,9 +13,14 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
  * The two milestones at the top of the cart drawer (docs/PLAN.md §8.3, §13.7; brief §6 cart drawer): a bar towards
  * free shipping ("Nog €0,10 tot gratis verzending") and three segments towards the stack discount ("Nog 1 armband of
  * oorbel voor 15% stack-korting"). The texts come from progressTexts() (lib/pricing.ts), so they say exactly what
- * the pricing rules do; a reached milestone collapses to one line with a check mark. Gift cards count for neither:
- * with gift cards only the block is one line that they come by mail. With Shopify the progress comes from
+ * the pricing rules do; a reached milestone swaps its icon for a check mark and keeps its bar, full. Gift cards count
+ * for neither: with gift cards only the block is one line that they come by mail. With Shopify the progress comes from
  * progressFromShopifyCart (Shopify's own amounts).
+ *
+ * The block keeps its height while the shopper taps "+" or "−" on a line below it (QA afsluitende controle): a reached
+ * milestone used to drop its bar and the stack text goes from two lines ("Nog 2 armbanden of oorbellen …") to one,
+ * so the stepper jumped 33 px under the finger and the next taps hit the line instead of "+". So both rows always
+ * have their bar, and the stack text keeps room for two lines, with the text on its bar.
  *
  * No hooks, so it renders on the server and in the drawer alike. Port of CORVANE components/cart/ShippingProgress.tsx.
  */
@@ -56,33 +61,28 @@ export function CartProgressBars({ progress, className }: { progress: CartProgre
   return (
     <section aria-label={cartCopy.progress.label} className={cn("space-y-4", frame)}>
       {texts.shipping ? (
-        freeShipping.reached ? (
-          <Status icon={null} done>
+        <div>
+          <Status icon={<Truck className="size-4" strokeWidth={1.75} />} done={freeShipping.reached}>
             {texts.shipping}
           </Status>
-        ) : (
-          <div>
-            <Status icon={<Truck className="size-4" strokeWidth={1.75} />} done={false}>
-              {texts.shipping}
-            </Status>
-            <ProgressBar value={freeShipping.ratio} label={cartCopy.progress.shippingMeter} className="mt-2.5" />
-          </div>
-        )
+          <ProgressBar
+            value={freeShipping.reached ? 1 : freeShipping.ratio}
+            label={cartCopy.progress.shippingMeter}
+            className="mt-2.5"
+          />
+        </div>
       ) : null}
 
       {texts.stack ? (
-        stack.reached ? (
-          <Status icon={null} done>
-            {texts.stack}
-          </Status>
-        ) : (
-          <div>
-            <Status icon={<Layers className="size-4" strokeWidth={1.75} />} done={false}>
+        <div>
+          {/* Room for the longest text (two lines), the text at the bottom on its bar (see above). */}
+          <div className="flex min-h-[2lh] flex-col justify-end text-sm leading-snug">
+            <Status icon={<Layers className="size-4" strokeWidth={1.75} />} done={stack.reached}>
               {texts.stack}
             </Status>
-            <ProgressBar value={filled / steps} segments={steps} label={cartCopy.progress.stackMeter} className="mt-2.5" />
           </div>
-        )
+          <ProgressBar value={filled / steps} segments={steps} label={cartCopy.progress.stackMeter} className="mt-2.5" />
+        </div>
       ) : null}
     </section>
   );

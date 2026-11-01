@@ -1,4 +1,4 @@
-import { addProduct, cartDrawer, expect, test, totalsRow } from "./fixtures";
+import { addProduct, cartDrawer, expect, settleAnimations, test, totalsRow } from "./fixtures";
 
 /**
  * Brief §7 "gratis-verzendbalk bij €34,90 en €35,00" (docs/PLAN.md §19.2, decision 33). Every price ends in ,95, so
@@ -30,4 +30,19 @@ test("€35,90 ships free", async ({ page }) => {
   await expect(progress(page).getByText(/tot gratis verzending/)).toHaveCount(0);
   await expect(totalsRow(drawer, "Verzending")).toHaveText("Gratis");
   await expect(totalsRow(drawer, "Totaal")).toHaveText("€35,90");
+});
+
+test("the '+' stays under the finger when a tap crosses the threshold (QA afsluitende controle)", async ({ page }) => {
+  // Lola (€19,95): the first "+" reaches free shipping and moves the stack text from two lines to one.
+  const drawer = await addProduct(page, "lola-chunky-hoops");
+  const plus = drawer.getByRole("button", { name: /^Meer / }).first();
+  await settleAnimations(page);
+  const before = await plus.boundingBox();
+  await plus.click();
+  await expect(progress(page).getByText("Je verzending is gratis", { exact: true })).toBeVisible();
+  await expect(progress(page).getByRole("progressbar", { name: "Op weg naar gratis verzending" })).toBeVisible();
+  expect((await plus.boundingBox())?.y).toBe(before?.y);
+  await plus.click();
+  await expect(progress(page).getByText("Je stack-korting van 15% is binnen", { exact: true })).toBeVisible();
+  expect((await plus.boundingBox())?.y).toBe(before?.y);
 });

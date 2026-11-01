@@ -137,3 +137,19 @@ test("the same flow with the keyboard alone", async ({ page }) => {
 
   await expectRecommendation(page);
 });
+
+test("Linde's favourites step aside while the result shows, so no card shows twice (QA afsluitende controle)", async ({ page }) => {
+  await gotoHydrated(page, "/spark-finder");
+  const main = page.getByRole("main");
+  const favourites = main.getByRole("region", { name: "Lindes favorieten" });
+  await expect(favourites).toBeVisible();
+
+  await answerQuiz(page);
+  await expect(main.getByRole("heading", { name: "Jouw sparks" })).toBeFocused();
+  await expect(favourites).toBeHidden();
+  // Lola is both a recommendation and one of Linde's favourites: exactly one visible card link remains.
+  await expect(main.getByRole("link", { name: "Lola chunky hoops", exact: true })).toHaveCount(1);
+
+  await main.getByRole("button", { name: "Opnieuw beginnen" }).click();
+  await expect(favourites).toBeVisible();
+});

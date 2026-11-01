@@ -126,16 +126,25 @@ describe("CartProgressBars (plan §8.3)", () => {
     expect(html).toMatch(/aria-valuemax="3" aria-valuenow="2"/);
   });
 
-  it("3 stack pieces: the milestone collapses to one line without a bar", () => {
+  it("3 stack pieces: the milestone keeps its bar, all three segments filled", () => {
     const html = render(3);
     expect(html).toContain(sharedCopy.progress.stackReached);
-    expect(html).not.toContain(cartCopy.progress.stackMeter);
+    expect(html).toMatch(new RegExp(`aria-label="${cartCopy.progress.stackMeter}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="3"`));
   });
 
-  it("free shipping reached: one line with a check, no bar", () => {
+  it("free shipping reached: the line with a check and a full bar", () => {
     const html = render(0, 3500);
     expect(html).toContain(sharedCopy.progress.reached);
-    expect(html).not.toContain('role="progressbar"');
+    expect(html).toMatch(new RegExp(`aria-label="${cartCopy.progress.shippingMeter}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"`));
+  });
+
+  it("keeps the same rows when a milestone is reached, so the stepper below does not move (QA afsluitende controle)", () => {
+    const bars = (html: string) => html.match(/role="progressbar"/g)?.length ?? 0;
+    // One piece and €20 against three pieces and €35: two bars either way, the stack text with room for two lines.
+    expect(bars(render(1))).toBe(2);
+    expect(bars(render(3, 3500))).toBe(2);
+    expect(render(1)).toContain("min-h-[2lh]");
+    expect(render(3, 3500)).toContain("min-h-[2lh]");
   });
 
   it("gift cards only: the note that they come by mail, no bars", () => {
@@ -180,6 +189,14 @@ describe("CartLineItem (decision 117, brief §2.5)", () => {
     // Quantity 1 is the minimum: the decrease button keeps focus with aria-disabled, never `disabled`.
     expect(html).toMatch(/aria-label="Minder Noor dikke ringetjes" aria-disabled="true"/);
     expect(html).not.toMatch(/<button[^>]* disabled=""/);
+  });
+
+  it("puts the discount rows under the stepper, so '+' never moves when they appear (QA afsluitende controle)", () => {
+    const html = withCart(cart, <CartLineItem line={noorLine!} onRemove={() => {}} />);
+    const stepper = html.indexOf(`aria-label="${cartCopy.line.quantity.increase(noor.title)}"`);
+    expect(stepper).toBeGreaterThan(-1);
+    expect(html.indexOf(escape("Stack-korting "))).toBeGreaterThan(stepper);
+    expect(html.indexOf(escape(cartCopy.line.total("€12,71")))).toBeGreaterThan(stepper);
   });
 
   it("read-only lines (demo checkout) show the quantity without stepper or remove button", () => {

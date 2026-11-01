@@ -69,8 +69,11 @@ export function ConsentCheckbox({ checked, onChange, error, tone = "licht", id, 
         </span>
       </label>
       <p id={privacyId} className="pl-9 tekst-klein">
+        {/* No prefetch (QA afsluitende controle): on the waitlist a prefetch of /privacy, a shop route, pulled in the
+            shop's scripts (about 56 kB) during the first seconds. A click still navigates client-side. */}
         <Link
           href={site.privacyLink.href}
+          prefetch={false}
           className={cn(
             "inline-flex min-h-11 items-center underline underline-offset-4 hover:decoration-2",
             dark ? "text-tekst-op-donker" : "text-link hover:text-link-hover",

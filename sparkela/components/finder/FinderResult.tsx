@@ -109,7 +109,8 @@ export function FinderResult({
   }
 
   return (
-    <div className={cn("flex flex-1 flex-col", className)}>
+    // data-finder-resultaat: on /spark-finder the favourites under the finder step aside while the result shows (globals.css).
+    <div data-finder-resultaat="" className={cn("flex flex-1 flex-col", className)}>
       <div className="flex items-center justify-between gap-4">
         <p className={cn("label-caps whitespace-nowrap", t.soft)}>{copy.resultEyebrow}</p>
         <span className="block w-20 shrink-0 sm:w-24">

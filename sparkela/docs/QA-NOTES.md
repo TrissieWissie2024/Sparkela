@@ -1,6 +1,6 @@
 # QA-notities
 
-Metingen en bevindingen uit golf 10-11 en later. Integrator 10 schreef §1; E3 (visuele QA) en F1 (oplevering) vullen aan (plan §20.2). De besluiten die hieruit volgen staan in `docs/DECISIONS.md` (212 tot en met 215, QA-ronde 1: 216 en 217, QA-ronde 2: 218 tot en met 220, QA-ronde 3: 221 en 222).
+Metingen en bevindingen uit golf 10-11 en later. Integrator 10 schreef §1; E3 (visuele QA) en F1 (oplevering) vullen aan (plan §20.2). De besluiten die hieruit volgen staan in `docs/DECISIONS.md` (212 tot en met 215, QA-ronde 1: 216 en 217, QA-ronde 2: 218 tot en met 220, QA-ronde 3: 221 en 222; afsluitende controle: 229).
 
 ## 1. Integrator 10 (27 oktober 2026)
 
@@ -509,3 +509,90 @@ Nieuwe e2e-checks (`tests/e2e/qa-round6.spec.ts`): kleur, ringmaat en "Stack van
 ### 7.5 Servers
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+
+## 8. Afsluitende controle: fixer (1 november 2026)
+
+De gerichte regressiecontrole na ronde 6 (twee lenzen: ui-a11y en flows-perf) leverde drie bevindingen: 1 middel, 2 laag. Alle drie zijn eerst zelf nagebootst op `npm run build:test` en `npm run start:test` (eigen Playwright-scripts, 390 × 844 met touch en 1440 × 900 met muis; de wachtlijst met `x-sparkela-test-now: 2026-11-20T12:00:00+01:00` en `page.clock` op dezelfde tijd). Alle drie waren echt en zijn opgelost; besluit 229.
+
+### 8.1 Wat er is opgelost
+
+| Bevinding | Oorzaak | Oplossing | Controle |
+| --- | --- | --- | --- |
+| Wachtlijst laadt toch de shopscripts (middel) | De viewport-prefetch van `/privacy` (privacylink bij het vinkje) en van de juridische links in de `MiniFooter` haalde shoproutes op, en daarmee de chunk van de shop-chrome (52 kB gzip, met "Artikelen in je tas"). §7.2 ("165 kB zonder shop-chunks") mat alleen de HTML | `prefetch={false}` op de privacylink van `ConsentCheckbox` en op de links van `MiniFooter`; een klik navigeert nog gewoon | `/` en `/wachtlijst` op 390 en `/` op 1440: was 11 RSC-prefetches en 13 scripts, nu 0 prefetches en 8 scripts, geen script met "Artikelen in je tas"; nieuwe e2e in `qa-round6.spec.ts` |
+| Na het resultaat herhaalt "Lindes favorieten" kaarten van "Jouw sparks" (laag, bijwerking van ronde 6) | Het blok onder de finder is een vaste serverlijst; de uitkomst is client-side | Het blok wijkt zolang het resultaat staat: `FinderResult` draagt `data-finder-resultaat`, `globals.css` verbergt `[data-finder-favorieten]` binnen `[data-finder-pagina]`. "Opnieuw beginnen" haalt het terug. Zo past ook de intro "Geen zin in vragen?" altijd | Chunky en bold · Date night · Oorbellen en · Festival · Armbanden, 390 en 1440: 0 dubbele kaarten (was Lola en Jet, of Tess); blok zichtbaar vóór het eerste antwoord en na "Opnieuw beginnen"; nieuwe e2e in `finder.spec.ts` |
+| "+" in de drawer springt onder de vinger weg (laag) | Een bereikte mijlpaal liet zijn balk vallen en de stacktekst ging van twee regels naar één (−33 px bij de eerste "+"); de rij "Stack-korting" stond tussen naam en stepper (+47 px bij het derde stuk) | Beide mijlpalen houden hun balk (vol bij bereikt, met vinkje); de stacktekst houdt ruimte voor twee regels (`min-h-[2lh]`, tekst onderaan op zijn balk); de kortingsrijen en "Samen" staan onder de stepper | Lola, vier tikken op de plek van de oude "+": aantal 2, 3, 4, 5 (was 2, 2, 2) en vier keer "−" terug naar 1, de stepper verschuift 0 px; het voordelenblok is in elke staat 123 px hoog; nieuwe e2e in `shipping-progress.spec.ts` |
+
+### 8.2 Metingen
+
+| Meting | Voor | Na |
+| --- | --- | --- |
+| Wachtlijst `/` (390): RSC-prefetches / scripts / scripts met shop-chrome | 11 / 13 / 1 (`1hco6eajf55hz.js`, 52 kB gzip) | 0 / 8 / 0 |
+| `/spark-finder` na het resultaat, dubbele kaarten (390 en 1440, 2 antwoordsets) | 2 en 1 | 0 en 0 |
+| `/spark-finder` na het resultaat, aandeel donkere footer (390 / 1440) | 22 tot 24% / 19 tot 20% | 28 tot 31% / 24 tot 25% |
+| Drawer, hoogte voordelenblok bij 1, 2, 3 en 4 stuks (390 en 1440) | 123, 90, 76, 76 px | 123, 123, 123, 123 px |
+| Drawer, verschuiving van "+" bij de 1e en 2e tik (390 en 1440) | −33 px, daarna mis | 0 px, 0 px |
+
+De footer na het resultaat blijft onder een derde: het resultaat zelf (3 tot 6 kaarten en het e-mailblok) is lang en licht. Op de schermafbeeldingen: in de drawer staat bij één regel stacktekst een witregel boven die regel, zodat de tekst op zijn balk staat; op de checkout (alleen-lezen regels) staan "Stack-korting −€8,98" en "Samen €50,87" onder "Aantal: 3".
+
+### 8.3 Mechanische controles
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 1509 tests geslaagd, 4 overgeslagen (nieuw: de balken blijven bij een bereikte mijlpaal, de kortingsrijen onder de stepper) |
+| `npm run build:test` | groen, geen waarschuwingen |
+
+De volledige e2e-suite draait in de eindcontrole. Hier alleen de nieuwe en de direct geraakte tests tegen `start:test` (finder, verzendbalk, stack-korting, wachtlijst): 18 groen op 390 en 1440, de drawertest daarna 3 keer herhaald, ook groen.
+
+### 8.4 Servers
+
+De testserver is na elke meting gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+
+## 9. Eindgate golf 10-11 (1 november 2026)
+
+Alleen deze controle draaide, in de volgorde van de opdracht, op dezelfde machine als §1 (4 cores, Node 24.22.1, Chromium 153). Elke stap was in één keer groen; er is geen code gewijzigd.
+
+### 9.1 Mechanische controles
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 85 bestanden geslaagd, 1 overgeslagen; 1509 tests geslaagd, 4 overgeslagen |
+| `npm run build` (productie, standaardinstellingen) | groen, geen waarschuwingen; 125 pagina's gegenereerd |
+| `npm run build:test` | groen, geen waarschuwingen |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 436 geslaagd, 38 overgeslagen, 0 mislukt, 8,8 minuten |
+| `npm run screenshots` | 14 geslaagd: 7 staten op 390 × 844 en 1440 × 900 |
+
+Ten opzichte van §7.4 zes e2e-tests meer: de drie nieuwe checks uit §8 (wachtlijst zonder shopscripts na hydratatie, de finder zonder dubbele favorieten, de "+" die onder de vinger blijft), elk in beide projecten. Het aantal overgeslagen tests is gelijk (onder meer de 14 screenshots zonder `SCREENSHOTS=1`).
+
+### 9.2 Toegankelijkheid (axe)
+
+`tests/e2e/a11y.spec.ts` in de volledige run (tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`): home, `/collections/oorbellen`, `/products/lola-chunky-hoops`, `/spark-finder`, `/herroepen`, cart met een regel, lege cart, menu open, popup open met een omgedraaide kaart en de wachtlijst (prelaunch-header), op 390 × 844 en 1440 × 900. 20 tests, 0 overtredingen.
+
+### 9.3 Lighthouse 13 (mobiel, mediaan van 3 runs)
+
+Werkwijze als in §1.1, tegen `start:test`, met niets anders actief dan de testserver.
+
+| Pagina | Performance (runs) | FCP | LCP | TBT | SI | CLS | Bytes, scripts |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `/` | **92** (81, 92, 98) | 1,06 s | 1,06 s | 212 ms | 1,23 s | 0 | 439 kB, 11 |
+| `/collections/alle` | **93** (93, 92, 98) | 0,92 s | 0,92 s | 322 ms | 0,92 s | 0 | 458 kB, 13 |
+| `/products/lola-chunky-hoops` | **95** (95, 95, 90) | 1,07 s | 1,07 s | 265 ms | 1,07 s | 0 | 450 kB, 13 |
+
+- Toegankelijkheid, best practices en SEO 100 en CLS 0 in alle negen runs. Elke mediaan haalt de norm (performance minstens 90).
+- De eerste home-run (81, TBT 784 ms) startte direct na de e2e- en screenshotruns (load 2,6; gemiddelde over vijf minuten 6,7). Een tweede reeks op de home met een rustige machine (load 1,0): **96** (92, 96, 96), TBT 214 tot 342 ms, verder gelijk.
+- TBT is in elke run het onderdeel dat de meeste punten kost en ook de bron van de spreiding (171 tot 399 ms buiten de eerste home-run). De LCP is tekst en valt in acht van de negen runs samen met de eerste paint; in één home-run viel de paint na de eerste lange scripttaak (LCP 2,84 s, zie §1.1).
+
+### 9.4 Screenshots naast de referentie
+
+Bekeken (`screenshots/`, gitignored): home, collectie (`/collections/oorbellen`), productpagina (`/products/lola-chunky-hoops`) en wachtlijst als volledige pagina; de open cart drawer met 3 stuks, de popup en het open menu (mobiel het menupaneel, desktop het megamenu "Shop per moment") als viewport. Telkens op 390 × 844 en 1440 × 900, naast `reference/corvane/` (de bovenkant van home, collectie en productpagina, `14-cart-drawer`, `02-popup`, `06-menu-open` en `06-nav-open`).
+
+- Geen overlap, geen afgekapte tekst, geen horizontale scroll en geen rommelige afstanden; niets aangepast.
+- De opbouw volgt de referentie: promobalk, header en hero; breadcrumb, kop, filters en grid; galerij met duimen en de koopkolom; in de drawer de twee voordelenbalken bovenaan, de regels en onderaan de totalen met de knop.
+- In de drawer met 3 stuks staan beide balken vol met vinkje en staan "Stack-korting −€2,99" en "Samen €16,96" onder de stepper (§8).
+
+### 9.5 Servers
+
+Na de laatste meting is de testserver gestopt; er draait geen `next start`, geen Playwright-server, geen Lighthouse en geen Chromium meer.

@@ -13,6 +13,9 @@ import { Container } from "@/components/ui/Container";
  * (<a href="/herroepen">{site.withdrawalLinkLabel}</a>, brief §2.10), the company details (CompanyDetails, the same
  * lines as the shop footer) and the VAT line. Donker (data-vlak="donker"), like every footer (brief §5), under the
  * light pages of the (kaal) layout (QA round 4). Server component.
+ *
+ * The legal links do not prefetch (QA afsluitende controle): they are shop routes, and a viewport prefetch from the
+ * waitlist loaded the shop's scripts (about 56 kB) in its first seconds.
  */
 export function MiniFooter() {
   const copy = formsCopy.miniFooter;
@@ -24,7 +27,7 @@ export function MiniFooter() {
           <ul className="flex flex-wrap gap-x-6">
             {legalNav.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className={link}>
+                <Link href={item.href} prefetch={false} className={link}>
                   {item.label}
                 </Link>
               </li>

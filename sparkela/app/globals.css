@@ -267,6 +267,15 @@ main:has([data-eigen-club]:not([hidden] *, [data-inline-hidden] *)) ~ footer {
 }
 
 /*
+ * /spark-finder (QA afsluitende controle): Linde's favourites under the finder ("Geen zin in vragen?") step aside
+ * while the result shows, so a piece that "Jouw sparks" just recommended never shows twice on the page. "Opnieuw
+ * beginnen" unmounts the result and brings them back. The :has() argument is one attribute, no style substring.
+ */
+[data-finder-pagina]:has([data-finder-resultaat]) [data-finder-favorieten] {
+  display: none;
+}
+
+/*
  * Task pages (checkout, search, account, contact) mark themselves with data-compacte-footer (QA round 1, brief §5 70/20/10):
  * the footer keeps only a row of legal links, the withdrawal link, the company details and the VAT line, like the
  * MiniFooter, instead of the Club sign-up, four link columns and the wordmark on a short page. The marker itself is

@@ -17,7 +17,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 /**
  * /spark-finder (docs/PLAN.md §14.5; brief §6 Spark Finder): PageHeader (H1 "Spark Finder", intro from quiz.intro),
  * SparkFinder variant="pagina" (the quiz on a white card with "Zo werkt het" beside it), then one line with a link to
- * /stacks, then Linde's favourites (QA round 6). Three questions, one per screen, then 3 to 6 products from the catalog's tags (client-side) and the optional
+ * /stacks, then Linde's favourites (QA round 6) while no result shows. Three questions, one per screen, then 3 to 6 products from the catalog's tags (client-side) and the optional
  * 10% email step. Fully keyboard operable. Static (○); the first question is in the HTML.
  */
 const copy = pagesCopy.finder;
@@ -36,7 +36,7 @@ export default async function SparkFinderPage() {
   return (
     // data-eigen-club: the finder ends in its own 10% sign-up, so the footer leaves its Club block out and the email
     // pill stays away on the whole page, not only once the email step shows (QA round 6, brief §5 70/20/10).
-    <div data-eigen-club="">
+    <div data-eigen-club="" data-finder-pagina="">
       <IndexedPageHeader
         eyebrow={copy.eyebrow}
         title={quiz.intro.title}
@@ -58,9 +58,15 @@ export default async function SparkFinderPage() {
           </Button>
         </div>
         {/* A light block before the footer (QA round 6: the page was more than half dark footer before the first
-            answer). The same columns and whole rows as the favourites under a short collection. */}
+            answer). The same columns and whole rows as the favourites under a short collection. It is the way in for
+            "Geen zin in vragen?", so it steps aside once "Jouw sparks" shows (data-finder-resultaat, app/globals.css):
+            it would repeat pieces the result just recommended (QA afsluitende controle). */}
         {favorites.length > 0 ? (
-          <section aria-labelledby="finder-favorieten" className="mt-12 border-t border-rand pt-12 md:mt-16 md:pt-16">
+          <section
+            aria-labelledby="finder-favorieten"
+            data-finder-favorieten=""
+            className="mt-12 border-t border-rand pt-12 md:mt-16 md:pt-16"
+          >
             <SectionHeading id="finder-favorieten" level={2} title={copy.favorites.title} intro={copy.favorites.intro} />
             <ProductGrid products={favorites} label={copy.favorites.title} headingLevel={3} fullRows className="mt-8 md:mt-10" />
           </section>

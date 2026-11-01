@@ -164,6 +164,25 @@ test.describe("prelaunch (QA round 6)", () => {
     expect(html).not.toContain("Lindes favorieten");
   });
 
+  test("the waitlist loads no shop scripts after hydration either (QA afsluitende controle)", async ({ page }) => {
+    // A viewport prefetch of /privacy or another legal page (shop routes) used to pull in the shop chrome's chunk.
+    const shopScripts: string[] = [];
+    const prefetches: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("_rsc=")) prefetches.push(new URL(request.url()).pathname);
+    });
+    page.on("response", async (response) => {
+      if (!response.url().endsWith(".js")) return;
+      const body = await response.text().catch(() => "");
+      if (body.includes("Artikelen in je tas")) shopScripts.push(response.url());
+    });
+    await gotoHydrated(page, "/");
+    await page.mouse.wheel(0, 2000);
+    await page.waitForTimeout(3000);
+    expect(prefetches).toEqual([]);
+    expect(shopScripts).toEqual([]);
+  });
+
   test("the drop teaser says when the shop opens instead of inviting a browse", async ({ page }) => {
     await gotoHydrated(page, "/drops/holiday-sparkle");
     const main = page.getByRole("main");

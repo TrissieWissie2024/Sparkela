@@ -144,7 +144,9 @@ export function FinderResult({
           variant={t.back}
           onClick={onRestart}
           iconStart={<RotateCcw aria-hidden="true" className="size-4" strokeWidth={1.75} />}
-          className="-ml-3 px-4 sm:-ml-4"
+          // The icon on the column edge like "Terug" (QA round 6): the pull equals the padding at every width. "!" because
+          // cn() does not merge, and the Button's own px-6 would otherwise win.
+          className="-ml-3 px-3! sm:-ml-4 sm:px-4!"
         >
           {config.result.restart}
         </Button>

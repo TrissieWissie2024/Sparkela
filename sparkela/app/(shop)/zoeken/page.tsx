@@ -7,7 +7,7 @@ import { pagesCopy } from "@/content/copy/pages";
 import { sharedCopy } from "@/content/copy/shared";
 import { SEARCH_QUERY_SCRIPT } from "@/components/collection/collectionQueryScript";
 import { PageHeader } from "@/components/pages/PageHeader";
-import { SearchFallback, SearchView } from "@/components/search/SearchView";
+import { SEARCH_PAGE_RESERVE, SearchFallback, SearchView } from "@/components/search/SearchView";
 import { Container } from "@/components/ui/Container";
 import { InlineScript } from "@/components/ui/InlineScript";
 
@@ -25,7 +25,11 @@ export const metadata: Metadata = pageMetadata({ title: copy.title, description:
 
 export default function SearchPage() {
   return (
-    <>
+    // Before the first paint, a deep link with ?q= marks this wrapper (data-search-query): the fallback's links stay
+    // invisible and the page reserves the height up to the fold, as SearchView does with a query (data-search-reserve),
+    // so the footer stays below the fold (QA rounds 2 and 6).
+    <div suppressHydrationWarning data-search-page="" className={SEARCH_PAGE_RESERVE}>
+      <InlineScript html={SEARCH_QUERY_SCRIPT} />
       {/* A task page: the compact footer (app/globals.css, QA round 1). */}
       <div data-compacte-footer="" hidden />
       <PageHeader
@@ -35,15 +39,10 @@ export default function SearchPage() {
         breadcrumbs={[{ label: sharedCopy.ui.home, href: "/" }, { label: copy.title }]}
       />
       <Container className="pb-16 md:pb-24">
-        {/* Before the first paint, a deep link with ?q= marks this wrapper: the fallback's links stay invisible and the
-            wrapper reserves the same height as SearchView with a query, so the footer stays below the fold (QA round 2). */}
-        <div suppressHydrationWarning className="[&[data-search-query]]:min-h-[calc(100svh-var(--header-hoogte))]">
-          <InlineScript html={SEARCH_QUERY_SCRIPT} />
-          <Suspense fallback={<SearchFallback />}>
-            <SearchView />
-          </Suspense>
-        </div>
+        <Suspense fallback={<SearchFallback />}>
+          <SearchView />
+        </Suspense>
       </Container>
-    </>
+    </div>
   );
 }

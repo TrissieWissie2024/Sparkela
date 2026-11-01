@@ -439,3 +439,73 @@ Nieuwe of bijgewerkte e2e-checks: een stylingtegel in één cel op 320 px en op 
 ### 6.5 Servers
 
 Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.
+
+## 7. QA-ronde 6: fixer (1 november 2026)
+
+Zes lenzen (design mobiel en desktop, toegankelijkheid, performance, copy en compliance, functioneel, volledigheid) leverden 25 bevestigde bevindingen: 8 middel, 17 laag; de dode links op de drop-teaser en de momenttegel kwamen elk twee keer. Alle zijn opgepakt; wat bewust anders of niet is gedaan staat in beslissing 228. Alles is gecontroleerd op `npm run build:test` en `npm run start:test` (testklok 27 november 2026; prelaunch met de header `x-sparkela-test-now` en `page.clock`) met eigen Playwright-scripts op 390 × 844 en 1440 × 900, en waar de bevinding daarom vroeg op 320, 640, 768, 1024, 1152, 1279 en 1280 en op 4× CPU. De beslissingen staan in `docs/DECISIONS.md` 227 en 228; plan §2.2 en §3.2 (de root-404), §5.3 (twee Club-voordelen), §7.2 (sorteren), §13.7 (`CartLineItem`), §13.12 (`DropTeaser`), §13.13 (`SubscribeForm heading`, `NotFoundView`), §14.1 (momenttegels), §14.3, §14.5, §14.10, §14.19, §14.20 en §15.2 zijn bijgewerkt.
+
+### 7.1 Wat er is opgelost (middel eerst)
+
+| Bevinding | Oplossing | Controle |
+| --- | --- | --- |
+| Kleur, ringmaat of "Stack van 3" getikt en meteen "In je tas": de tas kreeg de vorige keuze (regressie van ronde 5) | `BuyBox` voegt toe wat op het scherm staat: de gerenderde keuze plus de getikte keuzes die nog in de transition zitten | 4× CPU, tikken 185 tot 431 ms na elkaar: Zilver 3/3 Zilver (was Goud), maat 17 3/3 (was niets), stack 3/3 drie stukken (was één); e2e op 390 en 1440 |
+| Wachtlijst: na aanmelden een witte kaart in de witte kaart | Kop en voordelen via `SubscribeForm heading` (`kop-3`, `body`) | 390, 768, 1024, 1440: "Bijna klaar" en de uitkomst als platte tekst, 0 omrande elementen in de kaart; e2e |
+| Tab of Shift+Tab uit de keuzelijst van de upsell: focus op de drawer zelf, zonder ring | De lijst sluit pas als de focus geland is | Tab: "Evi dikke schakelketting" met ring; Shift+Tab: "Kies"; ook na Tab en Shift+Tab binnen de lijst; e2e |
+| "In je tas" weer 224 tot 312 ms op 4× CPU (regressie sinds ronde 2) | Cartstatus in transitions, `useCartOpen()` voor de pill, viewportcheck buiten de render | zie §7.2 |
+| Bevestigingsmail zei vóór de lancering "kun je nu al gebruiken" | Coderegel naar tijd (`requestNow`), lidmail voorwaardelijk na de lancering | unit-tests met 20 en 27 november |
+| "Wis filters" in de lege staat: focus naar `<body>` | Via de knop van de filterbalk (`handleRef`) | focus op "24 sieraden" op 390 en 1440; e2e |
+| `/spark-finder` en de 404 voor de helft donkere footer | Finder: `data-eigen-club` en Lindes favorieten; shop-404: compacte footer; root-404 kaal | zie §7.2 |
+| Pijl van "Kantoor maar niet saai" 49 tot 74 px van de tekst | Naam onder de foto op elke breedte, pijl vast aan het laatste woord | 8 px op elke tegel op 320 tot 1440 |
+
+De lage bevindingen (pill van de momenttegel, favorieten in de kolommen van de grid, de zoekreserve, "15% stack-korting", de kop van de wachtlijst, "Maat 17" en de cadeaukaart in de tas, de knoppen van de finder, de payload van de prelaunch, de springende foto op de wachtlijst, de teaser vóór de lancering, herhaalde beloningen, "goudlaag" bij zilverkleurige stukken, zoeken op verkleinwoorden en gewone woorden, uitverkocht bij een gelijke prijs, de verzendregel op de bevestiging) staan per punt in beslissing 227.
+
+### 7.2 Metingen
+
+| Meting | Vóór | Na |
+| --- | --- | --- |
+| "In je tas", Lola, 390, 4× CPU, methode van de verificatie (Playwright-klik, DSF 3, 6 runs) | mediaan 224 ms | mediaan 184 tot 208 ms over twee reeksen (136 tot 224) |
+| Idem, methode van ronde 2 (DSF 2, eerst Goud) | mediaan 248 ms | mediaan 168 tot 192 ms |
+| Idem, echte tik via CDP (zonder de luisteraars van Playwright, 7 runs, drie reeksen) | niet gemeten | mediaan 152 ms (104 tot 200) |
+| Renders na de klik op "In je tas" | 4 synchrone commits van 41 tot 42 componenten | 3 kleine (2 tot 3 componenten) en 1 transition van 42 |
+| "+" in de drawer, 4× CPU (blijft urgent, beslissing 227d) | mediaan 168 ms | mediaan 144 ms (verificatiemethode en echte tik) |
+| Wachtlijst-HTML (prelaunch) | 172 kB, 20,9 kB gzip | 71 kB, 10,5 kB gzip |
+| Scripts van de wachtlijst (async, gzip) | met 2 chunks van de root-404 (55,9 kB) | 165 kB zonder shop-chunks |
+| `/nieuwsbrief/bevestigen` | 166 kB | 66 kB |
+| Wachtlijst op 1440, 4× CPU: laadbeurten met een verschuiving | 5 van 12 (`/`), 5 van 10 (`/wachtlijst`), CLS tot 0,0202 | 0 van 12, 0 van 10 |
+| `/spark-finder` licht (pixeltelling, 390 / 1440) | 43% / 46% | 63% / 67% |
+| `/spark-finder` footer van de pagina | 56% / 53% | 32% / 30% |
+| 404 van een onbekend product (390 / 1440) | 44% / 49% licht | 71% / 78% licht (footer 20% / 16%) |
+| Root-404 `/bestaat-niet` (390 / 1440) | 44% / 49% licht | 64% / 70% licht (footer 30% / 27%) |
+| Favorieten onder een korte collectie op 1024 | 222 px × 4 onder 304 px × 3 | 304 px × 3 (de vierde vanaf `xl`) |
+| Nieuw: blok onder de grid | één favoriet | vier ("Meer om te ontdekken") |
+| `/zoeken` op 1440: ruimte boven de footer (geen resultaat / "hoops" / "ring") | 574 / 240 / 260 px | 212 / 119 / 119 px |
+| Afstand pijl tot tekst, momenttegels (1024 / 1152 / 390) | 49 / 74 / 49 px | 8 / 8 / 8 px |
+| "Opnieuw beginnen" en "Terug" tegen de kolomrand (1440 / 640 / 390) | +8 / +8 / +12 px | 0 / 0 / 0 px |
+| Zoeken: "sterretje", "kettinkje", "creolen", "oorringen", "oorknopjes", "roestvrij staal" | 1, 0, 0, 0, 0, 0 stukken | 3, 5, 4, 4, 1, 24 |
+| Zoeken: "nikkelvrij", "nikkel", "allergie" | "Niets gevonden" | geen stuk, wel de chip Veelgestelde vragen |
+| `/collections/armbanden?sort=prijs-aflopend`, eerste kaart | Isa dubbele schakel (uitverkocht) | Sparkle armband, Isa daarna |
+
+### 7.3 Toegankelijkheid
+
+- Tab en Shift+Tab uit de keuzelijst van een upsell in de drawer gaan naar het volgende of vorige element met een zichtbare ring, niet naar de drawer zelf (WCAG 2.4.3, 2.4.7).
+- Na "Wis filters" in de lege staat staat de focus op het aantal (een live region), niet op `<body>` (WCAG 2.4.3).
+- Een maat in de tas heet "Maat 17": een losse "17" vlak boven de stepper werd ongelabeld voorgelezen.
+- De root-404 heeft een eigen `<main id="main">` (doel van de skiplink), het logo als link met de naam "Sparkela, naar de homepage" en de shoplinks in een `nav` met kop.
+
+### 7.4 Mechanische controles (eindstand)
+
+| Controle | Uitkomst |
+| --- | --- |
+| `npm run lint` | schoon |
+| `npm run typecheck` | schoon |
+| `npm test` | 85 bestanden geslaagd, 1 overgeslagen; 1507 tests geslaagd, 4 overgeslagen |
+| `npm run build:test` | groen, geen waarschuwingen |
+| `npm run test:e2e` (2 workers, tegen `start:test`) | 430 geslaagd, 38 overgeslagen, 0 mislukt, 7,6 minuten |
+
+De eerste volledige e2e-run vond twee echte fouten in de eigen fix: het vinkje cadeauverpakking in de drawer (een control die de waarde van de cart zelf toont) sprong met het antwoord in een transition een frame terug, en een tweede "+" kon vanaf het oude aantal tellen. Die wijzigingen zijn nu `urgent` (beslissing 227d). Daarnaast klikte de stack-check soms naast de knop, die 430 px zakt zodra het stackpaneel rendert; de check drukt de knop nu in de pagina zelf, direct na de tik (36 van 36 groen bij herhalen).
+
+Nieuwe e2e-checks (`tests/e2e/qa-round6.spec.ts`): kleur, ringmaat en "Stack van 3" getikt vlak voor de koopknop op 4× CPU, Tab en Shift+Tab uit de upsell-lijst, focus na "Wis filters" in de lege staat, de wachtlijst-HTML zonder shop-chrome, de teaser vóór de lancering, de wachtlijst zonder verschuiving op 4× CPU (1440), de footer hooguit een derde van `/spark-finder` en `/bestaat-niet`, de pijl van de momenttegels op 1024, de zoekreserve tot de vouw, en "In je tas" onder 200 ms op 4× CPU (beste van drie). Bijgewerkt: de finder heeft vanaf het begin geen Club-blok in de footer, de ring in de tas heet "Maat 17", de wachtlijst toont na aanmelden geen kaart in de kaart en breekt zijn kop na de komma. Nieuwe unit-tests in `components/qa-round6.test.tsx` (zoeken, `moreFavorites`, `fullRowClasses`, `lineVariantLabel`, de verzendregel, `keepNumbersWithUnits` met procent, de copypunten) en in `lib/mail.test.ts` (de coderegel vóór en na de lancering).
+
+### 7.5 Servers
+
+Na elke meting is de testserver gestopt; aan het einde draait er geen `next start`, geen Playwright-server en geen Chromium meer.

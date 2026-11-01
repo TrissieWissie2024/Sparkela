@@ -60,7 +60,7 @@ const stacksTile = (image: StylingTileContent["image"]) =>
   tile(
     EYEBROW.styling,
     "Maak er een stack van",
-    `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+    `Drie oorbellen of armbanden die samen kloppen. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}%\u00a0stack-korting.`,
     image,
     "/stacks",
   );
@@ -119,7 +119,7 @@ export const collections: CollectionDefinition[] = [
       afterIndex: STYLING_TILE_AFTER,
       title: "Maak er een stack van",
       // The condition said plainly (QA round 5: "of nog een paar" read as one more pair, two pieces, no discount).
-      text: `Kies er nog ${stackDiscount.minUnits - 1}\u00a0armbanden of oorbellen bij. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}% stack-korting.`,
+      text: `Kies er nog ${stackDiscount.minUnits - 1}\u00a0armbanden of oorbellen bij. Vanaf ${stackDiscount.minUnits}\u00a0stuks krijg je ${stackDiscount.percent}%\u00a0stack-korting.`,
       image: "stacks.goud-en-gedurfd",
       href: "/stacks",
     },
@@ -137,7 +137,7 @@ export const collections: CollectionDefinition[] = [
     stylingTile: {
       afterIndex: STYLING_TILE_AFTER,
       title: "Stacks van Linde",
-      text: `Drie stuks die samen kloppen, met één knop in je tas. De ${stackDiscount.percent}% stack-korting gaat er vanzelf af.`,
+      text: `Drie stuks die samen kloppen, met één knop in je tas. De ${stackDiscount.percent}%\u00a0stack-korting gaat er vanzelf af.`,
       image: "stacks.kleur-op-je-pols",
       href: "/stacks",
     },

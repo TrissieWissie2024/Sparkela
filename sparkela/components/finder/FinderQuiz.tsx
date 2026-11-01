@@ -285,7 +285,7 @@ function QuestionStep({
                 variant={t.back}
                 onClick={onBack}
                 iconStart={<ArrowLeft aria-hidden="true" className="size-4" strokeWidth={1.75} />}
-                className="-ml-3 px-3 @max-[19rem]:ml-0 @max-[19rem]:self-start sm:-ml-4 sm:px-4"
+                className="-ml-3 px-3! @max-[19rem]:ml-0 @max-[19rem]:self-start sm:-ml-4 sm:px-4!"
               >
                 {copy.back}
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 import { readStorage, removeStorage, storageKeys, writeJson, writeStorage } from "@/lib/storage";
 import { hasSubscribed } from "@/lib/subscription";
@@ -196,18 +196,49 @@ export function viewportTooShortForPill(): boolean {
 /** Window event of StickyAddToCart (7-9/D2) after it changed body padding or scroll-padding (decision 194). */
 export const STICKY_ATC_EVENT = "sparkela:sticky-atc";
 
+/**
+ * The last measured viewportTooShortForPill(). Measured only on resize, the sticky bar's event and in a frame after
+ * subscribing or a navigation, never in render (QA round 6, INP): as the snapshot it read getComputedStyle on <html>
+ * and <body> on every render of EmailCapture, while the DOM was dirty, so each cart change forced several full-page
+ * style recalculations (about 45 ms of the 224 ms of "In je tas" at 4x CPU).
+ */
+let viewportTooShort = false;
+const viewportListeners = new Set<() => void>();
+
+function measureViewport(): void {
+  const next = viewportTooShortForPill();
+  if (next === viewportTooShort) return;
+  viewportTooShort = next;
+  for (const listener of viewportListeners) listener();
+}
+
 function subscribeViewport(listener: () => void): () => void {
-  window.addEventListener("resize", listener);
-  window.addEventListener(STICKY_ATC_EVENT, listener);
+  viewportListeners.add(listener);
+  if (viewportListeners.size === 1) {
+    window.addEventListener("resize", measureViewport);
+    window.addEventListener(STICKY_ATC_EVENT, measureViewport);
+  }
+  const frame = requestAnimationFrame(measureViewport);
   return () => {
-    window.removeEventListener("resize", listener);
-    window.removeEventListener(STICKY_ATC_EVENT, listener);
+    cancelAnimationFrame(frame);
+    viewportListeners.delete(listener);
+    if (viewportListeners.size > 0) return;
+    window.removeEventListener("resize", measureViewport);
+    window.removeEventListener(STICKY_ATC_EVENT, measureViewport);
   };
 }
 
-/** viewportTooShortForPill(), kept live on resize (zooming in) and when the sticky bar comes or goes. */
-export function useViewportTooShortForPill(): boolean {
-  return useSyncExternalStore(subscribeViewport, viewportTooShortForPill, () => false);
+/**
+ * viewportTooShortForPill(), kept live on resize (zooming in), when the sticky bar comes or goes and after a client
+ * navigation (`page`, the pathname: another page can have another scroll-padding-top). The snapshot is the cached
+ * value.
+ */
+export function useViewportTooShortForPill(page?: string): boolean {
+  useEffect(() => {
+    const frame = requestAnimationFrame(measureViewport);
+    return () => cancelAnimationFrame(frame);
+  }, [page]);
+  return useSyncExternalStore(subscribeViewport, () => viewportTooShort, () => false);
 }
 
 /** True while the visitor is typing or choosing in a form field (the pill never interrupts that). */

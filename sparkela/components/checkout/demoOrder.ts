@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { cartCopy } from "@/content/copy/cart";
 import { pagesCopy } from "@/content/copy/pages";
 import { discountLabel } from "@/components/cart/discountLabel";
+import { lineVariantLabel, shippingText } from "@/components/cart/lineText";
 
 /**
  * Pure logic of the local demo checkout (docs/PLAN.md §13.13, §14.18; brief §7): the fields and their check, the demo
@@ -83,8 +84,9 @@ export interface PlacedOrder {
   total: Money;
   lines: Array<{ id: string; title: string; variant: string | null; quantity: number }>;
   /**
-   * What else was in the order (QA round 5: the confirmation dropped them): the gift wrap ("Cadeauverpakking €1,95")
-   * and one row per discount, as in the review ("Code WELKOM10 −€4,69", "Gratis cadeauverpakking in december −€1,95").
+   * What else was in the order (QA round 5: the confirmation dropped them): the gift wrap ("Cadeauverpakking €1,95"),
+   * one row per discount, as in the review ("Code WELKOM10 −€4,69", "Gratis cadeauverpakking in december −€1,95"),
+   * and the shipping ("Verzending €3,95", "Gratis" or "Per mail"; QA round 6).
    */
   extras: Array<{ id: string; label: string; value: string }>;
   /** The gift message, or "". */
@@ -104,6 +106,8 @@ export function placedOrderFrom(cart: Cart, orderRef: string, email: string): Pl
       value: formatMoney(-discount.amount.cents),
     });
   }
+  // The one cost the lines do not show (QA round 6: "Totaal €16,90" under a line of €12,95, nothing in between).
+  extras.push({ id: "verzending", label: cartCopy.totals.shipping, value: shippingText(cart) });
   return {
     orderRef,
     email: email.trim(),
@@ -112,7 +116,7 @@ export function placedOrderFrom(cart: Cart, orderRef: string, email: string): Pl
     lines: cart.lines.map((line) => ({
       id: line.id,
       title: line.merchandise.productTitle,
-      variant: line.merchandise.variantTitle,
+      variant: lineVariantLabel(line.merchandise),
       quantity: line.quantity,
     })),
     extras,

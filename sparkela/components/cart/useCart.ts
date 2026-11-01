@@ -77,6 +77,8 @@ export const CartAnnouncementContext = createContext<CartAnnouncement | null>(nu
 /** Outside a provider (tests) every count is 0. */
 const NO_QUANTITIES: CartQuantities = { subscribeQuantities: () => () => undefined, quantityInCart: () => 0 };
 export const CartQuantitiesContext = createContext<CartQuantities>(NO_QUANTITIES);
+/** Whether the drawer is open; false outside <CartProvider>. */
+export const CartOpenContext = createContext(false);
 
 /** The cart with its actions. Throws outside <CartProvider>. */
 export function useCart(): CartContextValue {
@@ -106,6 +108,14 @@ export function useCartQuantity(variantId: string | null): number {
     () => (variantId ? quantityInCart(variantId) : 0),
     () => 0,
   );
+}
+
+/**
+ * Whether the cart drawer is open, without re-rendering on every cart change (QA round 6, INP: the email pill only
+ * needs this, and as a useCart() consumer it re-rendered on every add).
+ */
+export function useCartOpen(): boolean {
+  return useContext(CartOpenContext);
 }
 
 /** The latest cart announcement, or null (CartAnnouncer). */

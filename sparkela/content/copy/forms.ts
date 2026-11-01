@@ -155,7 +155,11 @@ export interface FormsCopy {
       button: string;
       linkHint: string;
       validity: (days: string) => string;
-      code: string;
+      /**
+       * The code line. launchDay = formatDayMonth(site.launchAt) for a sign-up before the launch (the shop is closed,
+       * QA round 6, like subscribe.pendingBeforeLaunch), null after it.
+       */
+      code: (launchDay: string | null) => string;
       ignore: string;
     };
     withdrawalCustomer: {
@@ -175,6 +179,8 @@ export interface FormsCopy {
     member: {
       subject: string;
       intro: string;
+      /** A member may already have ordered (WELKOM10 is once per customer): conditional after the launch (QA round 6). */
+      code: (launchDay: string | null) => string;
       ignore: string;
     };
     contact: {
@@ -335,7 +341,10 @@ export const formsCopy: FormsCopy = {
       button: "Bevestig mijn aanmelding",
       linkHint: "Werkt de knop niet? Plak deze link in je browser:",
       validity: (d) => `De link werkt ${d} dagen.`,
-      code: `Je code ${code} voor ${percent}% op je eerste bestelling kun je nu al gebruiken.`,
+      code: (launchDay) =>
+        launchDay
+          ? `Je code ${code} voor ${percent}% op je eerste bestelling gebruik je vanaf ${launchDay}.`
+          : `Je code ${code} voor ${percent}% op je eerste bestelling kun je meteen gebruiken.`,
       ignore: "Heb je je niet zelf aangemeld? Negeer deze mail dan. Je krijgt dan niets van ons.",
     },
     withdrawalCustomer: {
@@ -354,6 +363,10 @@ export const formsCopy: FormsCopy = {
     member: {
       subject: "Je bent al lid van de Sparkela Club",
       intro: "Dit e-mailadres is net aangemeld voor de Sparkela Club. Je bent al lid, dus er verandert niets: je hoort nog steeds als eerste van nieuwe drops.",
+      code: (launchDay) =>
+        launchDay
+          ? `Je code ${code} voor ${percent}% op je eerste bestelling gebruik je vanaf ${launchDay}.`
+          : `Nog niet besteld? Dan geeft je code ${code} je ${percent}% op je eerste bestelling.`,
       ignore: "Heb je je niet zelf aangemeld? Dan hoef je niets te doen.",
     },
     contact: {

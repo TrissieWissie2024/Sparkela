@@ -32,6 +32,12 @@ export interface ProductGridProps {
    * (404 favourites, "Maak de look af"), so no row is left with a single card.
    */
   columns?: ProductGridColumns;
+  /**
+   * Only whole rows (QA round 6): a card that would sit in an unfinished last row at a breakpoint is hidden there, so
+   * four favourites under a 2-3-4 grid show 4 on phones, 3 from md and 4 from xl, in the same columns as the grid
+   * above them. For a short extra list, never for the products a visitor asked for.
+   */
+  fullRows?: boolean;
   /** next/image sizes of the cards. Default: GRID_CARD_SIZES of `columns`. */
   sizes?: string;
   className?: string;
@@ -49,6 +55,27 @@ export const GRID_CARD_SIZES: Record<ProductGridColumns, string> = {
 /** Classes of the grid <ul> with the default columns; also for lists that render their own <li>s (CollectionView). */
 export const productGridClassName = "grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-3 md:gap-x-6 md:gap-y-12 xl:grid-cols-4 xl:gap-y-14";
 
+/** Per breakpoint range of a layout: its column count and the class that hides a card there. */
+const rowRanges: Record<ProductGridColumns, Array<{ columns: number; hidden: string }>> = {
+  "2-3-4": [
+    { columns: 2, hidden: "max-md:hidden" },
+    { columns: 3, hidden: "md:max-xl:hidden" },
+    { columns: 4, hidden: "xl:hidden" },
+  ],
+  "2-4": [
+    { columns: 2, hidden: "max-md:hidden" },
+    { columns: 4, hidden: "md:hidden" },
+  ],
+};
+
+/** The classes that hide card `index` of `count` where it would start an unfinished last row (`fullRows`). */
+export function fullRowClasses(columns: ProductGridColumns, index: number, count: number): string | undefined {
+  const hidden = rowRanges[columns]
+    .filter((range) => count > range.columns && index >= count - (count % range.columns))
+    .map((range) => range.hidden);
+  return hidden.length > 0 ? hidden.join(" ") : undefined;
+}
+
 const columnClasses: Record<ProductGridColumns, string> = {
   "2-3-4": productGridClassName,
   "2-4": "grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 md:gap-x-6 md:gap-y-12 xl:gap-y-14",
@@ -60,6 +87,7 @@ export function ProductGrid({
   headingLevel = 3,
   priorityCount = 0,
   columns = "2-3-4",
+  fullRows = false,
   sizes = GRID_CARD_SIZES[columns],
   className,
 }: ProductGridProps) {
@@ -70,7 +98,7 @@ export function ProductGrid({
   return (
     <ul role="list" aria-label={label} className={cn(columnClasses[columns], className)}>
       {products.map((product, index) => (
-        <li key={product.handle} className="min-w-0">
+        <li key={product.handle} className={cn("min-w-0", fullRows && fullRowClasses(columns, index, products.length))}>
           <ProductCard product={product} headingLevel={headingLevel} sizes={sizes} preload={index < priorityCount} />
         </li>
       ))}

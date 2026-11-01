@@ -321,7 +321,7 @@ export const home: HomeContent = {
       { title: "Zo vraag je het aan", text: "Mail ons een foto en je bestelnummer. Meer hoeft niet." },
       {
         title: "Roestvrij staal met goudlaag",
-        text: "De vaste collectie is van roestvrij staal met een goudlaag. Dat gaat lang mee.",
+        text: "De vaste collectie is van roestvrij staal, de goudkleurige stukken met een goudlaag. Dat gaat lang mee.",
       },
       {
         title: "Zo blijven ze mooi",

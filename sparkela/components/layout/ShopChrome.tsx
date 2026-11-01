@@ -19,7 +19,9 @@ import { Footer } from "./Footer";
 import { Header } from "./Header";
 
 /**
- * The shop chrome around every page of app/(shop) (docs/PLAN.md §13.5, §2.2, decision 16), and around the root 404.
+ * The shop chrome around every page of app/(shop) (docs/PLAN.md §13.5, §2.2, decision 16). The root 404 has the bare
+ * shape of the (kaal) pages instead (QA round 6: as the root layout's not-found boundary it was in every page's
+ * payload, so the waitlist loaded this whole chrome).
  * A server component that reads no cookies, headers or search params, so every route stays static.
  *
  * Providers: ClockProvider (the cached server clock, getServerNow) › CatalogProvider (the client catalog,

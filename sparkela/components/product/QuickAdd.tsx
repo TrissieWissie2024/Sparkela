@@ -28,7 +28,8 @@ import { Button, buttonClasses } from "@/components/ui/Button";
  *   "In tas" closes the list and puts focus back on "Kies" before the add, so the cart drawer records "Kies" as the
  *   element to return to (WCAG 2.4.3; the panel's own button is gone by then). "Kies" then says "Toegevoegd".
  *   Like a popover, the list also closes when focus leaves it (Shift+Tab to "Kies" or the card title, which it would
- *   otherwise cover: WCAG 2.4.11) and on a pointer press outside it, without moving focus (QA round 2). A press on
+ *   otherwise cover: WCAG 2.4.11) and on a pointer press outside it, without moving focus (QA round 2); the close waits
+ *   until focus has landed, so a surrounding focus trap (the cart drawer) never takes it (QA round 6). A press on
  *   "Kies" while the list is open closes it (and does not reopen it). With `panelInCard` (the product card) the
  *   wrapper is not positioned, so the list is placed against the card itself and can cover the card's whole text area.
  * - Rings (size tiles on the product page): no size is preselected. "In tas" looks and works like the buy box's button
@@ -231,12 +232,19 @@ export function QuickAdd({
     closePanel();
   };
 
-  // Focus left the list (not a switch to another window): close it and leave focus where it went.
+  // Focus left the list (not a switch to another window): close it and leave focus where it went. The close waits
+  // until focus has landed (QA round 6): unmounting the focused list during focusout left focus on <body> for a moment,
+  // and inside the cart drawer Radix's FocusScope then pulled it to the drawer itself (no ring, the next Tab back at
+  // "Sluiten"; WCAG 2.4.3, 2.4.7).
   const onPanelBlur = (event: FocusEvent<HTMLDivElement>) => {
     const next = event.relatedTarget;
-    if (next instanceof Node && event.currentTarget.contains(next)) return;
+    const panel = event.currentTarget;
+    if (next instanceof Node && panel.contains(next)) return;
     if (typeof document.hasFocus === "function" && !document.hasFocus()) return;
-    setOpen(false);
+    window.setTimeout(() => {
+      if (panel.isConnected && panel.contains(document.activeElement)) return;
+      setOpen(false);
+    }, 0);
   };
 
   return (

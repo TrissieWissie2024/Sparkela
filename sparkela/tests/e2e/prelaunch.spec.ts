@@ -165,6 +165,37 @@ test("after a waitlist sign-up the code is for the launch day, not for now (QA r
   await form.getByRole("button", { name: "Ik doe mee" }).click();
   await expect(page.getByText("Je code WELKOM10 gebruik je vanaf 27 november.", { exact: false })).toBeVisible();
   await expect(page.getByText("kun je meteen gebruiken", { exact: false })).toHaveCount(0);
+  // QA round 6: the result is plain text in the card under "Bijna klaar", no bordered box inside the card.
+  const card = page.getByRole("region", { name: "Bijna klaar" });
+  await expect(card).toBeVisible();
+  const nestedBoxes = await card.evaluate((section) =>
+    Array.from(section.querySelectorAll("*")).filter((el) => getComputedStyle(el).borderTopStyle !== "none" && getComputedStyle(el).borderTopWidth !== "0px").length,
+  );
+  expect(nestedBoxes).toBe(0);
+});
+
+test("the sign-up title breaks after the comma, never after 'plus' (QA round 6)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "From md the title has a line per half.");
+  await gotoHydrated(page, "/wachtlijst");
+  const lines = await page.locator("#wachtlijst-aanmelden").evaluate((heading) => {
+    const words: Record<number, string[]> = {};
+    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent ?? "";
+      for (const match of text.matchAll(/[^\s\u00a0]+/g)) {
+        const range = document.createRange();
+        range.setStart(node, match.index ?? 0);
+        range.setEnd(node, (match.index ?? 0) + match[0].length);
+        const top = Math.round(range.getBoundingClientRect().top);
+        (words[top] ??= []).push(match[0]);
+      }
+    }
+    return Object.keys(words)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((top) => words[top]!.join(" "));
+  });
+  expect(lines).toEqual(["Als eerste shoppen,", "plus 10% op je eerste bestelling"]);
 });
 
 test.describe("at the launch", () => {

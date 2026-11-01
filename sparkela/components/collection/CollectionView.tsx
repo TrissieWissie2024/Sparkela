@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import type { CatalogProduct, Facets, SortKey } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -11,7 +11,7 @@ import { productGridClassName } from "@/components/product/ProductGrid";
 import { Button } from "@/components/ui/Button";
 
 import { clearQueryMark, COLLECTION_QUERY_ATTRIBUTE } from "./collectionQueryScript";
-import { FilterBar } from "./FilterBar";
+import { FilterBar, type FilterBarHandle } from "./FilterBar";
 import {
   applyFilterState,
   DEFAULT_SORT,
@@ -120,7 +120,12 @@ function CollectionLayout({
       : filtered
         ? { ...stylingTilePlacement(visible.length, visible.length), index: visible.length }
         : stylingTilePlacement(products.length, stylingTileAfter);
-  const clear = () => onFiltersChange?.(emptyFilters());
+  // The empty state's "Wis filters" goes through the bar's, so focus moves to the count, not <body> (QA round 6).
+  const filterBar = useRef<FilterBarHandle>(null);
+  const clear = () => {
+    if (filterBar.current) filterBar.current.clearFilters();
+    else onFiltersChange?.(emptyFilters());
+  };
 
   // One flat list of keyed items, so a reorder moves the existing <li>s (and the tile) instead of remounting them.
   const items: ReactNode[] = visible.map((product) => (
@@ -141,6 +146,7 @@ function CollectionLayout({
   return (
     <>
       <FilterBar
+        handleRef={filterBar}
         facets={facets}
         counts={facetCounts(products, state.filters, facets)}
         value={state.filters}

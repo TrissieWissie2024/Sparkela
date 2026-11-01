@@ -126,14 +126,34 @@ const receipt: WithdrawalReceipt = {
   summary: [],
 };
 
+const BEFORE_LAUNCH = Date.parse("2026-11-20T12:00:00+01:00");
+const AFTER_LAUNCH = Date.parse("2026-11-27T12:00:00+01:00");
+
 describe("mail content", () => {
   it("confirmation mail: fixed text, the link, no visitor input", () => {
     const link = "https://sparkela.nl/nieuwsbrief/bevestigen?t=abc.def";
-    const mail = confirmationMail(link, 7);
+    const mail = confirmationMail(link, 7, AFTER_LAUNCH);
     expect(mail.subject).toBe("Bevestig je aanmelding bij Sparkela");
     expect(mail.text).toContain(link);
     expect(mail.text).toContain(formsCopy.mail.confirm.validity("7"));
     expect(mail.html).toContain(`href="${link}"`);
+  });
+
+  it("the code line says from when WELKOM10 works: the launch day before it, 'meteen' after it (QA round 6)", () => {
+    const link = "https://sparkela.nl/nieuwsbrief/bevestigen?t=abc.def";
+    const before = confirmationMail(link, 7, BEFORE_LAUNCH);
+    expect(before.text).toContain("Je code WELKOM10 voor 10% op je eerste bestelling gebruik je vanaf 27 november.");
+    expect(before.text).not.toMatch(/nu al|meteen/);
+    const after = confirmationMail(link, 7, AFTER_LAUNCH);
+    expect(after.text).toContain("Je code WELKOM10 voor 10% op je eerste bestelling kun je meteen gebruiken.");
+
+    const memberBefore = memberMail(BEFORE_LAUNCH);
+    expect(memberBefore.text).toContain("gebruik je vanaf 27 november.");
+    expect(memberBefore.text).not.toMatch(/nu al|meteen/);
+    // A member may already have ordered (WELKOM10 is once per customer): never "kun je gebruiken" as a fact.
+    const memberAfter = memberMail(AFTER_LAUNCH);
+    expect(memberAfter.text).toContain("Nog niet besteld? Dan geeft je code WELKOM10 je 10% op je eerste bestelling.");
+    expect(memberAfter.text).not.toMatch(/nu al|meteen/);
   });
 
   it("withdrawal receipt to the customer: content, date and time of receipt, reference, next steps, no links", () => {
@@ -173,7 +193,7 @@ describe("mail content", () => {
   });
 
   it("the 'al lid' mail: fixed text with the code, no link", () => {
-    const mail = memberMail();
+    const mail = memberMail(AFTER_LAUNCH);
     expect(mail.subject).toBe(formsCopy.mail.member.subject);
     expect(mail.text).toContain("WELKOM10");
     expect(mail.text).not.toContain("http");

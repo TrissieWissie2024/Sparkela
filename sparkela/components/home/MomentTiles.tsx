@@ -13,9 +13,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
  * "Shop per moment" (docs/PLAN.md §13.10, §14.1 section 11; brief §6 block 11): five 4:5 tiles (Festival, Date night,
- * Kantoor maar niet saai, Strand, Feestdagen), each a link to its moment collection with the name on a white pill
- * over the bottom of the photo below lg (the photo's "FOTO: …" placeholder stays centred above it), and under the
- * photo from lg, where five columns leave no room for "Kantoor maar niet saai" on one pill line (fix 7-9).
+ * Kantoor maar niet saai, Strand, Feestdagen), each a link to its moment collection with the name under the photo at
+ * every width (fix 7-9 from lg; QA round 6 below lg too, where "Kantoor maar niet saai" wrapped inside a pill on a
+ * 390 phone). The arrow is bound to the name's last word, so it stays right after the text when the name wraps.
  *
  * Phones and tablets: a ScrollRow (scroll snap, focusable only while it overflows, "Vorige" and "Volgende" from md)
  * that bleeds to the screen edge, so the next tile peeks in; from lg five equal columns without scrolling. The photo is
@@ -67,27 +67,12 @@ export function MomentTiles({ content, divider = false, className }: MomentTiles
                       sizes={TILE_SIZES}
                       className="motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover/moment:scale-[1.02]"
                     />
-                    {/* Below lg the name sits on a pill over the photo (the tiles are wide enough there). */}
-                    <span className="absolute inset-x-3 bottom-3 flex lg:hidden">
-                      <span className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-rand bg-kaart py-2 pr-3 pl-4 text-[0.9375rem] leading-tight font-semibold text-tekst">
-                        <span className="min-w-0">{tile.label}</span>
-                        <ArrowRight
-                          aria-hidden="true"
-                          className="size-4 shrink-0 motion-safe:transition-transform motion-safe:duration-200 group-hover/moment:translate-x-0.5"
-                          strokeWidth={1.75}
-                        />
-                      </span>
-                    </span>
                   </span>
-                  {/* From lg five tiles share the row (about 180 to 220 px each): "Kantoor maar niet saai" would wrap
-                      inside a pill, so the name moves under the photo, one line per tile, all aligned (fix 7-9). */}
-                  <span className="kop-4 mt-3 hidden items-start gap-2 text-tekst lg:flex">
-                    <span className="min-w-0 decoration-1 underline-offset-4 group-hover/moment:underline">{tile.label}</span>
-                    <ArrowRight
-                      aria-hidden="true"
-                      className="mt-1 size-4 shrink-0 motion-safe:transition-transform motion-safe:duration-200 group-hover/moment:translate-x-0.5"
-                      strokeWidth={1.75}
-                    />
+                  {/* The name under the photo at every width, the arrow right after its last word (QA round 6): on a pill
+                      over the photo "Kantoor maar niet saai" wrapped to two lines below lg, and a wrapped name in a flex
+                      row pushed the arrow to the far edge of the tile. */}
+                  <span className="kop-4 mt-3 block text-tekst decoration-1 underline-offset-4 group-hover/moment:underline">
+                    <LabelWithArrow label={tile.label} />
                   </span>
                 </Link>
               </li>
@@ -96,5 +81,23 @@ export function MomentTiles({ content, divider = false, className }: MomentTiles
         </div>
       </Container>
     </section>
+  );
+}
+
+/** The label with the arrow bound to its last word, so a wrapped name keeps the arrow right after the text. */
+function LabelWithArrow({ label }: { label: string }) {
+  const at = label.lastIndexOf(" ");
+  return (
+    <>
+      {at < 0 ? null : label.slice(0, at + 1)}
+      <span className="whitespace-nowrap">
+        {label.slice(at + 1)}
+        <ArrowRight
+          aria-hidden="true"
+          className="ml-2 inline-block size-4 align-[-0.125em] motion-safe:transition-transform motion-safe:duration-200 group-hover/moment:translate-x-0.5"
+          strokeWidth={1.75}
+        />
+      </span>
+    </>
   );
 }

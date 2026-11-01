@@ -51,8 +51,9 @@ test("three answers give a recommendation with the email step", async ({ page })
   await gotoHydrated(page, "/spark-finder");
   const main = page.getByRole("main");
   await expect(main.getByRole("heading", { level: 1 })).toHaveText("Spark Finder");
-  // Before the result the footer has its Club form; the result's own sign-up replaces it (QA round 3).
-  await expect(footerClub(page)).toBeVisible();
+  // The finder ends in its own 10% sign-up, so the page owns the Club sign-up from the start (QA round 6: the footer
+  // with its Club form made the page more than half dark).
+  await expect(footerClub(page)).toBeHidden();
 
   await expect(main.getByText("Vraag 1 van 3", { exact: true })).toBeVisible();
   await pickOption(main.getByRole("group", { name: "Wat is je vibe?" }), "Chunky en bold");
@@ -69,10 +70,10 @@ test("three answers give a recommendation with the email step", async ({ page })
   await expectRecommendation(page);
   await expect(footerClub(page)).toBeHidden();
 
-  // "Liever zonder e-mail verder" closes the step; the footer's Club form comes back.
+  // "Liever zonder e-mail verder" closes the step; the page still owns the sign-up, so the footer stays compact.
   await main.getByRole("button", { name: "Liever zonder e-mail verder" }).click();
   await expect(main.getByRole("region", { name: "Krijg 10% op je eerste bestelling" })).toHaveCount(0);
-  await expect(footerClub(page)).toBeVisible();
+  await expect(footerClub(page)).toBeHidden();
 });
 
 test("after a sign-up the email step keeps the code and drops the skip link (QA round 3)", async ({ page }) => {

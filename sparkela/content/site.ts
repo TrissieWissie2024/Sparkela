@@ -62,7 +62,7 @@ export interface SiteConfig {
   withdrawalLinkLabel: string;
   /** Shown for earrings and piercings (needsHygieneSeal in lib/catalog.ts). */
   hygieneRule: string;
-  club: { title: string; cta: string; benefits: [string, string, string] };
+  club: { title: string; cta: string; benefits: [string, string] };
   emailCapture: {
     enabled: boolean;
     /** The pill shows after this long on the page (performance.now()), or on exit intent (plan §13.11.1). */
@@ -141,11 +141,8 @@ export const site: SiteConfig = {
   club: {
     title: `Als eerste bij elke drop. Plus ${reward}.`,
     cta: "Ik doe mee",
-    benefits: [
-      "Als eerste horen wanneer er een nieuwe drop komt",
-      `Early access: ${EARLY_ACCESS_HOURS} uur eerder shoppen bij elke drop`,
-      `${welcomeCode.percent}% korting op je eerste bestelling`,
-    ],
+    // Only what the waitlist title ("Als eerste shoppen, plus 10% …") does not already say (QA round 6).
+    benefits: ["Een seintje zodra er een nieuwe drop komt", `Bij elke drop ${EARLY_ACCESS_HOURS} uur eerder shoppen`],
   },
   emailCapture: {
     enabled: true,

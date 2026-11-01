@@ -48,7 +48,8 @@ export interface CollectionCopy {
   emptyLimited: { title: string; text: string; cta: CopyLink };
   stylingTile: { eyebrow: string };
   /** Under a short collection (fewer than 8 pieces): Linde's favourites from the rest of the shop (QA round 5). */
-  more: { title: string; intro: string };
+  /** Under a short collection: Linde's favourites; `mixed` when the four are topped up with other pieces (QA round 6). */
+  more: { title: string; intro: string; mixed: { title: string; intro: string } };
   search: {
     title: string;
     intro: string;
@@ -153,6 +154,11 @@ export interface CollectionCopy {
     formText: string;
     /** The light row under the sign-up that leads back into the shop (QA round 3). */
     meanwhile: { title: string; links: CopyLink[] };
+    /**
+     * In its place before the launch (QA round 6): the shop is closed, so the row does not invite browsing. launchDay =
+     * formatDayMonth(site.launchAt).
+     */
+    beforeLaunch: { text: (launchDay: string) => string; link: CopyLink };
     metaDescription: (dropName: string) => string;
   };
 }
@@ -188,7 +194,11 @@ export const collectionCopy: CollectionCopy = {
     cta: clubLink,
   },
   stylingTile: { eyebrow: "Stylingtip" },
-  more: { title: "Lindes favorieten", intro: "Nog niet gevonden wat je zoekt? Deze stukken kiest Linde zelf vaak." },
+  more: {
+    title: "Lindes favorieten",
+    intro: "Nog niet gevonden wat je zoekt? Deze stukken kiest Linde zelf vaak.",
+    mixed: { title: "Meer om te ontdekken", intro: "Nog niet gevonden wat je zoekt? Kijk ook hier eens." },
+  },
   search: {
     title: "Zoeken",
     intro: "Zoek op naam, soort, vibe of moment.",
@@ -289,7 +299,8 @@ export const collectionCopy: CollectionCopy = {
     eyebrow: "Binnenkort",
     startsOn: (startLabel) => `Live op ${startLabel}`,
     formTitle: `Shop ${EARLY_ACCESS_HOURS} uur eerder`,
-    formText: `Word lid van de Sparkela Club. Je krijgt bij elke drop een eigen link, plus ${welcomeCode.percent}% op je eerste bestelling.`,
+    // The benefits next to the card carry the 24 hours and the 10% (QA round 6: they were said four and three times).
+    formText: "Word gratis lid van de Sparkela Club. Dat kost je een paar seconden.",
     meanwhile: {
       title: "Alvast rondkijken?",
       links: [
@@ -297,6 +308,10 @@ export const collectionCopy: CollectionCopy = {
         { label: "Stacks van Linde", href: "/stacks" },
         { label: "Spark Finder", href: "/spark-finder" },
       ],
+    },
+    beforeLaunch: {
+      text: (launchDay) => `De shop opent op ${launchDay}.`,
+      link: { label: "Naar de wachtlijst", href: "/wachtlijst" },
     },
     metaDescription: (dropName) => `${dropName} komt eraan. Club-leden zijn er ${EARLY_ACCESS_HOURS} uur eerder bij.`,
   },

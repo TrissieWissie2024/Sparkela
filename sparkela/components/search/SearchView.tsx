@@ -3,7 +3,17 @@
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type FormEvent, type RefObject } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type RefObject,
+} from "react";
 
 import { availableSearchPages, searchPages, searchProducts } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
@@ -33,15 +43,25 @@ import { Chip } from "@/components/ui/Chip";
  * Back from a result (QA round 2): Cache Components keep this route alive (hidden) while a product page shows, and
  * useSearchParams then follows the product page's URL. The field ignores URL changes while the pathname is not
  * /zoeken, and whenever the route is shown again (its effects run again) it re-reads the real URL, so Back always
- * brings the query and the results back. While there is a query, the view reserves at least a viewport of height, as
- * the fallback does on a deep link, so the footer never jumps out of view when the results arrive (CLS 0).
+ * brings the query and the results back. While there is a query, the page reserves the height up to the fold (its
+ * wrapper, SEARCH_PAGE_RESERVE), as on a deep link before hydration, so the footer never jumps into view when the
+ * results arrive (CLS 0).
  */
 
 /** The search page's path (the GET form's target and the page this view lives on). */
 export const SEARCH_PATH = "/zoeken";
 
-/** Reserve while there is a query (here and on the fallback's wrapper): keeps the footer below the fold. */
-export const SEARCH_QUERY_RESERVE = "min-h-[calc(100svh-var(--header-hoogte))]";
+/** Marks the page wrapper of /zoeken (from <main>'s top: page header, field and results). */
+export const SEARCH_PAGE_ATTRIBUTE = "data-search-page";
+/** Set on that wrapper by SearchView while there is a query (the pre-paint script sets data-search-query). */
+export const SEARCH_RESERVE_ATTRIBUTE = "data-search-reserve";
+/**
+ * The page wrapper's reserve while there is a query: from the top of <main> to the fold, so the footer stays just below
+ * it when the results come in (CLS 0, QA round 2). QA round 6: it was on the results wrapper, about 370 px further
+ * down at 1440, so no or few results left up to 574 px of empty page above the footer.
+ */
+export const SEARCH_PAGE_RESERVE =
+  "[&[data-search-query]]:min-h-[calc(100svh-var(--header-hoogte))] [&[data-search-reserve]]:min-h-[calc(100svh-var(--header-hoogte))]";
 
 /** Delay before the URL follows the field, in ms (a UI timer, not a time boundary). */
 const URL_DELAY_MS = 400;
@@ -91,6 +111,12 @@ export function SearchView() {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+  // The page keeps its reserve while there is a query; set before the pre-paint mark goes (layout effect first).
+  const rootRef = useRef<HTMLDivElement>(null);
+  const hasQuery = trimmed !== "";
+  useLayoutEffect(() => {
+    rootRef.current?.closest(`[${SEARCH_PAGE_ATTRIBUTE}]`)?.toggleAttribute(SEARCH_RESERVE_ATTRIBUTE, hasQuery);
+  }, [hasQuery]);
   // The real view is on screen: the fallback's pre-paint mark (a deep link with ?q=) is no longer needed.
   useEffect(() => clearQueryMark(SEARCH_QUERY_ATTRIBUTE), []);
 
@@ -128,7 +154,7 @@ export function SearchView() {
     : "";
 
   return (
-    <div className={cn(trimmed && SEARCH_QUERY_RESERVE)}>
+    <div ref={rootRef}>
       <SearchForm
         value={query}
         onChange={onChange}

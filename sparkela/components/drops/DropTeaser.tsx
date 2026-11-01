@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useId } from "react";
 
 import type { Drop } from "@/lib/types";
-import { formatStartLabel } from "@/lib/dates";
+import { formatDayMonth, formatStartLabel } from "@/lib/dates";
 import { dropPath } from "@/lib/paths";
 import { collectionCopy } from "@/content/copy/collection";
 import { sharedCopy } from "@/content/copy/shared";
@@ -29,7 +29,8 @@ import { DropCountdown } from "./DropCountdown";
  * 2. On --pagina: a white card with the Club sign-up (SubscribeForm source="club"), because Club members get the
  *    early-access link, and next to it the three Club benefits (ClubBenefits, as on /sparkela-club). The card carries
  *    data-eigen-club, so the footer leaves out its own Club block.
- * 3. A quiet row "Alvast rondkijken?" with pill links into the shop (Nieuw, stacks, Spark Finder).
+ * 3. A quiet row "Alvast rondkijken?" with pill links into the shop (Nieuw, stacks, Spark Finder); before the launch
+ *    "De shop opent op 27 november." with a link to the waitlist instead (QA round 6).
  * The page is single-purpose, like contact: it marks itself data-compacte-footer (app/globals.css).
  *
  * At startsAt the countdown makes way (TimeGate) for "Nu live" and a link to the drop. It is a plain <a>, not
@@ -50,6 +51,8 @@ export function DropTeaser({ drop, now }: DropTeaserProps) {
   const meanwhileId = useId();
   const copy = collectionCopy.teaser;
   const live = sharedCopy.countdown.live;
+  // "27 november" never breaks between day and month.
+  const launchDay = formatDayMonth(site.launchAt).replace(/ /g, "\u00a0");
 
   return (
     <>
@@ -110,21 +113,37 @@ export function DropTeaser({ drop, now }: DropTeaserProps) {
           <ClubBenefits headingId={benefitsId} className="lg:col-span-5" />
         </div>
 
-        {/* Below lg the benefits' last hairline is right above: no second line 48 px under it (QA round 5). */}
-        <nav aria-labelledby={meanwhileId} className="mt-12 md:mt-16 lg:border-t lg:border-rand lg:pt-8">
-          <h2 id={meanwhileId} className="kop-3 text-tekst">
-            {copy.meanwhile.title}
-          </h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {copy.meanwhile.links.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className={buttonClasses({ variant: "outline", size: "sm" })}>
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {/* Below lg the benefits' last hairline is right above: no second line 48 px under it (QA round 5). Before the
+            launch the shop is closed, so instead of "Alvast rondkijken?" (three links that all ended on the waitlist)
+            the row says when it opens (QA round 6). */}
+        <TimeGate
+          at={site.launchAt}
+          className="mt-12 md:mt-16 lg:border-t lg:border-rand lg:pt-8"
+          before={
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <p className="font-semibold text-tekst">{copy.beforeLaunch.text(launchDay)}</p>
+              <Link href={copy.beforeLaunch.link.href} className={buttonClasses({ variant: "outline", size: "sm" })}>
+                {copy.beforeLaunch.link.label}
+              </Link>
+            </div>
+          }
+          after={
+            <nav aria-labelledby={meanwhileId}>
+              <h2 id={meanwhileId} className="kop-3 text-tekst">
+                {copy.meanwhile.title}
+              </h2>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {copy.meanwhile.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className={buttonClasses({ variant: "outline", size: "sm" })}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          }
+        />
       </Container>
     </>
   );

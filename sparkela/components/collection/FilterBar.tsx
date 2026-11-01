@@ -2,7 +2,7 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useImperativeHandle, useLayoutEffect, useRef, useState, type Ref } from "react";
 
 import type { Facets, SortKey } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -49,10 +49,19 @@ export interface FilterBarProps {
   count: number;
   sort: SortKey;
   onSortChange(value: SortKey): void;
+  /**
+   * The bar's "Wis filters" for a button elsewhere (the empty state, QA round 6): it clears with the same focus
+   * handover, so focus lands on the count and never on <body> when the pressed button disappears.
+   */
+  handleRef?: Ref<FilterBarHandle>;
   className?: string;
 }
 
-export function FilterBar({ facets, counts, value, onChange, count, sort, onSortChange, className }: FilterBarProps) {
+export interface FilterBarHandle {
+  clearFilters(): void;
+}
+
+export function FilterBar({ facets, counts, value, onChange, count, sort, onSortChange, handleRef, className }: FilterBarProps) {
   const copy = collectionCopy.filters;
   const id = useId();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -69,7 +78,7 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
   // to a stable place (QA round 4, WCAG 2.4.3), never to <body>. The count is a live region, so it also says the new
   // number. Applied in a layout effect for exactly the filters the press asked for: the URL (and so `value`) follows
   // in a transition, which can take longer than a frame on a phone.
-  const pendingFocus = useRef<{ filters: string; target: number | "count" } | null>(null);
+  const pendingFocus = useRef<{ filters: string; target: number | "count"; scroll?: boolean } | null>(null);
   const filtersKey = facetsKey(value);
   useLayoutEffect(() => {
     const pending = pendingFocus.current;
@@ -78,13 +87,15 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
     const chips = pending.target === "count" ? [] : visibleChips(chosenRef.current);
     const next = typeof pending.target === "number" ? chips[Math.min(pending.target, chips.length - 1)]?.querySelector("button") : null;
     if (next) next.focus();
-    else countRef.current?.focus({ preventScroll: true });
+    else countRef.current?.focus({ preventScroll: pending.scroll !== true });
   }, [filtersKey]);
-  const clear = () => {
+  /** `scroll`: the pressed button was away from the bar (the empty state), so the count scrolls into view. */
+  const clear = (scroll = false) => {
     const next = emptyFilters();
-    pendingFocus.current = { filters: facetsKey(next), target: "count" };
+    pendingFocus.current = { filters: facetsKey(next), target: "count", scroll };
     onChange(next);
   };
+  useImperativeHandle(handleRef, () => ({ clearFilters: () => clear(true) }));
   /** Removes a chosen chip and moves focus to the chip that takes its place, the one before it, or the count. */
   const removeChosen = (key: FacetKey, item: string) => {
     const chipId = `${key}-${item}`;
@@ -170,7 +181,7 @@ export function FilterBar({ facets, counts, value, onChange, count, sort, onSort
               {collectionCopy.count(count)}
             </p>
             {active > 0 ? (
-              <Button variant="link" size="sm" onClick={clear}>
+              <Button variant="link" size="sm" onClick={() => clear()}>
                 {copy.clear}
               </Button>
             ) : null}

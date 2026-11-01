@@ -341,14 +341,21 @@ describe("sortProducts", () => {
     expect(order("nieuwste")).toEqual(["a", "b", "c", "uitverkocht"]);
   });
 
-  it("puts sold-out products last only for uitgelicht (decision 42)", () => {
+  it("puts sold-out products last for uitgelicht (decision 42) and on a tie in every other sort (QA round 6)", () => {
     const sameDay = [
       makeCatalogProduct({ handle: "later", featuredRank: 2 }),
       makeCatalogProduct({ handle: "op", featuredRank: 1, variants: [{ title: "Goud", price: 1495, quantityAvailable: 0 }] }),
     ];
     expect(sortProducts(sameDay, "uitgelicht").map((item) => item.handle)).toEqual(["later", "op"]);
-    expect(sortProducts(sameDay, "nieuwste").map((item) => item.handle)).toEqual(["op", "later"]);
-    expect(sortProducts(sameDay, "prijs-oplopend").map((item) => item.handle)).toEqual(["op", "later"]);
+    expect(sortProducts(sameDay, "nieuwste").map((item) => item.handle)).toEqual(["later", "op"]);
+    expect(sortProducts(sameDay, "prijs-oplopend").map((item) => item.handle)).toEqual(["later", "op"]);
+    expect(sortProducts(sameDay, "prijs-aflopend").map((item) => item.handle)).toEqual(["later", "op"]);
+    // The price still comes first: a cheaper sold-out piece stays in front in "Prijs laag naar hoog".
+    const cheaper = [
+      makeCatalogProduct({ handle: "duur", featuredRank: 1, price: 2495 }),
+      makeCatalogProduct({ handle: "op", featuredRank: 2, variants: [{ title: "Goud", price: 995, quantityAvailable: 0 }] }),
+    ];
+    expect(sortProducts(cheaper, "prijs-oplopend").map((item) => item.handle)).toEqual(["op", "duur"]);
   });
 
   it("never mutates the input", () => {

@@ -6,6 +6,7 @@ import {
 } from "@/lib/commerce/shopify/admin";
 import { getShopifyAdminConfig } from "@/lib/commerce/shopify/config";
 import { FORM_DEADLINE_MS } from "@/lib/deadline";
+import { requestNow } from "@/lib/clock";
 import { getEnv, readSecret } from "@/lib/env";
 import { CONFIRM_TOKEN_TTL_MS, createConfirmToken, sha256Hex } from "@/lib/forms/confirm-token";
 import { clientKey, RATE_LIMITS, rateLimit } from "@/lib/forms/rate-limit";
@@ -68,14 +69,14 @@ export async function POST(request: Request): Promise<Response> {
     const day = Math.floor(now / DAY_MS);
     sent = await sendMail({
       to: email,
-      ...memberMail(),
+      ...memberMail(requestNow(request)),
       idempotencyKey: `subscribe-member-${await sha256Hex(`${customer.customerId}:${day}`)}`,
       deadline,
     });
   } else {
     const token = await createConfirmToken(customer.customerId, now, secret, customer.tagsOnConfirm);
     const link = `${getEnv().siteUrl}${CONFIRM_PATH}?t=${token}`;
-    const mail = confirmationMail(link, Math.round(CONFIRM_TOKEN_TTL_MS / DAY_MS));
+    const mail = confirmationMail(link, Math.round(CONFIRM_TOKEN_TTL_MS / DAY_MS), requestNow(request));
     sent = await sendMail({ to: email, ...mail, idempotencyKey: `subscribe-${await sha256Hex(token)}`, deadline });
   }
   if (!sent.ok) {

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { brandColor } from "@/lib/brand-colors";
+import { formatDayMonth, isPrelaunch } from "@/lib/dates";
 import { attemptSignal } from "@/lib/deadline";
 import { readEnv, type EnvSource } from "@/lib/env";
 import type { WithdrawalReceipt } from "@/lib/types";
@@ -263,17 +264,26 @@ function compose(subject: string, greeting: string, blocks: Block[]): MailConten
 /* -------------------------------------------------------------------------- */
 
 /**
- * The double opt-in mail (plan §15.2 step 5): fixed text, one link, no visitor input. `validDays` is the token's life
- * in days (7).
+ * The launch day ("27 november") while the shop is still closed at `now`, else null: the code line of both mails then
+ * says from when WELKOM10 works, as the waitlist's own result does (QA round 6: the mail said "kun je nu al
+ * gebruiken" to every waitlist sign-up).
  */
-export function confirmationMail(link: string, validDays: number): MailContent {
+function launchDayFor(now: number): string | null {
+  return isPrelaunch(now) ? formatDayMonth(site.launchAt) : null;
+}
+
+/**
+ * The double opt-in mail (plan §15.2 step 5): fixed text, one link, no visitor input. `validDays` is the token's life
+ * in days (7); `now` the moment of the sign-up (requestNow), for the code line.
+ */
+export function confirmationMail(link: string, validDays: number, now: number): MailContent {
   const copy = formsCopy.mail.confirm;
   return compose(copy.subject, formsCopy.mail.greeting, [
     { kind: "p", text: copy.intro },
     { kind: "button", label: copy.button, href: link },
     { kind: "p", text: `${copy.linkHint}\n${link}` },
     { kind: "p", text: copy.validity(String(validDays)) },
-    { kind: "p", text: copy.code },
+    { kind: "p", text: copy.code(launchDayFor(now)) },
     { kind: "p", text: copy.ignore },
   ]);
 }
@@ -283,11 +293,11 @@ export function confirmationMail(link: string, validDays: number): MailContent {
  * "pending" as for any other address, so the answer tells nobody whether an address is a member; this mail tells the
  * owner of the address instead. Fixed text, no link, no visitor input.
  */
-export function memberMail(): MailContent {
+export function memberMail(now: number): MailContent {
   const copy = formsCopy.mail.member;
   return compose(copy.subject, formsCopy.mail.greeting, [
     { kind: "p", text: copy.intro },
-    { kind: "p", text: formsCopy.mail.confirm.code },
+    { kind: "p", text: copy.code(launchDayFor(now)) },
     { kind: "p", text: copy.ignore },
   ]);
 }

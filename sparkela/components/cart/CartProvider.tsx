@@ -16,6 +16,7 @@ import { CartAnnouncer } from "./CartAnnouncer";
 import {
   CartActionsContext,
   CartAnnouncementContext,
+  CartOpenContext,
   CartQuantitiesContext,
   CartStateContext,
   type AddToCartOptions,
@@ -27,6 +28,7 @@ import {
 export {
   useCart,
   useCartActions,
+  useCartOpen,
   useCartQuantity,
   type AddToCartOptions,
   type AddToCartSource,
@@ -184,14 +186,30 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     setHydrated(true);
   }, []);
 
-  /** Queues an adapter call; `report` runs with the answer and the cart from before the call. */
+  /**
+   * Queues an adapter call; `report` runs with the answer and the cart from before the call.
+   *
+   * Every state change of the cart itself (pending, the answer, pending again) is a transition (QA round 6, INP): a
+   * local answer resolves in microtasks while the click is still being dispatched, so these were three or four
+   * synchronous renders of every useCart() consumer before the next paint ("In je tas" took 224 to 312 ms at 4x CPU).
+   * The pressed button's own state and the live region stay urgent; the header count and the drawer follow in the
+   * next frame. cartRef is updated at once, so the queue always works on the latest answer. `urgent` commits the
+   * answer at once, for a control that shows the cart's own value (the gift wrap checkbox).
+   */
   const run = useCallback(
-    (call: (cartAdapter: CartAdapter) => Promise<CartResult>, report?: (result: CartResult, before: Cart | null) => void) => {
-      setPendingCount((count) => count + 1);
+    (
+      call: (cartAdapter: CartAdapter) => Promise<CartResult>,
+      report?: (result: CartResult, before: Cart | null) => void,
+      { urgent = false }: { urgent?: boolean } = {},
+    ) => {
+      startTransition(() => setPendingCount((count) => count + 1));
       const task = async (): Promise<CartResult> => {
         const before = cartRef.current;
         const result = await settle(() => call(adapter), before);
-        commit(result);
+        // A control that shows the cart's own value (the gift wrap checkbox) needs the answer before its next paint,
+        // or the tick flips back for a frame and a test sees no change.
+        if (urgent) commit(result);
+        else startTransition(() => commit(result));
         report?.(result, before);
         // A time-out or network failure says nothing about what the server did: it may still have stored the change.
         // Read the cart again so the drawer shows what is really in it (the error message stays; decision 200).
@@ -199,14 +217,14 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
           const reread = await settle(() => adapter.getCart(), cartRef.current);
           if (reread.ok) {
             cartRef.current = reread.cart;
-            setCart(reread.cart);
+            startTransition(() => setCart(reread.cart));
           }
         }
         return result;
       };
       const promise = queueRef.current.then(task, task);
       queueRef.current = promise.catch(() => undefined);
-      return promise.finally(() => setPendingCount((count) => Math.max(0, count - 1)));
+      return promise.finally(() => startTransition(() => setPendingCount((count) => Math.max(0, count - 1))));
     },
     [adapter, commit],
   );
@@ -260,6 +278,8 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     [announce, lookup, run],
   );
 
+  // Removing and changing a quantity are urgent too: the stepper shows the cart's own quantity, and a second "+"
+  // before a transition landed would count from the old one (QA round 6).
   const removeLine = useCallback(
     (lineId: string, options?: { announce?: boolean }) =>
       run(
@@ -269,6 +289,7 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
           if (!result.ok) announce(sharedCopy.announce.error);
           else if (line && (options?.announce ?? true)) announce(sharedCopy.announce.removed(line.merchandise.productTitle));
         },
+        { urgent: true },
       ),
     [announce, run],
   );
@@ -288,6 +309,7 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
             announce(sharedCopy.announce.error);
           }
         },
+        { urgent: true },
       );
     },
     [announce, removeLine, run],
@@ -309,8 +331,9 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
     (code: string) => run((cartAdapter) => cartAdapter.removeDiscountCode(code), reportFailure),
     [reportFailure, run],
   );
+  // Urgent: the drawer's checkbox is controlled by cart.giftWrap.selected (QA round 6, see run()).
   const setGiftWrap = useCallback(
-    (enabled: boolean) => run((cartAdapter) => cartAdapter.setGiftWrap(enabled), reportFailure),
+    (enabled: boolean) => run((cartAdapter) => cartAdapter.setGiftWrap(enabled), reportFailure, { urgent: true }),
     [reportFailure, run],
   );
   const setNote = useCallback(
@@ -402,12 +425,14 @@ export function CartProvider({ provider, children }: { provider: CommerceProvide
   return (
     <CartActionsContext value={actions}>
       <CartQuantitiesContext value={quantityValue}>
-        <CartStateContext value={state}>
-          <CartAnnouncementContext value={announcement}>
-            {children}
-            <CartAnnouncer />
-          </CartAnnouncementContext>
-        </CartStateContext>
+        <CartOpenContext value={isOpen}>
+          <CartStateContext value={state}>
+            <CartAnnouncementContext value={announcement}>
+              {children}
+              <CartAnnouncer />
+            </CartAnnouncementContext>
+          </CartStateContext>
+        </CartOpenContext>
       </CartQuantitiesContext>
     </CartActionsContext>
   );

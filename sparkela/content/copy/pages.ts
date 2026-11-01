@@ -95,6 +95,8 @@ export interface PagesCopy {
     emailText: string;
     steps: { title: string; items: Array<{ title: string; text: string }> };
     stacks: { text: string; link: PageLink };
+    /** Linde's favourites under the finder (QA round 6: a light block before the footer). */
+    favorites: { title: string; intro: string };
   };
   popup: {
     /** Visually hidden after the pill label, so the pill says what it offers. */
@@ -233,7 +235,7 @@ export const pagesCopy: PagesCopy = {
       items: [
         {
           title: "Roestvrij staal met goudlaag",
-          text: "De vaste collectie is van roestvrij staal met een goudlaag. Gemaakt om vaak te dragen, niet om in een la te liggen.",
+          text: "De vaste collectie is van roestvrij staal, de goudkleurige stukken met een goudlaag. Gemaakt om vaak te dragen, niet om in een la te liggen.",
         },
         {
           title: site.guarantee.short,
@@ -341,6 +343,7 @@ export const pagesCopy: PagesCopy = {
       text: "Liever meteen een complete look?",
       link: { label: "Bekijk de stacks van Linde", href: "/stacks" },
     },
+    favorites: { title: "Lindes favorieten", intro: "Geen zin in vragen? Deze stukken kiest Linde zelf vaak." },
   },
   popup: {
     pillSuffix: `, ${reward}`,

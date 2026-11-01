@@ -8,7 +8,7 @@ import { FINE_POINTER_QUERY } from "@/lib/hooks/useMediaQuery";
 import { useSubscribed } from "@/lib/subscription";
 import { pagesCopy } from "@/content/copy/pages";
 import { site } from "@/content/site";
-import { useCart } from "@/components/cart/useCart";
+import { useCartOpen } from "@/components/cart/useCart";
 import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -80,11 +80,11 @@ export function EmailCapture() {
   const copy = site.emailCapture;
   const popup = pagesCopy.popup;
   const pathname = usePathname();
-  const { isOpen: cartOpen } = useCart();
+  const cartOpen = useCartOpen();
   const subscribed = useSubscribed();
   const consentOpen = useConsentOpen();
   const ownsSignup = usePageOwnsSignup();
-  const tooShort = useViewportTooShortForPill();
+  const tooShort = useViewportTooShortForPill(pathname);
 
   const [appeared, setAppeared] = useState(false);
   const [dismissed, setDismissed] = useState(false);

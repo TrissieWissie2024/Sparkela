@@ -266,10 +266,13 @@ export function keepUnitsTogether(text: string): string {
 /**
  * A number stays on the line of its unit in running text (QA round 5, like keepUnitsTogether for spec lines and the
  * hard spaces in tile copy, decision 223j): "1 tot 2 werkdagen", "16.00 uur", "6 maanden", "14 dagen", "3 stuks". For
- * texts that come from Markdown or plain strings (legal pages, FAQ answers); a no-break space between them.
+ * texts that come from Markdown or plain strings (legal pages, FAQ answers); a no-break space between them. A
+ * percentage stays with the word after it ("15% korting", QA round 6).
  */
 export function keepNumbersWithUnits(text: string): string {
-  return text.replace(/(\d[\d.,]*) (uur|minuten|dagen|werkdagen|weken|maanden|jaar|stuks)(?![\p{L}\d])/gu, "$1\u00a0$2");
+  return text
+    .replace(/(\d[\d.,]*) (uur|minuten|dagen|werkdagen|weken|maanden|jaar|stuks)(?![\p{L}\d])/gu, "$1\u00a0$2")
+    .replace(/(\d+%) (?=\p{L})/gu, "$1\u00a0");
 }
 
 function dropsOf(product: Pick<Product, "tags">, drops: readonly Drop[]): Drop[] {
@@ -451,18 +454,25 @@ export function newSince(item: Pick<Sortable, "publishedAt" | "tags">): number {
  * start when later; QA round 5), then featuredRank.
  * The input is never mutated.
  */
+/** Sold-out pieces after the ones for sale, then featuredRank. */
+function bySaleThenRank(a: Sortable, b: Sortable): number {
+  return Number(!a.availableForSale) - Number(!b.availableForSale) || byRank(a, b);
+}
+
 export function sortProducts<T extends Sortable>(items: T[], key: SortKey): T[] {
   const sorted = [...items];
   switch (key) {
+    // A tie goes to the piece that is for sale (QA round 6: the sold-out Isa opened "Prijs hoog naar laag" on
+    // /collections/armbanden, level with Sparkle armband at €26,95), then featuredRank.
     case "prijs-oplopend":
-      return sorted.sort((a, b) => a.priceRange.min.cents - b.priceRange.min.cents || byRank(a, b));
+      return sorted.sort((a, b) => a.priceRange.min.cents - b.priceRange.min.cents || bySaleThenRank(a, b));
     case "prijs-aflopend":
-      return sorted.sort((a, b) => b.priceRange.min.cents - a.priceRange.min.cents || byRank(a, b));
+      return sorted.sort((a, b) => b.priceRange.min.cents - a.priceRange.min.cents || bySaleThenRank(a, b));
     case "nieuwste":
-      return sorted.sort((a, b) => newSince(b) - newSince(a) || byRank(a, b));
+      return sorted.sort((a, b) => newSince(b) - newSince(a) || bySaleThenRank(a, b));
     case "uitgelicht":
     default:
-      return sorted.sort((a, b) => Number(!a.availableForSale) - Number(!b.availableForSale) || byRank(a, b));
+      return sorted.sort(bySaleThenRank);
   }
 }
 
@@ -538,7 +548,7 @@ type Searchable = Pick<CatalogProduct, "title" | "type" | "tags" | "featuredRank
   Partial<Pick<CatalogProduct, "variants" | "specRegel" | "badges" | "availableForSale">>;
 
 /** Dutch endings stripped from a query word that does not occur as typed (longest first; QA round 5). */
-const SEARCH_ENDINGS = ["etjes", "tjes", "jes", "tje", "je", "en", "es", "s", "e"] as const;
+const SEARCH_ENDINGS = ["etjes", "etje", "tjes", "jes", "tje", "je", "en", "es", "s", "e"] as const;
 /** Shortest stem that is still matched as the start of a word ("ster" from "sterren", "hart" from "hartje"). */
 const SEARCH_STEM_MIN = 4;
 
@@ -546,7 +556,8 @@ const SEARCH_STEM_MIN = 4;
  * The stems of a query word, for a word that does not occur as typed (QA round 5: "zilveren", "bangles",
  * "armbandjes", "sterren", "hartje", "kraal" found nothing). Without a Dutch ending (plural, diminutive, the inflected
  * "-en"/"-e"), then with a doubled final consonant undone ("sterr" → "ster") and a long vowel in the last syllable
- * made short ("kraal" → "kral", the start of "kralen"). Each stem has at least SEARCH_STEM_MIN letters.
+ * made short ("kraal" → "kral", the start of "kralen"); a diminutive's -nk back to -ng ("kettink" → "ketting") and
+ * the singular "-etje" too ("sterretje", QA round 6). Each stem has at least SEARCH_STEM_MIN letters.
  */
 export function searchStems(word: string): string[] {
   const stems = new Set<string>();
@@ -557,6 +568,8 @@ export function searchStems(word: string): string[] {
     if (undoubled.length >= SEARCH_STEM_MIN) stems.add(undoubled);
     const shortVowel = stem.replace(/(aa|ee|oo|uu)([^aeiou]+)$/, (_, vowel: string, tail: string) => `${vowel[0]}${tail}`);
     if (shortVowel.length >= SEARCH_STEM_MIN) stems.add(shortVowel);
+    // A diminutive turns -ng into -nk ("kettinkje", QA round 6): the stem with -ng again.
+    if (stem.endsWith("nk")) stems.add(`${stem.slice(0, -2)}ng`);
   };
   add(word);
   for (const ending of SEARCH_ENDINGS) {
@@ -701,6 +714,27 @@ export function availableSearchPages<T extends { whileBadge?: BadgeId }>(
  * when no product is marked, Linde's favourites under their own title: Linde's picks never appear as bestsellers.
  * Only listable products, by featuredRank.
  */
+/**
+ * Up to `count` of Linde's favourites outside `exclude` (handles), for the block under a short collection and on the
+ * Spark Finder page (QA rounds 5 and 6). When fewer favourites are left (Nieuw holds most of them), the list is topped
+ * up with the best-ranked pieces that are for sale, and `onlyFavorites` is false: the caller then uses a title that
+ * does not call them Linde's picks. Sold-out pieces never top up.
+ */
+export function moreFavorites(
+  items: CatalogProduct[],
+  exclude: ReadonlySet<string>,
+  count: number,
+): { products: CatalogProduct[]; onlyFavorites: boolean } {
+  const favorites = homeFavorites(items, false).products.filter((item) => !exclude.has(item.handle)).slice(0, count);
+  if (favorites.length >= count) return { products: favorites, onlyFavorites: true };
+  const taken = new Set([...exclude, ...favorites.map((item) => item.handle)]);
+  const rest = items
+    .filter((item) => item.listable && item.availableForSale && !taken.has(item.handle))
+    .sort(byRank)
+    .slice(0, count - favorites.length);
+  return { products: [...favorites, ...rest], onlyFavorites: rest.length === 0 };
+}
+
 export function homeFavorites(
   items: CatalogProduct[],
   realSalesData: boolean,

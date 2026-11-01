@@ -126,6 +126,8 @@ export interface SharedCopy {
     finder: string;
     search: string;
     favoritesTitle: string;
+    /** Above the shop links of the root 404, which has no header menu (QA round 6). */
+    browseTitle: string;
     /** Metadata title of an unknown product, NO_PRODUCTS_HANDLE and the gift wrap (lib/seo.ts, plan §14.2). */
     metaTitle: string;
   };
@@ -262,6 +264,11 @@ export const sharedCopy: SharedCopy = {
     // QA round 4: the words of the menu and the collections ("Subtiel en klassiek" is the clean-en-classy vibe).
     classy: "subtiel subtiele klassiek klassieke",
     cadeaukaart: "giftcard cadeaubon tegoedbon",
+    // QA round 6: the everyday words for hoops and studs, and the material every piece is made of.
+    hoops: "creolen creool oorringen oorring",
+    ringetjes: "creolen creool oorringen oorring",
+    stipjes: "oorknopjes oorknopje knopjes studs",
+    staal: "roestvrij roestvrijstaal rvs",
   },
   searchTypeWords: {
     oorbel: "oorbellen",
@@ -283,7 +290,13 @@ export const sharedCopy: SharedCopy = {
       keywords: "verzenden verzending verzendkosten levering bezorging postnl retour retourneren terugsturen",
     },
     { label: "Herroepen", href: "/herroepen", keywords: "herroepen herroeping annuleren" },
-    { label: "Veelgestelde vragen", href: "/veelgestelde-vragen", keywords: "vraag vragen faq garantie" },
+    // QA round 6: a question about nickel or allergies ends at the answer, never at "Check de spelling". "nikkel" also
+    // matches a query that starts with it; products never match these words (brief §2.6).
+    {
+      label: "Veelgestelde vragen",
+      href: "/veelgestelde-vragen",
+      keywords: "vraag vragen faq garantie nikkel allergie allergisch verkleuren verkleuring",
+    },
     { label: "Sparkela Club", href: "/sparkela-club", keywords: "club nieuwsbrief welkomstcode kortingscode" },
     { label: "Contact", href: "/contact", keywords: "contact mailen email" },
     { label: "Over Sparkela", href: "/over-sparkela", keywords: "linde verhaal eigenaar" },
@@ -338,6 +351,7 @@ export const sharedCopy: SharedCopy = {
     finder: "Spark Finder",
     search: "Zoeken",
     favoritesTitle: "Lindes favorieten",
+    browseTitle: "Kijk verder in de shop",
     metaTitle: "Pagina niet gevonden",
   },
   dates: {

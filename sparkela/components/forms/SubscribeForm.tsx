@@ -38,10 +38,10 @@ import { submitForm } from "./submitForm";
  *
  * - Before the launch (the waitlist) the result says when the code works: "Je code WELKOM10 gebruik je vanaf 27
  *   november." (QA round 5: the shop is closed until then, so "meteen" was not true).
- * - `heading` (the Club page and the drop teaser, QA round 5): the form owns the heading and the line above it, so the
- *   result can replace them. On success the heading (same id, so a section's aria-labelledby still works) says
- *   "Bijna klaar" and the result is plain text in the same card: no stale "Vul je e-mailadres in" above it, no box in
- *   the box.
+ * - `heading` (the Club page and the drop teaser, QA round 5; the waitlist, QA round 6): the form owns the heading and
+ *   what sits between it and the field (a line, or the waitlist's benefit list), so the result can replace them. On
+ *   success the heading (same id and size, so a section's aria-labelledby still works) says "Bijna klaar" and the
+ *   result is plain text in the same card: no stale "Vul je e-mailadres in" above it, no box in the box.
  *
  * `tone="donker"` on dark surfaces (waitlist, footer): bot-wit labels, a white field. The order is always field, its
  * error, what you sign up for, the consent checkbox and then the button, on screen and in tab order, so nobody presses
@@ -52,9 +52,14 @@ import { submitForm } from "./submitForm";
 export interface SubscribeFormHeading {
   /** The heading's id (a section's aria-labelledby). */
   id: string;
-  title: string;
+  /** The title; a node so a caller can set its own line breaks (the waitlist splits after the comma). */
+  title: ReactNode;
   /** The line under the title while the form shows. */
-  text: string;
+  text?: string;
+  /** Heading style; default kop-2. The result keeps it, so the card does not change its type scale. */
+  className?: string;
+  /** Content between the title (or line) and the form while the form shows, e.g. the waitlist's benefit list. */
+  body?: ReactNode;
 }
 
 export interface SubscribeFormProps {
@@ -179,10 +184,12 @@ export function SubscribeForm({
   const done = status === "success" && result !== null;
   const pending = beforeLaunch ? copy.pendingBeforeLaunch(formatDayMonth(site.launchAt)) : copy.pending;
 
+  const headingClass = cn(heading?.className ?? "kop-2", text);
+
   if (done && heading) {
     return (
       <div ref={resultRef} tabIndex={-1}>
-        <h2 id={heading.id} className={cn("kop-2", text)}>
+        <h2 id={heading.id} className={headingClass}>
           {copy.successTitle}
         </h2>
         <p className={cn("mt-2", soft)}>{withCode(pending)}</p>
@@ -289,10 +296,11 @@ export function SubscribeForm({
   if (!heading) return form;
   return (
     <>
-      <h2 id={heading.id} className={cn("kop-2", text)}>
+      <h2 id={heading.id} className={headingClass}>
         {heading.title}
       </h2>
-      <p className={cn("mt-2", soft)}>{heading.text}</p>
+      {heading.text ? <p className={cn("mt-2", soft)}>{heading.text}</p> : null}
+      {heading.body}
       {form}
     </>
   );

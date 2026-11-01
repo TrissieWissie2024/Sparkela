@@ -8,6 +8,8 @@ import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { cartCopy } from "@/content/copy/cart";
 import { sharedCopy } from "@/content/copy/shared";
 import { VatNotice } from "@/components/time/VatNotice";
+
+import { shippingText } from "./lineText";
 import { Button } from "@/components/ui/Button";
 
 import { discountLabel } from "./discountLabel";
@@ -40,20 +42,6 @@ function Row({ label, value, note, className }: { label: ReactNode; value: React
       <dd className="tabular shrink-0 text-right">{value}</dd>
     </div>
   );
-}
-
-function shippingText(cart: Cart): string {
-  const { shipping } = cart.totals;
-  switch (shipping.kind) {
-    case "free":
-      return cartCopy.totals.shippingFree;
-    case "amount":
-      return formatMoney(shipping.amount);
-    case "at-checkout":
-      return cartCopy.totals.shippingAtCheckout;
-    case "none":
-      return cartCopy.totals.shippingNone;
-  }
 }
 
 export interface CartTotalsProps {

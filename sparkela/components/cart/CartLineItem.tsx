@@ -11,6 +11,7 @@ import { productPath } from "@/lib/paths";
 import { cartCopy } from "@/content/copy/cart";
 import { Button } from "@/components/ui/Button";
 
+import { lineVariantLabel } from "./lineText";
 import { ProductThumb } from "./ProductThumb";
 import { QuantityStepper } from "./QuantityStepper";
 import { useCart } from "./useCart";
@@ -40,6 +41,8 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
   // At the stock limit the "+" turns grey: say why (QA round 1), not at the general cap of 99.
   const stockLimited = !readOnly && max < MAX_LINE_QUANTITY && line.quantity >= max;
   const maxHintId = `${useId()}-max`;
+  // "Maat 17", not a bare "17"; a gift card shows its amount once, as the price (QA round 6).
+  const variantLabel = lineVariantLabel(merchandise);
 
   return (
     <li className="flex gap-4 py-5">
@@ -59,7 +62,7 @@ export function CartLineItem({ line, onRemove, readOnly = false }: CartLineItemP
             >
               {title}
             </Link>
-            {merchandise.variantTitle ? <p className="tekst-klein mt-0.5 text-tekst-2">{merchandise.variantTitle}</p> : null}
+            {variantLabel ? <p className="tekst-klein mt-0.5 text-tekst-2">{variantLabel}</p> : null}
             {merchandise.isGiftCard ? <p className="tekst-klein mt-0.5 text-tekst-2">{cartCopy.line.giftCardNote}</p> : null}
           </div>
           <p className="tabular shrink-0 text-right text-[0.9375rem] font-semibold text-tekst">{formatMoney(line.subtotal)}</p>

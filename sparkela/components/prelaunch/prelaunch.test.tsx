@@ -19,6 +19,12 @@ function escape(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
 
+/** The visible text of the sign-up card's H2 (its two halves are spans; the no-break space reads as a space). */
+function signupTitleText(markup: string): string {
+  const match = markup.match(/<h2 id="wachtlijst-aanmelden"[^>]*>(.*?)<\/h2>/);
+  return (match?.[1] ?? "").replace(/<[^>]+>/g, "").replace(/\u00a0/g, " ");
+}
+
 describe("WaitlistHero", () => {
   const html = renderToStaticMarkup(
     <ClockProvider serverNow={PRELAUNCH}>
@@ -31,7 +37,24 @@ describe("WaitlistHero", () => {
     expect(html).toContain(formsCopy.waitlist.title);
     // One sentence per line (QA round 3); day and month never break apart (decision 201).
     expect(html).toContain(`<span class="block">Vanaf 27\u00a0november online.</span>`);
-    expect(html).toContain(escape(formsCopy.waitlist.signupTitle));
+    expect(signupTitleText(html)).toBe(formsCopy.waitlist.signupTitle);
+  });
+
+  it("splits the sign-up title after the comma from md and keeps 'plus 10%' together (QA round 6)", () => {
+    expect(html).toContain('<span class="md:block">Als eerste shoppen,</span> <span class="md:block">plus\u00a010% op je eerste bestelling</span>');
+  });
+
+  it("lists only the benefits the title does not already say (QA round 6)", () => {
+    expect(site.club.benefits).toHaveLength(2);
+    for (const benefit of site.club.benefits) {
+      expect(html).toContain(escape(benefit));
+      expect(benefit).not.toMatch(/10%|korting/);
+    }
+  });
+
+  it("waits with the first paint until the whole hero grid is parsed (QA round 6, CLS from lg)", () => {
+    expect(html).toContain('<link rel="expect" href="#wachtlijst-geparsed" blocking="render"/>');
+    expect(html.indexOf('id="wachtlijst-geparsed"')).toBeGreaterThan(html.indexOf("Ik doe mee"));
   });
 
   it("has the Club sign-up with the consent sentence and the waitlist as source", () => {
@@ -69,7 +92,7 @@ describe("WaitlistHero", () => {
     // QA round 4: the switch sits right under the H1 (the first screen), before the sign-up card.
     const h1 = html.indexOf("<h1");
     expect(html.indexOf("Naar de shop")).toBeGreaterThan(h1);
-    expect(html.indexOf("Naar de shop")).toBeLessThan(html.indexOf(escape(formsCopy.waitlist.signupTitle)));
+    expect(html.indexOf("Naar de shop")).toBeLessThan(html.indexOf('id="wachtlijst-aanmelden"'));
     expect(html).not.toContain("De shop opent op");
   });
 

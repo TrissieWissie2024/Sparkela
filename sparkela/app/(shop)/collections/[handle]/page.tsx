@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
-import { homeFavorites } from "@/lib/catalog";
+import { moreFavorites } from "@/lib/catalog";
 import { breadcrumbJsonLd, collectionPath, NOT_FOUND_TITLE, pageMetadata } from "@/lib/seo";
 import { getShopCollection, getShopProducts } from "@/lib/shop-data";
 import { collections } from "@/content/collections";
@@ -88,13 +88,13 @@ export default async function CollectionPage({ params }: PageProps<"/collections
   const home = sharedCopy.ui.home;
   // A short collection is no dead end (QA round 5, brief §5 70/20/10: two rings and then the dark footer): Linde's
   // favourites from the rest of the shop, on the light page, between the grid and the footer.
-  const inCollection = new Set(products.map((product) => product.handle));
-  const more =
+  // Always four (QA round 6: Nieuw holds most favourites and had one lone card), topped up with the best-ranked pieces
+  // for sale under a title that does not call them Linde's picks.
+  const { products: more, onlyFavorites } =
     products.length > 0 && products.length < SHORT_COLLECTION
-      ? homeFavorites(await getShopProducts(), false)
-          .products.filter((product) => !inCollection.has(product.handle))
-          .slice(0, MORE_FAVORITES)
-      : [];
+      ? moreFavorites(await getShopProducts(), new Set(products.map((product) => product.handle)), MORE_FAVORITES)
+      : { products: [], onlyFavorites: true };
+  const moreCopy = onlyFavorites ? collectionCopy.more : collectionCopy.more.mixed;
 
   const cards: Record<string, ReactNode> = Object.fromEntries(
     products.map((product, index) => [
@@ -148,14 +148,10 @@ export default async function CollectionPage({ params }: PageProps<"/collections
         <Container as="section" aria-labelledby="meer-favorieten" className="-mt-4 pb-16 md:-mt-8 md:pb-24">
           {/* Two sections on the same surface: a hairline over the container width (plan §4.4). */}
           <div className="border-t border-rand pt-12 md:pt-16">
-            <SectionHeading id="meer-favorieten" level={2} title={collectionCopy.more.title} intro={collectionCopy.more.intro} />
-            <ProductGrid
-              products={more}
-              label={collectionCopy.more.title}
-              headingLevel={3}
-              columns={more.length === MORE_FAVORITES ? "2-4" : "2-3-4"}
-              className="mt-8 md:mt-10"
-            />
+            <SectionHeading id="meer-favorieten" level={2} title={moreCopy.title} intro={moreCopy.intro} />
+            {/* The grid's own columns (2, 3 from md, 4 from xl) and only whole rows: from md to xl three cards, never
+                a row of four smaller cards under rows of three (QA round 6). */}
+            <ProductGrid products={more} label={moreCopy.title} headingLevel={3} fullRows className="mt-8 md:mt-10" />
           </div>
         </Container>
       ) : null}

@@ -109,7 +109,8 @@ test("a ring has no preselected size: the add asks for one first", async ({ page
   await expect(cartDrawer(page)).toBeHidden();
   await pickOption(main, "17");
   await mainAddToCart(page).click();
-  await expect(cartLines(cartDrawer(page)).getByText("17", { exact: true })).toBeVisible();
+  // "Maat 17", never a bare "17" that reads as a quantity (QA round 6).
+  await expect(cartLines(cartDrawer(page)).getByText("Maat 17", { exact: true })).toBeVisible();
 });
 
 test("the demo checkout places an order and empties the bag", async ({ page }) => {

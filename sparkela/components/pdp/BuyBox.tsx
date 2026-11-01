@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { CartErrorCode } from "@/lib/commerce/types";
 import type { CatalogProduct, Product } from "@/lib/types";
@@ -13,7 +13,7 @@ import { useCart } from "@/components/cart/useCart";
 
 import { AddToCart } from "./AddToCart";
 import { GiftWrapCheckbox } from "./GiftWrapCheckbox";
-import { usePdpChoice, type StackChoice } from "./PdpStateProvider";
+import { usePdpChoice, type PdpChoice, type StackChoice } from "./PdpStateProvider";
 import { StackPicker } from "./StackPicker";
 import { quoteStack, resolvePicks, stackOptionsFor } from "./stackPicks";
 import { StickyAddToCart } from "./StickyAddToCart";
@@ -75,24 +75,56 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
     return () => clearTimeout(timer);
   }, [product]);
 
-  const variant = resolveVariant(product, choice.variantId);
-  // A ring size is never preselected (QA round 1): until one is chosen the add asks for it instead of adding size 16.
-  const sizeMissing = variantKind(product) === "maat" && product.variants.length > 1 && !choice.variantId;
-  const [sizeError, setSizeError] = useState(false);
-  const sizeErrorId = `${useId()}-maat`;
-  const soldOut = !sizeMissing && !variant.availableForSale;
-  // QA round 4: the chosen piece is already in the cart as often as we have it. "Voeg de stack toe" then added only
-  // the two others, so the button is unavailable with the reason under it (also "Los", which added nothing).
-  const inCart = (cart?.lines ?? [])
-    .filter((line) => line.merchandise.variantId === variant.id)
-    .reduce((sum, line) => sum + line.quantity, 0);
-  const atStockLimit = !sizeMissing && !soldOut && isAtStockLimit(variant, inCart);
-  const unavailable = soldOut || atStockLimit;
   const stackable = !product.isGiftCard && product.availableForSale && isStackEligible(product.type) && defaultStack !== null;
   const options = useMemo(() => stackOptionsFor(stackCandidates), [stackCandidates]);
-  const stackChoice: StackChoice = stackable && choice.stack?.mode === "stack" ? choice.stack : { mode: "los" };
-  const picks = stackChoice.mode === "stack" ? resolvePicks(stackChoice, defaultStack, options) : null;
-  const giftWrapOn = !product.isGiftCard && choice.giftWrap === true;
+
+  /** Everything the button needs, for a choice: the rendered one, or the one on screen in handleAdd. */
+  const resolve = (current: PdpChoice) => {
+    const chosen = resolveVariant(product, current.variantId);
+    // A ring size is never preselected (QA round 1): until one is chosen the add asks for it instead of adding size 16.
+    const missing = variantKind(product) === "maat" && product.variants.length > 1 && !current.variantId;
+    const outOfStock = !missing && !chosen.availableForSale;
+    // QA round 4: the chosen piece is already in the cart as often as we have it. "Voeg de stack toe" then added only
+    // the two others, so the button is unavailable with the reason under it (also "Los", which added nothing).
+    const units = (cart?.lines ?? [])
+      .filter((line) => line.merchandise.variantId === chosen.id)
+      .reduce((sum, line) => sum + line.quantity, 0);
+    const limit = !missing && !outOfStock && isAtStockLimit(chosen, units);
+    const stack: StackChoice = stackable && current.stack?.mode === "stack" ? current.stack : { mode: "los" };
+    return {
+      variant: chosen,
+      sizeMissing: missing,
+      soldOut: outOfStock,
+      atStockLimit: limit,
+      unavailable: outOfStock || limit,
+      stackChoice: stack,
+      picks: stack.mode === "stack" ? resolvePicks(stack, defaultStack, options) : null,
+      giftWrapOn: !product.isGiftCard && current.giftWrap === true,
+    };
+  };
+
+  const { variant, sizeMissing, soldOut, atStockLimit, unavailable, stackChoice, picks, giftWrapOn } = resolve(choice);
+  const [sizeError, setSizeError] = useState(false);
+  const sizeErrorId = `${useId()}-maat`;
+
+  /**
+   * Choices tapped but not rendered yet (QA round 6). The pickers show a tap at once and commit it in a transition
+   * (useInstantChoice, QA round 5, INP); a press on "In je tas" before that render landed added the previous choice
+   * (Goud while Zilver was checked, nothing for a just-tapped ring size, one piece for "Stack van 3"). handleAdd adds
+   * what the visitor sees: the rendered choice plus these. An entry is dropped once the rendered choice has it.
+   */
+  const requestedRef = useRef<PdpChoice>({});
+  const choose = (change: PdpChoice) => {
+    requestedRef.current = { ...requestedRef.current, ...change };
+    update(change);
+  };
+  useLayoutEffect(() => {
+    const requested: PdpChoice = { ...requestedRef.current };
+    if ("variantId" in requested && requested.variantId === choice.variantId) delete requested.variantId;
+    if ("giftWrap" in requested && requested.giftWrap === choice.giftWrap) delete requested.giftWrap;
+    if ("stack" in requested && sameStackChoice(requested.stack, choice.stack)) delete requested.stack;
+    requestedRef.current = requested;
+  }, [choice]);
 
   const total = picks ? quoteStack({ price: variant.price.cents, type: product.type }, picks, options).total : variant.price.cents;
   // A gift card amount is whole euros, written like its tiles and "Vanaf €15" ("€15", not "€15,00"), fix 7-9.
@@ -113,6 +145,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
   if (giftWrapOn) summary.push(pdpCopy.stickyBar.giftWrap);
 
   const handleAdd = async () => {
+    const { variant, sizeMissing, unavailable, picks, giftWrapOn } = resolve({ ...choice, ...requestedRef.current });
     if (sizeMissing) {
       setSizeError(true);
       // Focus (and so scroll to) the first size that is for sale; the message is linked to the group.
@@ -148,7 +181,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
         value={sizeMissing ? null : variant.id}
         onChange={(variantId) => {
           setSizeError(false);
-          update({ variantId });
+          choose({ variantId });
         }}
         errorId={variantKind(product) === "maat" ? sizeErrorId : undefined}
         error={sizeMissing && sizeError ? pdpCopy.variant.chooseSize : null}
@@ -161,7 +194,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
           candidates={stackCandidates}
           defaultPicks={defaultStack}
           value={stackChoice}
-          onChange={(stack) => update({ stack })}
+          onChange={(stack) => choose({ stack })}
           stackName={stackName}
         />
       ) : null}
@@ -171,7 +204,7 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
           value={giftWrapOn || wrapInCart}
           inCart={wrapInCart}
           onChange={(giftWrap) => {
-            update({ giftWrap });
+            choose({ giftWrap });
             if (wrapInCart && !giftWrap) void setGiftWrap(false);
           }}
         />
@@ -199,4 +232,11 @@ export function BuyBox({ product, stackCandidates, defaultStack, stackName = nul
       />
     </div>
   );
+}
+
+function sameStackChoice(a: StackChoice | undefined, b: StackChoice | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.mode !== b.mode) return false;
+  if (a.mode === "los" || b.mode === "los") return true;
+  return a.picks[0] === b.picks[0] && a.picks[1] === b.picks[1];
 }

@@ -20,7 +20,8 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
  * header logo (inkt word, roest spark), so the only public page of the prelaunch keeps the brand's 70/20/10 like the
  * drop teaser (QA round 4: it was about 95% inkt); only the MiniFooter below is donker. Top to bottom on a phone: the
  * logo, the H1 "Sparkela komt eraan" with the promise (the date from site.launchAt, never retyped), the photo of
- * Linde, then the Club sign-up in a white card with the reward stated up front, and the socials.
+ * Linde, then the Club sign-up in a white card with the reward stated up front (the title) and the two benefits the
+ * title does not already say (QA round 6), and the socials.
  *
  * The photo block shows when its file is supplied, and in local, test and preview builds also as the "FOTO: Linde,
  * wachtlijst" placeholder (site.flags.hideMissingOptionalMedia false, QA round 1), so the two-column layout is built and
@@ -37,6 +38,8 @@ import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 const PHOTO_KEY = "linde.wachtlijst";
 const TITLE_ID = "wachtlijst-titel";
 const SIGNUP_ID = "wachtlijst-aanmelden";
+/** The element after the hero that the render-blocking `expect` link waits for. */
+const PARSED_ID = "wachtlijst-geparsed";
 const LOGO_WIDTH = 160;
 /** The logo's built-in free space, trimmed on the left so its letters line up with the H1 (as in Header). */
 const logoTrim = { marginLeft: -logoLayout(LOGO_WIDTH).clearSpace };
@@ -101,22 +104,33 @@ export function WaitlistHero({ hideMissing = site.flags.hideMissingOptionalMedia
             </div>
           ) : null}
 
+          {/* The form owns the heading and the benefits (SubscribeForm `heading`, as on /sparkela-club and the drop
+              teaser): after a sign-up the card reads "Bijna klaar" and the result as plain text, no box in the box
+              (QA round 6). */}
           <section
             aria-labelledby={SIGNUP_ID}
             className={cn("rounded-kaart border border-rand bg-kaart p-5 md:p-8", column, photo && "lg:self-start")}
           >
-            <h2 id={SIGNUP_ID} className="kop-3 text-tekst">
-              {copy.signupTitle}
-            </h2>
-            <ul aria-label={copy.benefitsLabel} className="mt-4 space-y-2">
-              {site.club.benefits.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2.5 text-tekst-2">
-                  <Check aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-roest" strokeWidth={1.75} />
-                  <span>{benefit}</span>
-                </li>
-              ))}
-            </ul>
-            <SubscribeForm source="wachtlijst" layout="inline" className="mt-5 max-w-[34rem] md:mt-6" />
+            <SubscribeForm
+              source="wachtlijst"
+              layout="inline"
+              className="mt-5 max-w-[34rem] md:mt-6"
+              heading={{
+                id: SIGNUP_ID,
+                className: "kop-3",
+                title: <SignupTitle title={copy.signupTitle} />,
+                body: (
+                  <ul aria-label={copy.benefitsLabel} className="mt-4 space-y-2">
+                    {site.club.benefits.map((benefit) => (
+                      <li key={benefit} className="flex items-start gap-2.5 text-tekst-2">
+                        <Check aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-roest" strokeWidth={1.75} />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              }}
+            />
           </section>
 
           {/* Only confirmed accounts: this page is where social traffic lands before the launch (QA round 3). */}
@@ -142,6 +156,27 @@ export function WaitlistHero({ hideMissing = site.flags.hideMissingOptionalMedia
           ) : null}
         </div>
       </Container>
+      {/* No first paint before the whole grid is parsed (QA round 6): from lg the photo spans both rows and is centred
+          in them, so a paint before the sign-up card arrived drew it at the top and moved it 114 px down a moment
+          later. The same render-blocking `expect` link as DropHero's (decision 225j); React hoists it into <head>. */}
+      <link rel="expect" href={`#${PARSED_ID}`} blocking="render" />
+      <span id={PARSED_ID} hidden />
     </section>
+  );
+}
+
+/**
+ * "Als eerste shoppen, plus 10% op je eerste bestelling" (brief verbatim, kept whole in content): from md each half
+ * on its own line, split after the comma, so "plus" never dangles at a line end and the reward stays one phrase; on a
+ * phone "plus" and the percentage are bound by a no-break space (QA round 6).
+ */
+function SignupTitle({ title }: { title: string }) {
+  const at = title.indexOf(", ");
+  if (at < 0) return title;
+  const tail = title.slice(at + 2).replace(" ", "\u00a0");
+  return (
+    <>
+      <span className="md:block">{title.slice(0, at + 1)}</span> <span className="md:block">{tail}</span>
+    </>
   );
 }
